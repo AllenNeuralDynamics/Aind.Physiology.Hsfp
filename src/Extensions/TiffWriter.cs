@@ -1,6 +1,7 @@
 using Bonsai;
 using System;
 using System.ComponentModel;
+using System.IO;
 using System.Reactive.Linq;
 using System.Runtime.InteropServices;
 using OpenCV.Net;
@@ -15,6 +16,7 @@ public class TiffWriter
     private bool useBigTiff = false;
     private Compression compression = Compression.NONE;
     private bool overwrite = false;
+    private int? chunkSize = null;
 
     [Description("The path to the output file.")]
     public string FileName
@@ -44,10 +46,17 @@ public class TiffWriter
         set { overwrite = value; }
     }
 
+    [Description("The number of frames per chunk file. When set, the writer operates in rolling mode, creating a new file after each chunk with '_####' suffix (e.g., 'output_0000.tiff'). Leave null to write all frames to a single file.")]
+    public int? ChunkSize
+    {
+        get { return chunkSize; }
+        set { chunkSize = value; }
+    }
+
     public IObservable<IplImage> Process(IObservable<IplImage> source)
     {
         return Observable.Using(
-            () => new TiffStackWriter(fileName, useBigTiff, compression, overwrite),
+            () => new TiffStackWriter(fileName, useBigTiff, compression, overwrite, chunkSize),
             writer =>
             {
                 return source.Do(image => writer.WriteFrame(image));
@@ -56,33 +65,90 @@ public class TiffWriter
 
     private class TiffStackWriter : IDisposable
     {
-        private readonly Tiff tiffStack;
+        private Tiff tiffStack;
         private int currentFrameIdx;
+        private int currentChunkIdx;
         private byte[] rowBuffer; // reusable buffer
         private byte[] stripBuffer; // reusable buffer
 
-        private Compression compression;
+        private readonly string fileNamePattern;
+        private readonly bool useBigTiff;
+        private readonly Compression compression;
+        private readonly bool overwrite;
+        private readonly int? chunkSize;
 
-        public TiffStackWriter(string path, bool useBigTiff, Compression compression, bool overwrite)
+        public TiffStackWriter(string path, bool useBigTiff, Compression compression, bool overwrite, int? chunkSize)
         {
-            if (!overwrite && System.IO.File.Exists(path))
+            this.useBigTiff = useBigTiff;
+            this.compression = compression;
+            this.overwrite = overwrite;
+            this.chunkSize = chunkSize;
+
+            // Determine the file name pattern for chunked mode
+            if (chunkSize.HasValue)
+            {
+                var directory = Path.GetDirectoryName(path);
+                var baseName = Path.GetFileNameWithoutExtension(path);
+                var extension = Path.GetExtension(path);
+                fileNamePattern = string.IsNullOrEmpty(directory)
+                    ? string.Format("{0}_{{0:D4}}{1}", baseName, extension)
+                    : Path.Combine(directory, string.Format("{0}_{{0:D4}}{1}", baseName, extension));
+            }
+            else
+            {
+                fileNamePattern = path;
+            }
+
+            currentFrameIdx = 0;
+            currentChunkIdx = 0;
+            rowBuffer = null;
+
+            OpenNewFile();
+        }
+
+        private string GetCurrentFilePath()
+        {
+            if (chunkSize.HasValue)
+            {
+                return string.Format(fileNamePattern, currentChunkIdx);
+            }
+            return fileNamePattern;
+        }
+
+        private void OpenNewFile()
+        {
+            var path = GetCurrentFilePath();
+            if (!overwrite && File.Exists(path))
             {
                 throw new InvalidOperationException(string.Format("File already exists: {0}", path));
             }
-            this.compression = compression;
             var mode = useBigTiff ? "w8" : "w";
             tiffStack = Tiff.Open(path, mode);
             if (tiffStack == null)
             {
                 throw new InvalidOperationException(string.Format("Failed to create TIFF file: {0}", path));
             }
-
             currentFrameIdx = 0;
-            rowBuffer = null;
+        }
+
+        private void CloseCurrentFile()
+        {
+            if (tiffStack != null)
+            {
+                tiffStack.Dispose();
+                tiffStack = null;
+            }
         }
 
         public void WriteFrame(IplImage image)
         {
+            if (chunkSize.HasValue && currentFrameIdx >= chunkSize.Value)
+            {
+                CloseCurrentFile();
+                currentChunkIdx++;
+                OpenNewFile();
+            }
+
             var width = image.Width;
             var height = image.Height;
             var channels = image.Channels;
@@ -99,7 +165,7 @@ public class TiffWriter
             tiffStack.SetField(TiffTag.SAMPLEFORMAT, sampleFormat);
             tiffStack.SetField(TiffTag.ORIENTATION, Orientation.TOPLEFT);
             tiffStack.SetField(TiffTag.PLANARCONFIG, PlanarConfig.CONTIG);
-            tiffStack.SetField(TiffTag.COMPRESSION, this.compression);
+            tiffStack.SetField(TiffTag.COMPRESSION, compression);
             tiffStack.SetField(TiffTag.ROWSPERSTRIP, height);
 
             if (channels == 1)
@@ -160,10 +226,7 @@ public class TiffWriter
 
         public void Dispose()
         {
-            if (tiffStack != null)
-            {
-                tiffStack.Dispose();
-            }
+            CloseCurrentFile();
         }
 
         private static void GetTiffSampleInfo(IplDepth depth, out int bitsPerSample, out SampleFormat sampleFormat)
