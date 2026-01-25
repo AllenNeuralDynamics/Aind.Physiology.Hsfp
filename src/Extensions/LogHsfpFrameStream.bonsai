@@ -5,7 +5,7 @@
                  xmlns:p1="clr-namespace:AllenNeuralDynamics.Core;assembly=AllenNeuralDynamics.Core"
                  xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
                  xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
-                 xmlns:dsp="clr-namespace:Bonsai.Dsp;assembly=Bonsai.Dsp"
+                 xmlns:p2="clr-namespace:;assembly=Extensions"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
@@ -165,15 +165,15 @@
                   </Expression>
                   <Expression xsi:type="PropertyMapping">
                     <PropertyMappings>
-                      <Property Name="Path" />
+                      <Property Name="FileName" />
                     </PropertyMappings>
                   </Expression>
                   <Expression xsi:type="Combinator">
-                    <Combinator xsi:type="dsp:MatrixWriter">
-                      <dsp:Path>C:/output_data/Test/Test_20260123T113618\fib/tiffs/channel.bin</dsp:Path>
-                      <dsp:Suffix>None</dsp:Suffix>
-                      <dsp:Overwrite>false</dsp:Overwrite>
-                      <dsp:Layout>ColumnMajor</dsp:Layout>
+                    <Combinator xsi:type="p2:TiffWriter">
+                      <p2:FileName />
+                      <p2:UseBigTiff>false</p2:UseBigTiff>
+                      <p2:Compression>NONE</p2:Compression>
+                      <p2:Overwrite>false</p2:Overwrite>
                     </Combinator>
                   </Expression>
                   <Expression xsi:type="WorkflowOutput" />
