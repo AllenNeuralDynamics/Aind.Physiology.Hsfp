@@ -13,7 +13,7 @@ using BitMiracle.LibTiff.Classic;
 public class TiffWriter
 {
     private string fileName = string.Empty;
-    private bool useBigTiff = false;
+    private bool useBigTiff = true;
     private Compression compression = Compression.NONE;
     private bool overwrite = false;
     private int? chunkSize = null;
@@ -122,6 +122,13 @@ public class TiffWriter
             {
                 throw new InvalidOperationException(string.Format("File already exists: {0}", path));
             }
+
+            var directory = Path.GetDirectoryName(path);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
             var mode = useBigTiff ? "w8" : "w";
             tiffStack = Tiff.Open(path, mode);
             if (tiffStack == null)

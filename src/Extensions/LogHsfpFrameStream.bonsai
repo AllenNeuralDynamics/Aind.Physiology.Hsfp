@@ -69,7 +69,6 @@
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="io:CsvWriter">
-              <io:FileName>C:/output_data/Test/Test_20260123T113618\fib/metadata.csv</io:FileName>
               <io:Append>false</io:Append>
               <io:Overwrite>false</io:Overwrite>
               <io:Suffix>None</io:Suffix>
@@ -83,7 +82,7 @@
               <Name>fileNameComponents</Name>
             </Expression>
             <Expression xsi:type="Format">
-              <Format>{0}/frame_ch{2}/.tiff</Format>
+              <Format>{0}/frame_ch{1}/.tiff</Format>
               <Selector>RootPath,ChannelIndex</Selector>
             </Expression>
             <Expression xsi:type="PropertyMapping">
@@ -102,7 +101,7 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p2:TiffWriter">
                 <p2:FileName />
-                <p2:UseBigTiff>false</p2:UseBigTiff>
+                <p2:UseBigTiff>true</p2:UseBigTiff>
                 <p2:Compression>NONE</p2:Compression>
                 <p2:Overwrite>false</p2:Overwrite>
                 <p2:ChunkSize xsi:nil="true" />

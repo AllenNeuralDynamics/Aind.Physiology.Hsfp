@@ -110,11 +110,11 @@
               <gui:ColumnStyles>
                 <gui:ColumnStyle>
                   <gui:SizeType>Percent</gui:SizeType>
-                  <gui:Width>0.7</gui:Width>
+                  <gui:Width>0.3</gui:Width>
                 </gui:ColumnStyle>
                 <gui:ColumnStyle>
                   <gui:SizeType>Percent</gui:SizeType>
-                  <gui:Width>0.3</gui:Width>
+                  <gui:Width>0.7</gui:Width>
                 </gui:ColumnStyle>
               </gui:ColumnStyles>
               <gui:RowStyles />
