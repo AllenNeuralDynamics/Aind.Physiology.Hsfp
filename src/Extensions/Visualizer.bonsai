@@ -237,7 +237,9 @@
                       </Edges>
                     </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai" />
+                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai">
+                    <Rectangles />
+                  </Expression>
                   <Expression xsi:type="VisualizerMapping">
                     <VisualizerType xsi:type="TypeMapping" TypeArguments="gui:TableLayoutPanelVisualizer" />
                   </Expression>
@@ -271,7 +273,9 @@
                       </Edges>
                     </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai" />
+                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai">
+                    <Rectangles />
+                  </Expression>
                   <Expression xsi:type="VisualizerMapping">
                     <VisualizerType xsi:type="TypeMapping" TypeArguments="gui:TableLayoutPanelVisualizer" />
                   </Expression>
@@ -305,7 +309,9 @@
                       </Edges>
                     </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai" />
+                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai">
+                    <Rectangles />
+                  </Expression>
                   <Expression xsi:type="VisualizerMapping">
                     <VisualizerType xsi:type="TypeMapping" TypeArguments="gui:TableLayoutPanelVisualizer" />
                   </Expression>
@@ -339,7 +345,9 @@
                       </Edges>
                     </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai" />
+                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai">
+                    <Rectangles />
+                  </Expression>
                   <Expression xsi:type="VisualizerMapping">
                     <VisualizerType xsi:type="TypeMapping" TypeArguments="gui:TableLayoutPanelVisualizer" />
                   </Expression>
@@ -373,7 +381,9 @@
                       </Edges>
                     </Workflow>
                   </Expression>
-                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai" />
+                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\ChannelVisualizer.bonsai">
+                    <Rectangles />
+                  </Expression>
                   <Expression xsi:type="VisualizerMapping">
                     <VisualizerType xsi:type="TypeMapping" TypeArguments="gui:TableLayoutPanelVisualizer" />
                   </Expression>

@@ -56,8 +56,12 @@ public class SelectRectangles
         }
     }
 
-    public IObservable<Rect[]> Process(IObservable<IplImage> source)
+    public IObservable<CroppedRegions> Process(IObservable<IplImage> source)
     {
-        return source.Select(value=> Rectangles);
+        return source.Select(value=> new CroppedRegions(){
+            Label = this.Label,
+            Image = value,
+            Regions = this.Rectangles
+        });
     }
 }

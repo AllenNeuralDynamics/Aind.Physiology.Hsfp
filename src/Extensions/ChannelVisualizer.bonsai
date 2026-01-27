@@ -2,15 +2,17 @@
 <WorkflowBuilder Version="2.9.0"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
-                 xmlns:cv="clr-namespace:Bonsai.Vision;assembly=Bonsai.Vision"
-                 xmlns:gui="clr-namespace:Bonsai.Gui;assembly=Bonsai.Gui"
-                 xmlns:dsp="clr-namespace:Bonsai.Dsp;assembly=Bonsai.Dsp"
+                 xmlns:p1="clr-namespace:;assembly=Extensions"
                  xmlns:zg="clr-namespace:Bonsai.Gui.ZedGraph;assembly=Bonsai.Gui.ZedGraph"
+                 xmlns:gui="clr-namespace:Bonsai.Gui;assembly=Bonsai.Gui"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
       <Expression xsi:type="WorkflowInput">
         <Name>Source1</Name>
+      </Expression>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="Rectangles" />
       </Expression>
       <Expression xsi:type="rx:Visualizer">
         <Name>ChannelVisualizer</Name>
@@ -36,62 +38,42 @@
             <Expression xsi:type="MemberSelector">
               <Selector>Image</Selector>
             </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>thisStream</Name>
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>Key</Selector>
+            </Expression>
+            <Expression xsi:type="Format">
+              <Format>Channel: {0}</Format>
+              <Selector>it</Selector>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="label" />
+              </PropertyMappings>
+            </Expression>
             <Expression xsi:type="ExternalizedMapping">
-              <Property Name="RegionOfInterest" />
+              <Property Name="Rectangles" />
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="cv:Crop">
-                <cv:RegionOfInterest>
-                  <cv:X>0</cv:X>
-                  <cv:Y>0</cv:Y>
-                  <cv:Width>0</cv:Width>
-                  <cv:Height>0</cv:Height>
-                </cv:RegionOfInterest>
+              <Combinator xsi:type="p1:SelectRectangles">
+                <p1:label>Channel</p1:label>
+                <p1:Rectangles />
+                <p1:Refresh>false</p1:Refresh>
               </Combinator>
             </Expression>
             <Expression xsi:type="rx:PublishSubject">
               <Name>cropped</Name>
             </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>cropped</Name>
+            <Expression xsi:type="VisualizerMapping">
+              <VisualizerType xsi:type="TypeMapping" TypeArguments="p1:SelectRectangleVisualizer" />
             </Expression>
-            <Expression xsi:type="VisualizerMapping" />
-            <Expression xsi:type="gui:PropertyGridBuilder">
-              <gui:Name>CropUi</gui:Name>
-              <gui:Enabled>true</gui:Enabled>
-              <gui:Visible>true</gui:Visible>
-              <gui:HelpVisible>false</gui:HelpVisible>
-              <gui:ToolbarVisible>false</gui:ToolbarVisible>
-              <gui:AutoRefresh>false</gui:AutoRefresh>
-            </Expression>
-            <Expression xsi:type="VisualizerMapping" />
-            <Expression xsi:type="gui:TableLayoutPanelBuilder">
-              <gui:Enabled>true</gui:Enabled>
-              <gui:Visible>true</gui:Visible>
-              <gui:ColumnCount>1</gui:ColumnCount>
-              <gui:RowCount>2</gui:RowCount>
-              <gui:ColumnStyles />
-              <gui:RowStyles>
-                <gui:RowStyle>
-                  <gui:SizeType>Percent</gui:SizeType>
-                  <gui:Height>0.8</gui:Height>
-                </gui:RowStyle>
-                <gui:RowStyle>
-                  <gui:SizeType>Percent</gui:SizeType>
-                  <gui:Height>0.2</gui:Height>
-                </gui:RowStyle>
-              </gui:RowStyles>
-              <gui:CellSpans />
-            </Expression>
-            <Expression xsi:type="VisualizerMapping" />
             <Expression xsi:type="SubscribeSubject">
               <Name>cropped</Name>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="dsp:Average" />
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Val0</Selector>
+              <Combinator xsi:type="p1:ProcessCroppedRegions" />
             </Expression>
             <Expression xsi:type="zg:RollingGraphBuilder">
               <zg:SymbolType>None</zg:SymbolType>
@@ -101,7 +83,9 @@
               <zg:Min xsi:nil="true" />
               <zg:Max xsi:nil="true" />
             </Expression>
-            <Expression xsi:type="VisualizerMapping" />
+            <Expression xsi:type="VisualizerMapping">
+              <VisualizerType xsi:type="TypeMapping" TypeArguments="zg:RollingGraphVisualizer" />
+            </Expression>
             <Expression xsi:type="gui:TableLayoutPanelBuilder">
               <gui:Enabled>true</gui:Enabled>
               <gui:Visible>true</gui:Visible>
@@ -110,7 +94,7 @@
               <gui:ColumnStyles>
                 <gui:ColumnStyle>
                   <gui:SizeType>Percent</gui:SizeType>
-                  <gui:Width>0.3</gui:Width>
+                  <gui:Width>0.4</gui:Width>
                 </gui:ColumnStyle>
                 <gui:ColumnStyle>
                   <gui:SizeType>Percent</gui:SizeType>
@@ -127,29 +111,29 @@
             <Edge From="1" To="2" Label="Source1" />
             <Edge From="3" To="4" Label="Source1" />
             <Edge From="4" To="5" Label="Source1" />
-            <Edge From="5" To="7" Label="Source1" />
-            <Edge From="6" To="7" Label="Source2" />
+            <Edge From="5" To="11" Label="Source1" />
+            <Edge From="6" To="7" Label="Source1" />
             <Edge From="7" To="8" Label="Source1" />
-            <Edge From="9" To="10" Label="Source1" />
-            <Edge From="10" To="13" Label="Source1" />
+            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="11" Label="Source2" />
+            <Edge From="10" To="11" Label="Source3" />
             <Edge From="11" To="12" Label="Source1" />
-            <Edge From="12" To="13" Label="Source2" />
-            <Edge From="13" To="14" Label="Source1" />
-            <Edge From="14" To="20" Label="Source1" />
+            <Edge From="12" To="13" Label="Source1" />
+            <Edge From="13" To="18" Label="Source1" />
+            <Edge From="14" To="15" Label="Source1" />
             <Edge From="15" To="16" Label="Source1" />
             <Edge From="16" To="17" Label="Source1" />
-            <Edge From="17" To="18" Label="Source1" />
+            <Edge From="17" To="18" Label="Source2" />
             <Edge From="18" To="19" Label="Source1" />
-            <Edge From="19" To="20" Label="Source2" />
-            <Edge From="20" To="21" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
       <Expression xsi:type="WorkflowOutput" />
     </Nodes>
     <Edges>
-      <Edge From="0" To="1" Label="Source1" />
-      <Edge From="1" To="2" Label="Source1" />
+      <Edge From="0" To="2" Label="Source1" />
+      <Edge From="1" To="2" Label="Source2" />
+      <Edge From="2" To="3" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
