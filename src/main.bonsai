@@ -8,6 +8,7 @@
                  xmlns:p3="clr-namespace:AllenNeuralDynamics.HamamatsuCamera.Nodes;assembly=AllenNeuralDynamics.HamamatsuCamera"
                  xmlns:port="clr-namespace:Bonsai.IO.Ports;assembly=Bonsai.System"
                  xmlns:p4="clr-namespace:System.Reactive;assembly=System.Reactive.Core"
+                 xmlns:ui="clr-namespace:Bonsai.Design;assembly=Bonsai.Design"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
@@ -351,6 +352,17 @@
         <Channel3 />
         <Channel4 />
       </Expression>
+      <Expression xsi:type="ui:VisualizerWindow">
+        <ui:Visible>true</ui:Visible>
+        <ui:Location xsi:nil="true" />
+        <ui:Size xsi:nil="true" />
+        <ui:WindowState xsi:nil="true" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:DelaySubscription">
+          <rx:DueTime>PT0.5S</rx:DueTime>
+        </Combinator>
+      </Expression>
     </Nodes>
     <Edges>
       <Edge From="1" To="3" Label="Source1" />
@@ -367,6 +379,8 @@
       <Edge From="14" To="15" Label="Source1" />
       <Edge From="16" To="18" Label="Source1" />
       <Edge From="17" To="18" Label="Source2" />
+      <Edge From="18" To="19" Label="Source1" />
+      <Edge From="19" To="20" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
