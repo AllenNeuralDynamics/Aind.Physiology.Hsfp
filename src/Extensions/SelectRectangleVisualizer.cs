@@ -54,14 +54,6 @@ public class SelectRectangleVisualizer : DialogTypeVisualizer
         {
             visualizerService.AddControl(rectanglePicker);
         }
-
-        visualizerService.AddControl(new Label
-        {
-            Text = selectRegions.label,
-            Dock = DockStyle.Top,
-            TextAlign = System.Drawing.ContentAlignment.MiddleCenter,
-            AutoSize = true,
-        });
     }
 
     private void UpdateRegions(SelectRectangles selectRegions)
