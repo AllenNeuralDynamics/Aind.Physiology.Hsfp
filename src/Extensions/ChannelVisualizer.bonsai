@@ -66,9 +66,7 @@
             <Expression xsi:type="rx:PublishSubject">
               <Name>cropped</Name>
             </Expression>
-            <Expression xsi:type="VisualizerMapping">
-              <VisualizerType xsi:type="TypeMapping" TypeArguments="p1:SelectRectangleVisualizer" />
-            </Expression>
+            <Expression xsi:type="VisualizerMapping" />
             <Expression xsi:type="SubscribeSubject">
               <Name>cropped</Name>
             </Expression>
@@ -94,7 +92,7 @@
               <gui:ColumnStyles>
                 <gui:ColumnStyle>
                   <gui:SizeType>Percent</gui:SizeType>
-                  <gui:Width>0.4</gui:Width>
+                  <gui:Width>0.3</gui:Width>
                 </gui:ColumnStyle>
                 <gui:ColumnStyle>
                   <gui:SizeType>Percent</gui:SizeType>
