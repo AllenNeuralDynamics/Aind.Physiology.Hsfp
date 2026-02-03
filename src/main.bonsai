@@ -337,7 +337,20 @@
           <Value>0</Value>
         </Combinator>
       </Expression>
-      <Expression xsi:type="IncludeWorkflow" Path="Extensions\Visualizer.bonsai" />
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="Channel0" />
+        <Property Name="Channel1" />
+        <Property Name="Channel2" />
+        <Property Name="Channel3" />
+        <Property Name="Channel4" />
+      </Expression>
+      <Expression xsi:type="IncludeWorkflow" Path="Extensions\Visualizer.bonsai">
+        <Channel0 />
+        <Channel1 />
+        <Channel2 />
+        <Channel3 />
+        <Channel4 />
+      </Expression>
     </Nodes>
     <Edges>
       <Edge From="1" To="3" Label="Source1" />
@@ -352,7 +365,8 @@
       <Edge From="12" To="13" Label="Source2" />
       <Edge From="13" To="14" Label="Source1" />
       <Edge From="14" To="15" Label="Source1" />
-      <Edge From="16" To="17" Label="Source1" />
+      <Edge From="16" To="18" Label="Source1" />
+      <Edge From="17" To="18" Label="Source2" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
