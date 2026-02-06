@@ -12,6 +12,11 @@
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="Subject" />
+        <Property Name="ChunkSize" />
+        <Property Name="Value" />
+      </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Init</Name>
         <Workflow>
@@ -21,7 +26,7 @@
             </Expression>
             <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:GenerateRootLoggingPath.bonsai">
               <RootFolder>C:/output_data</RootFolder>
-              <Subject>MouseTest</Subject>
+              <Subject>000000</Subject>
               <DateTimeOffset>0001-01-01T00:00:00.0000000+00:00</DateTimeOffset>
               <SubjectName>LoggingRootPath</SubjectName>
             </Expression>
@@ -46,7 +51,7 @@
             </Expression>
             <Expression xsi:type="PropertySource" TypeArguments="p1:TiffWriter,sys:Nullable(sys:Int32)">
               <MemberName>ChunkSize</MemberName>
-              <Value>100</Value>
+              <Value>1000</Value>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Take">
@@ -346,11 +351,76 @@
         <Property Name="Channel4" />
       </Expression>
       <Expression xsi:type="IncludeWorkflow" Path="Extensions\Visualizer.bonsai">
-        <Channel0 />
-        <Channel1 />
-        <Channel2 />
-        <Channel3 />
-        <Channel4 />
+        <Channel0>
+          <Rect>
+            <X>1492</X>
+            <Y>53</Y>
+            <Width>147</Width>
+            <Height>53</Height>
+          </Rect>
+          <Rect>
+            <X>1504</X>
+            <Y>130</Y>
+            <Width>135</Width>
+            <Height>48</Height>
+          </Rect>
+        </Channel0>
+        <Channel1>
+          <Rect>
+            <X>890</X>
+            <Y>66</Y>
+            <Width>324</Width>
+            <Height>41</Height>
+          </Rect>
+          <Rect>
+            <X>908</X>
+            <Y>141</Y>
+            <Width>300</Width>
+            <Height>37</Height>
+          </Rect>
+        </Channel1>
+        <Channel2>
+          <Rect>
+            <X>572</X>
+            <Y>66</Y>
+            <Width>383</Width>
+            <Height>53</Height>
+          </Rect>
+          <Rect>
+            <X>572</X>
+            <Y>143</Y>
+            <Width>383</Width>
+            <Height>50</Height>
+          </Rect>
+        </Channel2>
+        <Channel3>
+          <Rect>
+            <X>548</X>
+            <Y>64</Y>
+            <Width>306</Width>
+            <Height>41</Height>
+          </Rect>
+          <Rect>
+            <X>536</X>
+            <Y>140</Y>
+            <Width>317</Width>
+            <Height>49</Height>
+          </Rect>
+        </Channel3>
+        <Channel4>
+          <Rect>
+            <X>436</X>
+            <Y>62</Y>
+            <Width>265</Width>
+            <Height>58</Height>
+          </Rect>
+          <Rect>
+            <X>454</X>
+            <Y>145</Y>
+            <Width>241</Width>
+            <Height>52</Height>
+          </Rect>
+        </Channel4>
       </Expression>
       <Expression xsi:type="ui:VisualizerWindow">
         <ui:Visible>true</ui:Visible>
@@ -365,22 +435,23 @@
       </Expression>
     </Nodes>
     <Edges>
-      <Edge From="1" To="3" Label="Source1" />
-      <Edge From="2" To="3" Label="Source2" />
-      <Edge From="5" To="7" Label="Source1" />
-      <Edge From="6" To="7" Label="Source2" />
-      <Edge From="7" To="13" Label="Source1" />
-      <Edge From="8" To="9" Label="Source1" />
+      <Edge From="0" To="1" Label="Source1" />
+      <Edge From="2" To="4" Label="Source1" />
+      <Edge From="3" To="4" Label="Source2" />
+      <Edge From="6" To="8" Label="Source1" />
+      <Edge From="7" To="8" Label="Source2" />
+      <Edge From="8" To="14" Label="Source1" />
       <Edge From="9" To="10" Label="Source1" />
       <Edge From="10" To="11" Label="Source1" />
       <Edge From="11" To="12" Label="Source1" />
-      <Edge From="12" To="13" Label="Source2" />
-      <Edge From="13" To="14" Label="Source1" />
+      <Edge From="12" To="13" Label="Source1" />
+      <Edge From="13" To="14" Label="Source2" />
       <Edge From="14" To="15" Label="Source1" />
-      <Edge From="16" To="18" Label="Source1" />
-      <Edge From="17" To="18" Label="Source2" />
-      <Edge From="18" To="19" Label="Source1" />
+      <Edge From="15" To="16" Label="Source1" />
+      <Edge From="17" To="19" Label="Source1" />
+      <Edge From="18" To="19" Label="Source2" />
       <Edge From="19" To="20" Label="Source1" />
+      <Edge From="20" To="21" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
