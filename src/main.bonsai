@@ -6,12 +6,20 @@
                  xmlns:sys="clr-namespace:System;assembly=mscorlib"
                  xmlns:p2="clr-namespace:AllenNeuralDynamics.HamamatsuCamera;assembly=AllenNeuralDynamics.HamamatsuCamera"
                  xmlns:p3="clr-namespace:AllenNeuralDynamics.HamamatsuCamera.Nodes;assembly=AllenNeuralDynamics.HamamatsuCamera"
+                 xmlns:p4="clr-namespace:AllenNeuralDynamics.Core;assembly=AllenNeuralDynamics.Core"
                  xmlns:port="clr-namespace:Bonsai.IO.Ports;assembly=Bonsai.System"
-                 xmlns:p4="clr-namespace:System.Reactive;assembly=System.Reactive.Core"
+                 xmlns:p5="clr-namespace:System.Reactive;assembly=System.Reactive.Core"
+                 xmlns:harp="clr-namespace:Bonsai.Harp;assembly=Bonsai.Harp"
+                 xmlns:p6="clr-namespace:AllenNeuralDynamics.Cuttlefish;assembly=AllenNeuralDynamics.Cuttlefish"
                  xmlns:ui="clr-namespace:Bonsai.Design;assembly=Bonsai.Design"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="Subject" />
+        <Property Name="ChunkSize" />
+        <Property Name="Value" />
+      </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Init</Name>
         <Workflow>
@@ -21,7 +29,7 @@
             </Expression>
             <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:GenerateRootLoggingPath.bonsai">
               <RootFolder>C:/output_data</RootFolder>
-              <Subject>MouseTest</Subject>
+              <Subject>000000</Subject>
               <DateTimeOffset>0001-01-01T00:00:00.0000000+00:00</DateTimeOffset>
               <SubjectName>LoggingRootPath</SubjectName>
             </Expression>
@@ -46,7 +54,7 @@
             </Expression>
             <Expression xsi:type="PropertySource" TypeArguments="p1:TiffWriter,sys:Nullable(sys:Int32)">
               <MemberName>ChunkSize</MemberName>
-              <Value>100</Value>
+              <Value>1000</Value>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Take">
@@ -68,6 +76,9 @@
           </Edges>
         </Workflow>
       </Expression>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="SettingsPath" />
+      </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Camera</Name>
         <Workflow>
@@ -81,7 +92,7 @@
                 <p2:Regions>
                   <p2:RegionOfInterest>
                     <p2:X>28</p2:X>
-                    <p2:Y>841</p2:Y>
+                    <p2:Y>874</p2:Y>
                     <p2:Width>1976</p2:Width>
                     <p2:Height>236</p2:Height>
                   </p2:RegionOfInterest>
@@ -89,7 +100,7 @@
                 <p2:CropMode>Auto</p2:CropMode>
                 <p2:EnableBundling>false</p2:EnableBundling>
                 <p2:BundleSize>1</p2:BundleSize>
-                <p2:SettingsPath>C:\local-HSFP\20260112_C13440Config_V4-beta_extTrig.xml</p2:SettingsPath>
+                <p2:SettingsPath>C:\local-HSFP\20260219_C13440Config_extTrig_4msExp.xml</p2:SettingsPath>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -130,10 +141,40 @@
               <Name>FrameStreams</Name>
               <rx:BufferSize>5</rx:BufferSize>
             </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p2:Processing">
+                <p2:DeinterleaveCount>5</p2:DeinterleaveCount>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>LoggingRootPath</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p4:AppendModalitySuffix">
+                <p4:Modality>Fib</p4:Modality>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="Format">
+              <Format>{0}/session_params_.csv</Format>
+              <Selector>it</Selector>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="FileName" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p2:CsvWriter">
+                <p2:FileName>C:/output_data/000000/000000_20260225T110133\fib/session_params_.csv</p2:FileName>
+                <p2:Suffix>Timestamp</p2:Suffix>
+                <p2:Overwrite>false</p2:Overwrite>
+              </Combinator>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
             <Edge From="1" To="2" Label="Source1" />
+            <Edge From="1" To="12" Label="Source1" />
             <Edge From="2" To="3" Label="Source1" />
             <Edge From="2" To="7" Label="Source1" />
             <Edge From="3" To="6" Label="Source1" />
@@ -144,6 +185,11 @@
             <Edge From="8" To="11" Label="Source1" />
             <Edge From="9" To="10" Label="Source1" />
             <Edge From="10" To="11" Label="Source2" />
+            <Edge From="12" To="17" Label="Source1" />
+            <Edge From="13" To="14" Label="Source1" />
+            <Edge From="14" To="15" Label="Source1" />
+            <Edge From="15" To="16" Label="Source1" />
+            <Edge From="16" To="17" Label="Source2" />
           </Edges>
         </Workflow>
       </Expression>
@@ -157,10 +203,13 @@
         <Name>Teensy</Name>
         <Workflow>
           <Nodes>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="PortName" />
+            </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="port:CreateSerialPort">
                 <port:Name>Teensy</port:Name>
-                <port:PortName>COM7</port:PortName>
+                <port:PortName>COM3</port:PortName>
                 <port:BaudRate>9600</port:BaudRate>
                 <port:NewLine>\r\n</port:NewLine>
                 <port:Parity>None</port:Parity>
@@ -228,7 +277,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="StringProperty">
-                <Value>q</Value>
+                <Value>s</Value>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -252,7 +301,7 @@
             <Expression xsi:type="MulticastSubject">
               <Name>SendToTeensy</Name>
             </Expression>
-            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p4:Unit">
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p5:Unit">
               <rx:Name>StartExperiment</rx:Name>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -276,23 +325,125 @@
             </Expression>
           </Nodes>
           <Edges>
-            <Edge From="1" To="2" Label="Source1" />
-            <Edge From="3" To="4" Label="Source1" />
+            <Edge From="0" To="1" Label="Source1" />
+            <Edge From="2" To="3" Label="Source1" />
             <Edge From="4" To="5" Label="Source1" />
             <Edge From="5" To="6" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
-            <Edge From="8" To="9" Label="Source1" />
-            <Edge From="10" To="11" Label="Source1" />
+            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="9" To="10" Label="Source1" />
             <Edge From="11" To="12" Label="Source1" />
             <Edge From="12" To="13" Label="Source1" />
             <Edge From="13" To="14" Label="Source1" />
             <Edge From="14" To="15" Label="Source1" />
             <Edge From="15" To="16" Label="Source1" />
-            <Edge From="17" To="18" Label="Source1" />
+            <Edge From="16" To="17" Label="Source1" />
             <Edge From="18" To="19" Label="Source1" />
             <Edge From="19" To="20" Label="Source1" />
-            <Edge From="20" To="22" Label="Source1" />
-            <Edge From="21" To="22" Label="Source2" />
+            <Edge From="20" To="21" Label="Source1" />
+            <Edge From="21" To="23" Label="Source1" />
+            <Edge From="22" To="23" Label="Source2" />
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>Cuttlefish</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="harp:HarpMessage">
+              <rx:Name>CuttlefishCommands</rx:Name>
+            </Expression>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="PortName" />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p6:Device">
+                <harp:OperationMode>Active</harp:OperationMode>
+                <harp:OperationLed>On</harp:OperationLed>
+                <harp:DumpRegisters>true</harp:DumpRegisters>
+                <harp:VisualIndicators>On</harp:VisualIndicators>
+                <harp:Heartbeat>Enabled</harp:Heartbeat>
+                <harp:IgnoreErrors>false</harp:IgnoreErrors>
+                <harp:PortName>COM8</harp:PortName>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:PublishSubject">
+              <Name>CuttlefishEvents</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>CuttlefishEvents</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Take">
+                <rx:Count>1</rx:Count>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="p6:CreateMessage">
+              <harp:MessageType>Write</harp:MessageType>
+              <harp:Payload xsi:type="p6:CreatePinDirectionPayload">
+                <p6:PinDirection>None</p6:PinDirection>
+              </harp:Payload>
+            </Expression>
+            <Expression xsi:type="MulticastSubject">
+              <Name>CuttlefishCommands</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Delay">
+                <rx:DueTime>PT0.05S</rx:DueTime>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="p6:CreateMessage">
+              <harp:MessageType>Write</harp:MessageType>
+              <harp:Payload xsi:type="p6:CreateEnableRisingEdgeEventsPayload">
+                <p6:EnableRisingEdgeEvents>Pin0</p6:EnableRisingEdgeEvents>
+              </harp:Payload>
+            </Expression>
+            <Expression xsi:type="MulticastSubject">
+              <Name>CuttlefishCommands</Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p5:Unit">
+              <rx:Name>TriggerReadDump</rx:Name>
+            </Expression>
+            <Expression xsi:type="harp:CreateMessage">
+              <harp:MessageType>Write</harp:MessageType>
+              <harp:Payload xsi:type="harp:CreateOperationControlPayload">
+                <harp:OperationMode>Active</harp:OperationMode>
+                <harp:DumpRegisters>true</harp:DumpRegisters>
+                <harp:MuteReplies>false</harp:MuteReplies>
+                <harp:VisualIndicators>On</harp:VisualIndicators>
+                <harp:OperationLed>On</harp:OperationLed>
+                <harp:Heartbeat>Enabled</harp:Heartbeat>
+              </harp:Payload>
+            </Expression>
+            <Expression xsi:type="MulticastSubject">
+              <Name>CuttlefishCommands</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>StartExperiment</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Delay">
+                <rx:DueTime>PT0.05S</rx:DueTime>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="MulticastSubject">
+              <Name>TriggerReadDump</Name>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="2" Label="Source1" />
+            <Edge From="1" To="2" Label="Source2" />
+            <Edge From="2" To="3" Label="Source1" />
+            <Edge From="4" To="5" Label="Source1" />
+            <Edge From="5" To="6" Label="Source1" />
+            <Edge From="6" To="7" Label="Source1" />
+            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="10" Label="Source1" />
+            <Edge From="11" To="12" Label="Source1" />
+            <Edge From="12" To="13" Label="Source1" />
+            <Edge From="14" To="15" Label="Source1" />
+            <Edge From="15" To="16" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
@@ -303,7 +454,7 @@
       <Expression xsi:type="Combinator">
         <Combinator xsi:type="rx:SubscribeWhen" />
       </Expression>
-      <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p4:Unit">
+      <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p5:Unit">
         <rx:Name>EndExperiment</rx:Name>
       </Expression>
       <Expression xsi:type="Combinator">
@@ -338,19 +489,47 @@
           <Value>0</Value>
         </Combinator>
       </Expression>
-      <Expression xsi:type="ExternalizedMapping">
-        <Property Name="Channel0" />
-        <Property Name="Channel1" />
-        <Property Name="Channel2" />
-        <Property Name="Channel3" />
-        <Property Name="Channel4" />
-      </Expression>
       <Expression xsi:type="IncludeWorkflow" Path="Extensions\Visualizer.bonsai">
-        <Channel0 />
-        <Channel1 />
-        <Channel2 />
-        <Channel3 />
-        <Channel4 />
+        <Channel0>
+          <Rect>
+            <X>1487</X>
+            <Y>43</Y>
+            <Width>147</Width>
+            <Height>53</Height>
+          </Rect>
+        </Channel0>
+        <Channel1>
+          <Rect>
+            <X>881</X>
+            <Y>54</Y>
+            <Width>324</Width>
+            <Height>41</Height>
+          </Rect>
+        </Channel1>
+        <Channel2>
+          <Rect>
+            <X>566</X>
+            <Y>54</Y>
+            <Width>383</Width>
+            <Height>53</Height>
+          </Rect>
+        </Channel2>
+        <Channel3>
+          <Rect>
+            <X>544</X>
+            <Y>70</Y>
+            <Width>306</Width>
+            <Height>41</Height>
+          </Rect>
+        </Channel3>
+        <Channel4>
+          <Rect>
+            <X>440</X>
+            <Y>59</Y>
+            <Width>265</Width>
+            <Height>58</Height>
+          </Rect>
+        </Channel4>
       </Expression>
       <Expression xsi:type="ui:VisualizerWindow">
         <ui:Visible>true</ui:Visible>
@@ -365,22 +544,23 @@
       </Expression>
     </Nodes>
     <Edges>
-      <Edge From="1" To="3" Label="Source1" />
-      <Edge From="2" To="3" Label="Source2" />
-      <Edge From="5" To="7" Label="Source1" />
-      <Edge From="6" To="7" Label="Source2" />
-      <Edge From="7" To="13" Label="Source1" />
-      <Edge From="8" To="9" Label="Source1" />
-      <Edge From="9" To="10" Label="Source1" />
-      <Edge From="10" To="11" Label="Source1" />
+      <Edge From="0" To="1" Label="Source1" />
+      <Edge From="2" To="3" Label="Source1" />
+      <Edge From="3" To="5" Label="Source1" />
+      <Edge From="4" To="5" Label="Source2" />
+      <Edge From="8" To="10" Label="Source1" />
+      <Edge From="9" To="10" Label="Source2" />
+      <Edge From="10" To="16" Label="Source1" />
       <Edge From="11" To="12" Label="Source1" />
-      <Edge From="12" To="13" Label="Source2" />
+      <Edge From="12" To="13" Label="Source1" />
       <Edge From="13" To="14" Label="Source1" />
       <Edge From="14" To="15" Label="Source1" />
-      <Edge From="16" To="18" Label="Source1" />
-      <Edge From="17" To="18" Label="Source2" />
-      <Edge From="18" To="19" Label="Source1" />
+      <Edge From="15" To="16" Label="Source2" />
+      <Edge From="16" To="17" Label="Source1" />
+      <Edge From="17" To="18" Label="Source1" />
       <Edge From="19" To="20" Label="Source1" />
+      <Edge From="20" To="21" Label="Source1" />
+      <Edge From="21" To="22" Label="Source1" />
     </Edges>
   </Workflow>
 </WorkflowBuilder>
