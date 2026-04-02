@@ -84,15 +84,56 @@
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
-              <Property Name="LookupTablePath" />
-              <Property Name="SettingsPath" />
+              <Property Name="Value" DisplayName="SettingsPath" />
+            </Expression>
+            <Expression xsi:type="PropertySource" TypeArguments="p2:C13440,sys:String">
+              <MemberName>SettingsPath</MemberName>
+              <Value>C:\local-HSFP\20260402_C13440Config_HSFP.xml</Value>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Take">
+                <rx:Count>1</rx:Count>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:AsyncSubject">
+              <Name>CameraSettingsPath</Name>
+            </Expression>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="Value" DisplayName="LookupTablePath" />
+            </Expression>
+            <Expression xsi:type="PropertySource" TypeArguments="p2:C13440,sys:String">
+              <MemberName>LookupTablePath</MemberName>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Take">
+                <rx:Count>1</rx:Count>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:AsyncSubject">
+              <Name>CameraLutPath</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>CameraSettingsPath</Name>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="SettingsPath" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>CameraLutPath</Name>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="LookupTablePath" />
+              </PropertyMappings>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p2:C13440">
                 <p2:Regions>
                   <p2:RegionOfInterest>
-                    <p2:X>28</p2:X>
-                    <p2:Y>874</p2:Y>
+                    <p2:X>63</p2:X>
+                    <p2:Y>881</p2:Y>
                     <p2:Width>1976</p2:Width>
                     <p2:Height>236</p2:Height>
                   </p2:RegionOfInterest>
@@ -100,7 +141,7 @@
                 <p2:CropMode>Auto</p2:CropMode>
                 <p2:EnableBundling>false</p2:EnableBundling>
                 <p2:BundleSize>1</p2:BundleSize>
-                <p2:SettingsPath>C:\local-HSFP\20260219_C13440Config_extTrig_4msExp.xml</p2:SettingsPath>
+                <p2:SettingsPath>C:\local-HSFP\20260402_C13440Config_HSFP.xml</p2:SettingsPath>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -165,7 +206,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p2:CsvWriter">
-                <p2:FileName>C:/output_data/000000/000000_20260225T110133\fib/session_params_.csv</p2:FileName>
+                <p2:FileName>C:/output_data/000000/000000_20260402T110814\fib/session_params_.csv</p2:FileName>
                 <p2:Suffix>Timestamp</p2:Suffix>
                 <p2:Overwrite>false</p2:Overwrite>
               </Combinator>
@@ -174,22 +215,31 @@
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
             <Edge From="1" To="2" Label="Source1" />
-            <Edge From="1" To="12" Label="Source1" />
             <Edge From="2" To="3" Label="Source1" />
-            <Edge From="2" To="7" Label="Source1" />
-            <Edge From="3" To="6" Label="Source1" />
             <Edge From="4" To="5" Label="Source1" />
-            <Edge From="5" To="6" Label="Source2" />
-            <Edge From="6" To="7" Label="Source2" />
-            <Edge From="7" To="8" Label="Source1" />
-            <Edge From="8" To="11" Label="Source1" />
-            <Edge From="9" To="10" Label="Source1" />
-            <Edge From="10" To="11" Label="Source2" />
-            <Edge From="12" To="17" Label="Source1" />
+            <Edge From="5" To="6" Label="Source1" />
+            <Edge From="6" To="7" Label="Source1" />
+            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="12" Label="Source1" />
+            <Edge From="10" To="11" Label="Source1" />
+            <Edge From="11" To="12" Label="Source2" />
+            <Edge From="12" To="13" Label="Source1" />
+            <Edge From="12" To="23" Label="Source1" />
             <Edge From="13" To="14" Label="Source1" />
-            <Edge From="14" To="15" Label="Source1" />
+            <Edge From="13" To="18" Label="Source1" />
+            <Edge From="14" To="17" Label="Source1" />
             <Edge From="15" To="16" Label="Source1" />
             <Edge From="16" To="17" Label="Source2" />
+            <Edge From="17" To="18" Label="Source2" />
+            <Edge From="18" To="19" Label="Source1" />
+            <Edge From="19" To="22" Label="Source1" />
+            <Edge From="20" To="21" Label="Source1" />
+            <Edge From="21" To="22" Label="Source2" />
+            <Edge From="23" To="28" Label="Source1" />
+            <Edge From="24" To="25" Label="Source1" />
+            <Edge From="25" To="26" Label="Source1" />
+            <Edge From="26" To="27" Label="Source1" />
+            <Edge From="27" To="28" Label="Source2" />
           </Edges>
         </Workflow>
       </Expression>
@@ -492,40 +542,40 @@
       <Expression xsi:type="IncludeWorkflow" Path="Extensions\Visualizer.bonsai">
         <Channel0>
           <Rect>
-            <X>1487</X>
-            <Y>43</Y>
+            <X>1475</X>
+            <Y>30</Y>
             <Width>147</Width>
             <Height>53</Height>
           </Rect>
         </Channel0>
         <Channel1>
           <Rect>
-            <X>881</X>
-            <Y>54</Y>
+            <X>863</X>
+            <Y>44</Y>
             <Width>324</Width>
             <Height>41</Height>
           </Rect>
         </Channel1>
         <Channel2>
           <Rect>
-            <X>566</X>
-            <Y>54</Y>
+            <X>557</X>
+            <Y>44</Y>
             <Width>383</Width>
             <Height>53</Height>
           </Rect>
         </Channel2>
         <Channel3>
           <Rect>
-            <X>544</X>
-            <Y>70</Y>
+            <X>526</X>
+            <Y>52</Y>
             <Width>306</Width>
             <Height>41</Height>
           </Rect>
         </Channel3>
         <Channel4>
           <Rect>
-            <X>440</X>
-            <Y>59</Y>
+            <X>428</X>
+            <Y>49</Y>
             <Width>265</Width>
             <Height>58</Height>
           </Rect>
