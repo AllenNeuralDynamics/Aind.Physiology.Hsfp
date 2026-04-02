@@ -88,7 +88,7 @@
             </Expression>
             <Expression xsi:type="PropertySource" TypeArguments="p2:C13440,sys:String">
               <MemberName>SettingsPath</MemberName>
-              <Value />
+              <Value>C:\local-HSFP\20260402_C13440Config_HSFP.xml</Value>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Take">
@@ -132,8 +132,8 @@
               <Combinator xsi:type="p2:C13440">
                 <p2:Regions>
                   <p2:RegionOfInterest>
-                    <p2:X>28</p2:X>
-                    <p2:Y>874</p2:Y>
+                    <p2:X>63</p2:X>
+                    <p2:Y>881</p2:Y>
                     <p2:Width>1976</p2:Width>
                     <p2:Height>236</p2:Height>
                   </p2:RegionOfInterest>
@@ -141,7 +141,7 @@
                 <p2:CropMode>Auto</p2:CropMode>
                 <p2:EnableBundling>false</p2:EnableBundling>
                 <p2:BundleSize>1</p2:BundleSize>
-                <p2:SettingsPath>C:\local-HSFP\20260219_C13440Config_extTrig_4msExp.xml</p2:SettingsPath>
+                <p2:SettingsPath>C:\local-HSFP\20260402_C13440Config_HSFP.xml</p2:SettingsPath>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -206,7 +206,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p2:CsvWriter">
-                <p2:FileName>C:/output_data/000000/000000_20260225T110133\fib/session_params_.csv</p2:FileName>
+                <p2:FileName>C:/output_data/000000/000000_20260402T110814\fib/session_params_.csv</p2:FileName>
                 <p2:Suffix>Timestamp</p2:Suffix>
                 <p2:Overwrite>false</p2:Overwrite>
               </Combinator>
@@ -542,40 +542,40 @@
       <Expression xsi:type="IncludeWorkflow" Path="Extensions\Visualizer.bonsai">
         <Channel0>
           <Rect>
-            <X>1487</X>
-            <Y>43</Y>
+            <X>1475</X>
+            <Y>30</Y>
             <Width>147</Width>
             <Height>53</Height>
           </Rect>
         </Channel0>
         <Channel1>
           <Rect>
-            <X>881</X>
-            <Y>54</Y>
+            <X>863</X>
+            <Y>44</Y>
             <Width>324</Width>
             <Height>41</Height>
           </Rect>
         </Channel1>
         <Channel2>
           <Rect>
-            <X>566</X>
-            <Y>54</Y>
+            <X>557</X>
+            <Y>44</Y>
             <Width>383</Width>
             <Height>53</Height>
           </Rect>
         </Channel2>
         <Channel3>
           <Rect>
-            <X>544</X>
-            <Y>70</Y>
+            <X>526</X>
+            <Y>52</Y>
             <Width>306</Width>
             <Height>41</Height>
           </Rect>
         </Channel3>
         <Channel4>
           <Rect>
-            <X>440</X>
-            <Y>59</Y>
+            <X>428</X>
+            <Y>49</Y>
             <Width>265</Width>
             <Height>58</Height>
           </Rect>
