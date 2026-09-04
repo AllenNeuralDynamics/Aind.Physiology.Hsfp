@@ -473,7 +473,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Delay">
-                <rx:DueTime>PT0.05S</rx:DueTime>
+                <rx:DueTime>PT0.5S</rx:DueTime>
               </Combinator>
             </Expression>
             <Expression xsi:type="MulticastSubject">
