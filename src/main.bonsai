@@ -88,7 +88,7 @@
             </Expression>
             <Expression xsi:type="PropertySource" TypeArguments="p2:C13440,sys:String">
               <MemberName>SettingsPath</MemberName>
-              <Value>C:\local-HSFP\20260402_C13440Config_HSFP.xml</Value>
+              <Value>C:\git\Aind.Physiology.Hsfp\local\HSFP-default-camera-config.xml</Value>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Take">
