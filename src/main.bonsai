@@ -18,7 +18,7 @@
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="Subject" />
         <Property Name="ChunkSize" />
-        <Property Name="Value" />
+        <Property Name="ChannelCount" />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Init</Name>
@@ -34,7 +34,7 @@
               <SubjectName>LoggingRootPath</SubjectName>
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
-              <Property Name="Value" />
+              <Property Name="Value" DisplayName="ChannelCount" />
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="IntProperty">
