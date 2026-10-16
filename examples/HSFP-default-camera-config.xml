@@ -1,0 +1,85 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Settings>
+  <Setting ID="4194832" Value="1">SENSOR MODE</Setting>
+  <Setting ID="4194608" Value="5">READOUT DIRECTION</Setting>
+  <Setting ID="1048848" Value="2">TRIGGER SOURCE</Setting>
+  <Setting ID="1049104" Value="1">TRIGGER MODE</Setting>
+  <Setting ID="1048864" Value="1">TRIGGER ACTIVE</Setting>
+  <Setting ID="2032384" Value="5">TRIGGER GLOBAL EXPOSURE</Setting>
+  <Setting ID="1049120" Value="2">TRIGGER POLARITY</Setting>
+  <Setting ID="1049136" Value="2">TRIGGER CONNECTOR</Setting>
+  <Setting ID="1049152" Value="1">TRIGGER TIMES</Setting>
+  <Setting ID="1049184" Value="0">TRIGGER DELAY</Setting>
+  <Setting ID="1049200" Value="1">INTERNAL TRIGGER HANDLING</Setting>
+  <Setting ID="2031888" Value="0.00400493233082707">EXPOSURE TIME</Setting>
+  <Setting ID="1835024" Value="3">NUMBER OF OUTPUT TRIGGER CONNECTOR</Setting>
+  <Setting ID="1835280" Value="2">OUTPUT TRIGGER SOURCE[0]</Setting>
+  <Setting ID="1835296" Value="2">OUTPUT TRIGGER POLARITY[0]</Setting>
+  <Setting ID="1835312" Value="1">OUTPUT TRIGGER ACTIVE[0]</Setting>
+  <Setting ID="1835328" Value="0">OUTPUT TRIGGER DELAY[0]</Setting>
+  <Setting ID="1835344" Value="1E-06">OUTPUT TRIGGER PERIOD[0]</Setting>
+  <Setting ID="1835360" Value="2">OUTPUT TRIGGER KIND[0]</Setting>
+  <Setting ID="1835376" Value="16">OUTPUT TRIGGER BASE SENSOR[0]</Setting>
+  <Setting ID="1835408" Value="0">OUTPUT TRIGGER PRE HSYNC COUNT</Setting>
+  <Setting ID="2097936" Value="-10">SENSOR TEMPERATURE</Setting>
+  <Setting ID="2097984" Value="2">SENSOR COOLER STATUS</Setting>
+  <Setting ID="4198672" Value="1">BINNING</Setting>
+  <Setting ID="4202768" Value="64">SUBARRAY HPOS</Setting>
+  <Setting ID="4202784" Value="1972">SUBARRAY HSIZE</Setting>
+  <Setting ID="4202800" Value="884">SUBARRAY VPOS</Setting>
+  <Setting ID="4202816" Value="232">SUBARRAY VSIZE</Setting>
+  <Setting ID="4202832" Value="2">SUBARRAY MODE</Setting>
+  <Setting ID="4194576" Value="2">READOUT SPEED</Setting>
+  <Setting ID="4653072" Value="2">DEFECT CORRECT MODE</Setting>
+  <Setting ID="4653104" Value="1">HOT PIXEL CORRECT LEVEL</Setting>
+  <Setting ID="3671312" Value="1">INTENSITY LUT MODE</Setting>
+  <Setting ID="3671328" Value="1">INTENSITY LUT PAGE</Setting>
+  <Setting ID="4325664" Value="1">COLORTYPE</Setting>
+  <Setting ID="4325680" Value="16">BIT PER CHANNEL</Setting>
+  <Setting ID="4329488" Value="1">FRAMEBUNDLE MODE</Setting>
+  <Setting ID="4329504" Value="2">FRAMEBUNDLE NUMBER</Setting>
+  <Setting ID="4329520" Value="3944">FRAMEBUNDLE ROWBYTES</Setting>
+  <Setting ID="4329536" Value="915008">FRAMEBUNDLE FRAME STEP BYTES</Setting>
+  <Setting ID="4206608" Value="0.00230941353383459">TIMING READOUT TIME</Setting>
+  <Setting ID="4206624" Value="0">TIMING CYCLIC TRIGGER PERIOD</Setting>
+  <Setting ID="4206640" Value="0">TIMING MIN TRIGGER BLANKING</Setting>
+  <Setting ID="4206672" Value="0.00551530827067669">TIMING MIN TRIGGER INTERVAL</Setting>
+  <Setting ID="4206736" Value="9.74436090225564E-05">TIMING GLOBAL EXPOSURE DELAY</Setting>
+  <Setting ID="4206688" Value="1">TIMING EXPOSURE</Setting>
+  <Setting ID="4206704" Value="9.74436090225564E-05">TIMING INVALID EXPOSURE PERIOD</Setting>
+  <Setting ID="4208656" Value="182.929512994872">INTERNAL FRAME RATE</Setting>
+  <Setting ID="4208672" Value="0.00546658646616541">INTERNAL FRAME INTERVAL</Setting>
+  <Setting ID="4208704" Value="0.667052469135802">INTERNAL LINE SPEED</Setting>
+  <Setting ID="4208720" Value="9.74436090225564E-06">INTERNAL LINE INTERVAL</Setting>
+  <Setting ID="4325904" Value="1972">IMAGE WIDTH</Setting>
+  <Setting ID="4325920" Value="232">IMAGE HEIGHT</Setting>
+  <Setting ID="4325936" Value="3944">IMAGE ROWBYTES</Setting>
+  <Setting ID="4325952" Value="915008">IMAGE FRAMEBYTES</Setting>
+  <Setting ID="4325968" Value="0">IMAGE TOP OFFSET BYTES</Setting>
+  <Setting ID="4326000" Value="2">IMAGE PIXEL TYPE</Setting>
+  <Setting ID="4326144" Value="0">IMAGE CAMERA STAMP</Setting>
+  <Setting ID="4326192" Value="3944">BUFFER ROWBYTES</Setting>
+  <Setting ID="4326208" Value="915008">BUFFER FRAMEBYTES</Setting>
+  <Setting ID="4326224" Value="0">BUFFER TOP OFFSET BYTES</Setting>
+  <Setting ID="4326240" Value="2">BUFFER PIXEL TYPE</Setting>
+  <Setting ID="4262416" Value="5">TIME STAMP PRODUCER</Setting>
+  <Setting ID="4262432" Value="5">FRAME STAMP PRODUCER</Setting>
+  <Setting ID="16711696" Value="2">SYSTEM ALIVE</Setting>
+  <Setting ID="16769040" Value="0.48">CONVERSION FACTOR COEFF</Setting>
+  <Setting ID="16769056" Value="100">CONVERSION FACTOR OFFSET</Setting>
+  <Setting ID="4325824" Value="1">NUMBER OF VIEW</Setting>
+  <Setting ID="4327440" Value="6.5">IMAGE DETECTOR PIXEL WIDTH</Setting>
+  <Setting ID="4327456" Value="6.5">IMAGE DETECTOR PIXEL HEIGHT</Setting>
+  <Setting ID="4327472" Value="2048">IMAGE DETECTOR PIXEL NUM HORZ</Setting>
+  <Setting ID="4327488" Value="2048">IMAGE DETECTOR PIXEL NUM VERT</Setting>
+  <Setting ID="4326416" Value="256">RECORD FIXED BYTES PER FILE</Setting>
+  <Setting ID="4326432" Value="1104">RECORD FIXED BYTES PER SESSION</Setting>
+  <Setting ID="4326448" Value="950320">RECORD FIXED BYTES PER FRAME</Setting>
+  <Setting ID="1966112" Value="1">MASTER PULSE MODE</Setting>
+  <Setting ID="1966128" Value="1">MASTER PULSE TRIGGER SOURCE</Setting>
+  <Setting ID="1966144" Value="0.1">MASTER PULSE INTERVAL</Setting>
+  <Setting ID="1966160" Value="1">MASTER PULSE BURST TIMES</Setting>
+  <Setting ID="4195872" Value="1">EXTRACTION MODE</Setting>
+  <Region X="63" Y="881" Width="1976" Height="236" />
+  <CropMode Value="Auto" />
+</Settings>
