@@ -10,6 +10,8 @@ Bonsai compiles `src/Extensions/*.cs` when loading the workflow, separately from
 
 One acquisition contains multiple segment streams. Raw payloads are under `fib/segments/segment_NNNN/fib/`; the inner fib preserves current modality suffixes. Sources/readbacks are isolated per segment. The root instrument snapshot remains fixed across resumes. Existing processing readers require explicit support for this layout before pipeline use.
 
+See the [2026-10-19 workflow review](docs/workflow-review-2026-10-19.md) for the complete property contract, source audit, preserved acquisition settings, verification evidence and remaining rig checks.
+
 Run offline:
 
 ```powershell
