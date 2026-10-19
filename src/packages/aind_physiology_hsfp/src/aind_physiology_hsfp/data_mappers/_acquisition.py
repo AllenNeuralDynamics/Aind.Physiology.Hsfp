@@ -23,12 +23,12 @@ from aind_data_schema.core.acquisition import (
     DataStream,
 )
 from aind_data_schema.core.instrument import Instrument
-from aind_data_schema.core.procedures import Procedures
 from aind_data_schema_models.modalities import Modality
 from aind_data_schema_models.units import PowerUnit, SizeUnit, TimeUnit
 
 from .. import __version__
 from ..data_contract import atomic_json, read_events, sha256
+from ..procedures_source import fiber_implants_from_procedures
 from ..session_input import SessionInput
 
 REPOSITORY_URL = "https://github.com/AllenNeuralDynamics/Aind.Physiology.Hsfp"
@@ -129,12 +129,10 @@ def build_acquisition(root: Path) -> Acquisition:
     instrument = load_json(root / "instrument_fib.json")
     Instrument.model_validate(instrument)
     procedures = load_json(root / "fib/Logs/procedures_source.json")
-    Procedures.model_validate(procedures)
-    if procedures.get("subject_id") != session.subject_id:
-        raise ValueError("Procedures subject does not match acquisition")
+    implants = fiber_implants_from_procedures(
+        procedures, session.subject_id, report_path=root / "fib/Logs/procedures_validation.json"
+    )
     devices = named_devices(instrument)
-    implant_names = set(Procedures.model_validate(procedures).get_device_names())
-    implants = {name: value for name, value in named_devices(procedures).items() if name in implant_names}
     events = read_events(root)
     ids = list(dict.fromkeys(e.segment_id for e in events if e.event == "recording_start"))
     if not ids:
@@ -271,6 +269,7 @@ def build_acquisition(root: Path) -> Acquisition:
                 "indicators_by_fiber": saved.indicators_by_fiber,
                 "indicator_provenance": saved.indicator_provenance,
                 "fiber_connections": saved.connections,
+                "procedures_validation_report": "fib/Logs/procedures_validation.json",
                 "fiber_names": saved.fiber_names,
                 "channel_order": order,
                 "observed_per_channel_rate_hz": rates,

@@ -1,0 +1,150 @@
+{
+  "object_type": "Procedures",
+  "describedBy": "https://raw.githubusercontent.com/AllenNeuralDynamics/aind-data-schema/main/src/aind_data_schema/core/procedures.py",
+  "schema_version": "2.2.3",
+  "subject_id": "876770",
+  "subject_procedures": [
+    {
+      "object_type": "Surgery",
+      "protocol_id": null,
+      "start_date": "2026-01-01",
+      "experimenters": null,
+      "ethics_review_id": null,
+      "animal_weight_prior": null,
+      "animal_weight_post": null,
+      "weight_unit": "gram",
+      "anaesthesia": null,
+      "workstation_id": null,
+      "coordinate_system": null,
+      "global_coordinate_system": null,
+      "measured_coordinates": null,
+      "procedures": [
+        {
+          "object_type": "Probe implant",
+          "protocol_id": null,
+          "implanted_device": {
+            "object_type": "Fiber probe",
+            "name": "Implant 0",
+            "serial_number": null,
+            "manufacturer": null,
+            "model": null,
+            "additional_settings": null,
+            "notes": null,
+            "core_diameter": "200",
+            "core_diameter_unit": "micrometer",
+            "numerical_aperture": "0.37",
+            "ferrule_material": null,
+            "active_length": null,
+            "total_length": "4.5",
+            "length_unit": "millimeter"
+          },
+          "device_config": {
+            "object_type": "Probe config",
+            "device_name": "Implant 0",
+            "primary_targeted_structure": {
+              "atlas": "CCFv3",
+              "name": "Nucleus accumbens",
+              "acronym": "ACB",
+              "id": "56"
+            },
+            "other_targeted_structure": null,
+            "atlas_coordinate": null,
+            "coordinate_system": null,
+            "local_coordinate_system": {
+              "object_type": "Coordinate system",
+              "name": "TEST",
+              "origin": "Tip",
+              "axes": [
+                {
+                  "object_type": "Axis",
+                  "name": "AP",
+                  "direction": "Posterior_to_anterior"
+                },
+                {
+                  "object_type": "Axis",
+                  "name": "ML",
+                  "direction": "Left_to_right"
+                },
+                {
+                  "object_type": "Axis",
+                  "name": "SI",
+                  "direction": "Superior_to_inferior"
+                }
+              ],
+              "axis_unit": "millimeter",
+              "handedness": null
+            },
+            "transform": [],
+            "dye": null,
+            "notes": null
+          }
+        },
+        {
+          "object_type": "Probe implant",
+          "protocol_id": null,
+          "implanted_device": {
+            "object_type": "Fiber probe",
+            "name": "Implant 1",
+            "serial_number": null,
+            "manufacturer": null,
+            "model": null,
+            "additional_settings": null,
+            "notes": null,
+            "core_diameter": "200",
+            "core_diameter_unit": "micrometer",
+            "numerical_aperture": "0.37",
+            "ferrule_material": null,
+            "active_length": null,
+            "total_length": "4.5",
+            "length_unit": "millimeter"
+          },
+          "device_config": {
+            "object_type": "Probe config",
+            "device_name": "Implant 1",
+            "primary_targeted_structure": {
+              "atlas": "CCFv3",
+              "name": "Nucleus accumbens",
+              "acronym": "ACB",
+              "id": "56"
+            },
+            "other_targeted_structure": null,
+            "atlas_coordinate": null,
+            "coordinate_system": null,
+            "local_coordinate_system": {
+              "object_type": "Coordinate system",
+              "name": "TEST",
+              "origin": "Tip",
+              "axes": [
+                {
+                  "object_type": "Axis",
+                  "name": "AP",
+                  "direction": "Posterior_to_anterior"
+                },
+                {
+                  "object_type": "Axis",
+                  "name": "ML",
+                  "direction": "Left_to_right"
+                },
+                {
+                  "object_type": "Axis",
+                  "name": "SI",
+                  "direction": "Superior_to_inferior"
+                }
+              ],
+              "axis_unit": "millimeter",
+              "handedness": null
+            },
+            "transform": [],
+            "dye": null,
+            "notes": null
+          }
+        }
+      ],
+      "notes": null
+    }
+  ],
+  "specimen_procedures": [],
+  "coordinate_system": null,
+  "global_coordinate_system": null,
+  "notes": "Synthetic two-fiber fixture for software tests; not an animal procedures record."
+}

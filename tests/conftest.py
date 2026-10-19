@@ -1,14 +1,11 @@
 """Complete synthetic recording bundles; no TIFF payloads or live services required."""
 
+import json
 import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
-from aind_data_schema.components.devices import Device
-from aind_data_schema.components.subject_procedures import Surgery
-from aind_data_schema.components.surgery_procedures import DeviceImplant
-from aind_data_schema.core.procedures import Procedures
 from aind_physiology_hsfp.data_contract import (
     allocate_segment,
     append_event,
@@ -27,18 +24,8 @@ def recording(tmp_path):
     root = tmp_path / ".hsfp-pending-test"
     root.mkdir()
     shutil.copy2(Path(__file__).parent / "fixtures/instrument_fib.json", root / "instrument_fib.json")
-    procedures = Procedures(
-        subject_id="876770",
-        subject_procedures=[
-            Surgery(
-                start_date="2026-01-01",
-                procedures=[
-                    DeviceImplant(relative_position=[], implanted_device=Device(name=f"Implant {n}")) for n in [0, 1]
-                ],
-            )
-        ],
-    )
-    atomic_json(root / "fib/Logs/procedures_source.json", procedures.model_dump(mode="json"))
+    procedures = json.loads((Path(__file__).parent / "fixtures/procedures.json").read_text())
+    atomic_json(root / "fib/Logs/procedures_source.json", procedures)
     session = SessionInput(
         subject_id="876770",
         experimenters=["Operator"],
