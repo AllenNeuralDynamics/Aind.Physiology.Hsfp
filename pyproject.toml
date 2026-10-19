@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "aind-physiology-hsfp"
+version = "0.1.0"
+description = "HSFP acquisition inputs, recording contract and acquisition metadata mapper"
+requires-python = ">=3.12"
+dependencies = ["aind-data-schema==2.9.1", "aind-data-schema-models==6.3.1", "aind-behavior-services==0.13.9", "tzdata>=2025.1"]
+
+[project.scripts]
+hsfp-map-acquisition = "aind_physiology_hsfp.data_mappers:main"
+
+[project.optional-dependencies]
+dev = ["pytest>=8", "ruff"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/packages/aind_physiology_hsfp/src/aind_physiology_hsfp"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120

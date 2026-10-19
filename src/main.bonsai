@@ -1,39 +1,20 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<WorkflowBuilder Version="2.9.0"
-                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                 xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
-                 xmlns:p1="clr-namespace:;assembly=Extensions"
-                 xmlns:sys="clr-namespace:System;assembly=mscorlib"
-                 xmlns:p2="clr-namespace:AllenNeuralDynamics.HamamatsuCamera;assembly=AllenNeuralDynamics.HamamatsuCamera"
-                 xmlns:p3="clr-namespace:AllenNeuralDynamics.HamamatsuCamera.Nodes;assembly=AllenNeuralDynamics.HamamatsuCamera"
-                 xmlns:p4="clr-namespace:AllenNeuralDynamics.Core;assembly=AllenNeuralDynamics.Core"
-                 xmlns:port="clr-namespace:Bonsai.IO.Ports;assembly=Bonsai.System"
-                 xmlns:p5="clr-namespace:System.Reactive;assembly=System.Reactive.Core"
-                 xmlns:harp="clr-namespace:Bonsai.Harp;assembly=Bonsai.Harp"
-                 xmlns:p6="clr-namespace:AllenNeuralDynamics.Cuttlefish;assembly=AllenNeuralDynamics.Cuttlefish"
-                 xmlns:ui="clr-namespace:Bonsai.Design;assembly=Bonsai.Design"
-                 xmlns="https://bonsai-rx.org/2018/workflow">
+<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder xmlns:p5="clr-namespace:System.Reactive;assembly=System.Reactive.Core" xmlns:p3="clr-namespace:AllenNeuralDynamics.HamamatsuCamera.Nodes;assembly=AllenNeuralDynamics.HamamatsuCamera" xmlns:sys="clr-namespace:System;assembly=mscorlib" xmlns:p1="clr-namespace:;assembly=Extensions" xmlns="https://bonsai-rx.org/2018/workflow" xmlns:harp="clr-namespace:Bonsai.Harp;assembly=Bonsai.Harp" xmlns:p2="clr-namespace:AllenNeuralDynamics.HamamatsuCamera;assembly=AllenNeuralDynamics.HamamatsuCamera" xmlns:p4="clr-namespace:AllenNeuralDynamics.Core;assembly=AllenNeuralDynamics.Core" xmlns:p6="clr-namespace:AllenNeuralDynamics.Cuttlefish;assembly=AllenNeuralDynamics.Cuttlefish" xmlns:port="clr-namespace:Bonsai.IO.Ports;assembly=Bonsai.System" xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core" xmlns:ui="clr-namespace:Bonsai.Design;assembly=Bonsai.Design" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" Version="2.9.0">
   <Workflow>
     <Nodes>
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="Subject" />
         <Property Name="ChunkSize" />
         <Property Name="ChannelCount" />
-      </Expression>
+      <Property Name="AcquisitionRoot" /><Property Name="SegmentId" /><Property Name="TeensyPort" /><Property Name="CuttlefishPort" /><Property Name="LookupTablePath" /></Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Init</Name>
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="Subject" />
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:GenerateRootLoggingPath.bonsai">
-              <RootFolder>C:/output_data</RootFolder>
-              <Subject>000000</Subject>
-              <DateTimeOffset>0001-01-01T00:00:00.0000000+00:00</DateTimeOffset>
-              <SubjectName>LoggingRootPath</SubjectName>
-            </Expression>
-            <Expression xsi:type="ExternalizedMapping">
+            <Property Name="AcquisitionRoot" /><Property Name="SegmentId" /></Expression>
+            <Expression xsi:type="GroupWorkflow"><Name>Registered recording root</Name><Workflow><Nodes><Expression xsi:type="ExternalizedMapping"><Property Name="Subject" /><Property Name="AcquisitionRoot" /><Property Name="SegmentId" /></Expression><Expression xsi:type="Combinator"><Combinator xsi:type="p1:HsfpRootPath"><Subject>000000</Subject><AcquisitionRoot /><SegmentId /></Combinator></Expression><Expression xsi:type="rx:AsyncSubject"><Name>LoggingRootPath</Name></Expression></Nodes><Edges><Edge From="1" To="2" Label="Source1" /></Edges></Workflow></Expression><Expression xsi:type="ExternalizedMapping">
               <Property Name="Value" DisplayName="ChannelCount" />
             </Expression>
             <Expression xsi:type="Combinator">
@@ -129,7 +110,7 @@
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="p2:C13440">
+              <Combinator xsi:type="p1:HsfpCamera">
                 <p2:Regions>
                   <p2:RegionOfInterest>
                     <p2:X>63</p2:X>
@@ -254,9 +235,9 @@
         <Workflow>
           <Nodes>
             <Expression xsi:type="ExternalizedMapping">
-              <Property Name="PortName" />
+              <Property Name="TeensyPort" />
             </Expression>
-            <Expression xsi:type="Combinator">
+            <Expression xsi:type="GroupWorkflow"><Workflow><Nodes><Expression xsi:type="ExternalizedMapping"><Property Name="PortName" DisplayName="TeensyPort" /></Expression><Expression xsi:type="Combinator">
               <Combinator xsi:type="port:CreateSerialPort">
                 <port:Name>Teensy</port:Name>
                 <port:PortName>COM3</port:PortName>
@@ -275,7 +256,7 @@
                 <port:ReceivedBytesThreshold>1</port:ReceivedBytesThreshold>
               </Combinator>
             </Expression>
-            <Expression xsi:type="Combinator">
+            <Expression xsi:type="WorkflowOutput" /></Nodes><Edges><Edge From="1" To="2" Label="Source1" /></Edges></Workflow></Expression><Expression xsi:type="Combinator">
               <Combinator xsi:type="port:SerialReadLine">
                 <port:PortName>Teensy</port:PortName>
               </Combinator>
@@ -404,9 +385,9 @@
               <rx:Name>CuttlefishCommands</rx:Name>
             </Expression>
             <Expression xsi:type="ExternalizedMapping">
-              <Property Name="PortName" />
+              <Property Name="CuttlefishPort" />
             </Expression>
-            <Expression xsi:type="Combinator">
+            <Expression xsi:type="GroupWorkflow"><Workflow><Nodes><Expression xsi:type="ExternalizedMapping"><Property Name="PortName" DisplayName="CuttlefishPort" /></Expression><Expression xsi:type="Combinator">
               <Combinator xsi:type="p6:Device">
                 <harp:OperationMode>Active</harp:OperationMode>
                 <harp:OperationLed>On</harp:OperationLed>
@@ -417,7 +398,7 @@
                 <harp:PortName>COM8</harp:PortName>
               </Combinator>
             </Expression>
-            <Expression xsi:type="rx:PublishSubject">
+            <Expression xsi:type="WorkflowOutput" /></Nodes><Edges><Edge From="1" To="2" Label="Source1" /></Edges></Workflow></Expression><Expression xsi:type="rx:PublishSubject">
               <Name>CuttlefishEvents</Name>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
@@ -592,7 +573,7 @@
           <rx:DueTime>PT0.5S</rx:DueTime>
         </Combinator>
       </Expression>
-    </Nodes>
+    <Expression xsi:type="Combinator"><Combinator xsi:type="p1:HsfpRecordingEnd" /></Expression></Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
       <Edge From="2" To="3" Label="Source1" />
@@ -606,11 +587,11 @@
       <Edge From="13" To="14" Label="Source1" />
       <Edge From="14" To="15" Label="Source1" />
       <Edge From="15" To="16" Label="Source2" />
-      <Edge From="16" To="17" Label="Source1" />
+      <Edge From="23" To="17" Label="Source1" />
       <Edge From="17" To="18" Label="Source1" />
       <Edge From="19" To="20" Label="Source1" />
       <Edge From="20" To="21" Label="Source1" />
       <Edge From="21" To="22" Label="Source1" />
-    </Edges>
+    <Edge From="16" To="23" Label="Source1" /></Edges>
   </Workflow>
 </WorkflowBuilder>

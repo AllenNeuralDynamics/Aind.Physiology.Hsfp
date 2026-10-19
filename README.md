@@ -1,3 +1,7 @@
+# HSFP acquisition and metadata
+
+New recordings use the sibling **Aind.Experiment.Hsfp** clabe launcher. See [acquisition mapper and restart contract](README-mapper.md) before running this branch. The historical direct-Bonsai commands below describe the pre-mapper workflow and are superseded by the registered AcquisitionRoot/SegmentId contract.
+
 # Getting started
 
 During the early development phase, this repository is intended for internal use only.

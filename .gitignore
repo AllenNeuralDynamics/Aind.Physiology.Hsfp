@@ -95,3 +95,9 @@ ipython_config.py
 
 # temp folder
 .temp/
+# Python acquisition package (distinct from generated NuGet Packages)
+!/src/packages/
+!/src/packages/**
+
+/src/packages/**/__pycache__/
+/src/packages/**/*.py[cod]

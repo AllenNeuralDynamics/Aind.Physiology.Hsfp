@@ -1,0 +1,1057 @@
+{
+   "object_type": "Instrument",
+   "describedBy": "https://raw.githubusercontent.com/AllenNeuralDynamics/aind-data-schema/main/src/aind_data_schema/core/instrument.py",
+   "schema_version": "2.2.7",
+   "location": "428",
+   "instrument_id": "HSFP-1",
+   "modification_date": "2026-10-09",
+   "modalities": [
+      {
+         "name": "Fiber photometry",
+         "abbreviation": "fib"
+      }
+   ],
+   "calibrations": [
+      {
+         "object_type": "Calibration",
+         "device_name": "OBIS 405 LX",
+         "protocol_id": null,
+         "calibration_date": "2026-04-16T11:00:00Z",
+         "description": "laser calibration",
+         "measured_at": "fiber 0 tip",
+         "input": [
+            3.1
+         ],
+         "input_unit": "percent",
+         "repeats": null,
+         "output": [
+            10.0
+         ],
+         "output_unit": "microwatt",
+         "fit": null,
+         "notes": null
+      },
+      {
+         "object_type": "Calibration",
+         "device_name": "OBIS 445 LX",
+         "protocol_id": null,
+         "calibration_date": "2026-04-16T11:00:00Z",
+         "description": "laser calibration",
+         "measured_at": "fiber 0 tip",
+         "input": [
+            67.8
+         ],
+         "input_unit": "percent",
+         "repeats": null,
+         "output": [
+            15.0
+         ],
+         "output_unit": "microwatt",
+         "fit": null,
+         "notes": null
+      },
+      {
+         "object_type": "Calibration",
+         "device_name": "OBIS 488 LX",
+         "protocol_id": null,
+         "calibration_date": "2026-04-16T11:00:00Z",
+         "description": "laser calibration",
+         "measured_at": "fiber 0 tip",
+         "input": [
+            4.5
+         ],
+         "input_unit": "percent",
+         "repeats": null,
+         "output": [
+            30.0
+         ],
+         "output_unit": "microwatt",
+         "fit": null,
+         "notes": null
+      },
+      {
+         "object_type": "Calibration",
+         "device_name": "OBIS 514 LX",
+         "protocol_id": null,
+         "calibration_date": "2026-04-16T11:00:00Z",
+         "description": "laser calibration",
+         "measured_at": "fiber 0 tip",
+         "input": [
+            20.0
+         ],
+         "input_unit": "percent",
+         "repeats": null,
+         "output": [
+            40.0
+         ],
+         "output_unit": "microwatt",
+         "fit": null,
+         "notes": null
+      },
+      {
+         "object_type": "Calibration",
+         "device_name": "OBIS 561 LS",
+         "protocol_id": null,
+         "calibration_date": "2026-04-16T11:00:00Z",
+         "description": "laser calibration",
+         "measured_at": "fiber 0 tip",
+         "input": [
+            4.3
+         ],
+         "input_unit": "percent",
+         "repeats": null,
+         "output": [
+            40.0
+         ],
+         "output_unit": "microwatt",
+         "fit": null,
+         "notes": null
+      },
+      {
+         "object_type": "Calibration",
+         "device_name": "OBIS 594 LS",
+         "protocol_id": null,
+         "calibration_date": "2026-04-16T11:00:00Z",
+         "description": "laser calibration",
+         "measured_at": "fiber 0 tip",
+         "input": [
+            23.5
+         ],
+         "input_unit": "percent",
+         "repeats": null,
+         "output": [
+            40.0
+         ],
+         "output_unit": "microwatt",
+         "fit": null,
+         "notes": null
+      }
+   ],
+   "coordinate_system": null,
+   "global_coordinate_system": {
+      "object_type": "Coordinate system",
+      "name": "IMAGE_XYZ",
+      "origin": "Origin",
+      "axes": [
+         {
+            "object_type": "Axis",
+            "name": "X",
+            "direction": "Positive"
+         },
+         {
+            "object_type": "Axis",
+            "name": "Y",
+            "direction": "Positive"
+         },
+         {
+            "object_type": "Axis",
+            "name": "Z",
+            "direction": "Positive"
+         }
+      ],
+      "axis_unit": "pixel",
+      "handedness": null
+   },
+   "temperature_control": null,
+   "notes": null,
+   "connections": [
+      {
+         "object_type": "Connection",
+         "source_device": "White Rabbit Clock Generator",
+         "source_port": null,
+         "target_device": "cuTTLefish Camera Timestamp Logger",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Teensy 4.1",
+         "source_port": "2",
+         "target_device": "cuTTLefish TTL Buffer",
+         "target_port": "IO0",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Teensy 4.1",
+         "source_port": "5",
+         "target_device": "cuTTLefish TTL Buffer",
+         "target_port": "IO1",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Teensy 4.1",
+         "source_port": "12",
+         "target_device": "cuTTLefish TTL Buffer",
+         "target_port": "IO2",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Teensy 4.1",
+         "source_port": "25",
+         "target_device": "cuTTLefish TTL Buffer",
+         "target_port": "IO3",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Teensy 4.1",
+         "source_port": "29",
+         "target_device": "cuTTLefish TTL Buffer",
+         "target_port": "IO4",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Teensy 4.1",
+         "source_port": "9",
+         "target_device": "Hamamatsu Orca Flash 4 v3",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Teensy 4.1",
+         "source_port": "9",
+         "target_device": "cuTTLefish Camera Timestamp Logger",
+         "target_port": "IO0",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Hamamatsu Orca Flash 4 v3",
+         "source_port": null,
+         "target_device": "DT605510",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "cuTTLefish Camera Timestamp Logger",
+         "source_port": null,
+         "target_device": "DT605510",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Teensy 4.1",
+         "source_port": null,
+         "target_device": "DT605510",
+         "target_port": "COM3",
+         "send_and_receive": true
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 1",
+         "source_port": null,
+         "target_device": "DT605510",
+         "target_port": "COM5",
+         "send_and_receive": true
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 2",
+         "source_port": null,
+         "target_device": "DT605510",
+         "target_port": "COM6",
+         "send_and_receive": true
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Galaxy 8 Output Fiber",
+         "source_port": null,
+         "target_device": "FC/PC MM Patch Cord",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "FC/PC MM Patch Cord",
+         "source_port": null,
+         "target_device": "Laser De-Speckler",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Laser De-Speckler",
+         "source_port": null,
+         "target_device": "1x2 Splitter Branching Patchcord Attenuating",
+         "target_port": "1",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "1x2 Splitter Branching Patchcord Attenuating",
+         "source_port": "2",
+         "target_device": "Variable Optic Attenuator FC/PC MM 0",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Variable Optic Attenuator FC/PC MM 0",
+         "source_port": null,
+         "target_device": "Wideband MM Circulator 0",
+         "target_port": "1",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Wideband MM Circulator 0",
+         "source_port": "2",
+         "target_device": "Mono Fiber-optic Patch Cord 0",
+         "target_port": null,
+         "send_and_receive": true
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Wideband MM Circulator 0",
+         "source_port": "3",
+         "target_device": "Bundle Branching Fiber-optic Patch Cord",
+         "target_port": "1",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "1x2 Splitter Branching Patchcord Attenuating",
+         "source_port": "3",
+         "target_device": "Variable Optic Attenuator FC/PC MM 1",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Variable Optic Attenuator FC/PC MM 1",
+         "source_port": null,
+         "target_device": "Wideband MM Circulator 1",
+         "target_port": "1",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Wideband MM Circulator 1",
+         "source_port": "2",
+         "target_device": "Mono Fiber-optic Patch Cord 1",
+         "target_port": null,
+         "send_and_receive": true
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Wideband MM Circulator 1",
+         "source_port": "3",
+         "target_device": "Bundle Branching Fiber-optic Patch Cord",
+         "target_port": "2",
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "Bundle Branching Fiber-optic Patch Cord",
+         "source_port": "3",
+         "target_device": "CFI60 Plan Apochromat Lambda D 10x",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 1",
+         "source_port": null,
+         "target_device": "OBIS 405 LX",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 1",
+         "source_port": null,
+         "target_device": "OBIS 445 LX",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 1",
+         "source_port": null,
+         "target_device": "OBIS 488 LX",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 1",
+         "source_port": null,
+         "target_device": "OBIS 594 LS",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 1",
+         "source_port": null,
+         "target_device": "OBIS 640 LX",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 2",
+         "source_port": null,
+         "target_device": "OBIS 514 LX",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 2",
+         "source_port": null,
+         "target_device": "OBIS 532 LS",
+         "target_port": null,
+         "send_and_receive": false
+      },
+      {
+         "object_type": "Connection",
+         "source_device": "OBIS Laser Box 2",
+         "source_port": null,
+         "target_device": "OBIS 561 LS",
+         "target_port": null,
+         "send_and_receive": false
+      }
+   ],
+   "components": [
+      {
+         "object_type": "Computer",
+         "name": "DT605510",
+         "serial_number": null,
+         "manufacturer": null,
+         "model": null,
+         "additional_settings": null,
+         "notes": null,
+         "operating_system": null
+      },
+      {
+         "object_type": "Laser",
+         "name": "OBIS 405 LX",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LX",
+         "additional_settings": null,
+         "notes": "Maximum power: 200 mW",
+         "wavelength": 405,
+         "wavelength_unit": "nanometer",
+         "coupling": "Multi-mode fiber",
+         "coupling_efficiency": null,
+         "coupling_efficiency_unit": "percent"
+      },
+      {
+         "object_type": "Laser",
+         "name": "OBIS 445 LX",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LX",
+         "additional_settings": null,
+         "notes": "Maximum power: 45 mW",
+         "wavelength": 445,
+         "wavelength_unit": "nanometer",
+         "coupling": "Multi-mode fiber",
+         "coupling_efficiency": null,
+         "coupling_efficiency_unit": "percent"
+      },
+      {
+         "object_type": "Laser",
+         "name": "OBIS 488 LX",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LX",
+         "additional_settings": null,
+         "notes": "Maximum power: 150 mW",
+         "wavelength": 488,
+         "wavelength_unit": "nanometer",
+         "coupling": "Multi-mode fiber",
+         "coupling_efficiency": null,
+         "coupling_efficiency_unit": "percent"
+      },
+      {
+         "object_type": "Laser",
+         "name": "OBIS 514 LX",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LX",
+         "additional_settings": null,
+         "notes": "Maximum power: 50 mW",
+         "wavelength": 514,
+         "wavelength_unit": "nanometer",
+         "coupling": "Multi-mode fiber",
+         "coupling_efficiency": null,
+         "coupling_efficiency_unit": "percent"
+      },
+      {
+         "object_type": "Laser",
+         "name": "OBIS 532 LS",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LS",
+         "additional_settings": null,
+         "notes": "Maximum power: 150 mW",
+         "wavelength": 532,
+         "wavelength_unit": "nanometer",
+         "coupling": "Multi-mode fiber",
+         "coupling_efficiency": null,
+         "coupling_efficiency_unit": "percent"
+      },
+      {
+         "object_type": "Laser",
+         "name": "OBIS 561 LS",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LS",
+         "additional_settings": null,
+         "notes": "Maximum power: 150 mW",
+         "wavelength": 561,
+         "wavelength_unit": "nanometer",
+         "coupling": "Multi-mode fiber",
+         "coupling_efficiency": null,
+         "coupling_efficiency_unit": "percent"
+      },
+      {
+         "object_type": "Laser",
+         "name": "OBIS 594 LS",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LS",
+         "additional_settings": null,
+         "notes": "Maximum power: 60 mW",
+         "wavelength": 594,
+         "wavelength_unit": "nanometer",
+         "coupling": "Multi-mode fiber",
+         "coupling_efficiency": null,
+         "coupling_efficiency_unit": "percent"
+      },
+      {
+         "object_type": "Laser",
+         "name": "OBIS 640 LX",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LX",
+         "additional_settings": null,
+         "notes": "Maximum power: 130 mW",
+         "wavelength": 640,
+         "wavelength_unit": "nanometer",
+         "coupling": "Multi-mode fiber",
+         "coupling_efficiency": null,
+         "coupling_efficiency_unit": "percent"
+      },
+      {
+         "object_type": "DAQ device",
+         "name": "Teensy 4.1",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Arduino",
+            "abbreviation": null,
+            "registry": null,
+            "registry_identifier": null
+         },
+         "model": "Teensy 4.1",
+         "additional_settings": null,
+         "notes": "Sequences laser and camera triggering. Pin assignments mirror LASER_PINS in HSFP-triggering/code/HSFP_trigger_Teensy_V2 at commit 31ca740. Channel names give the multiplex position; the laser driven by each position is recorded per session in acquisition_fib.json.",
+         "data_interface": "USB",
+         "channels": [
+            {
+               "object_type": "DAQ channel",
+               "channel_name": "Laser Trigger 0",
+               "channel_type": "Digital Output",
+               "port": 2,
+               "channel_index": null,
+               "sample_rate": null,
+               "sample_rate_unit": null,
+               "event_based_sampling": null
+            },
+            {
+               "object_type": "DAQ channel",
+               "channel_name": "Laser Trigger 1",
+               "channel_type": "Digital Output",
+               "port": 5,
+               "channel_index": null,
+               "sample_rate": null,
+               "sample_rate_unit": null,
+               "event_based_sampling": null
+            },
+            {
+               "object_type": "DAQ channel",
+               "channel_name": "Laser Trigger 2",
+               "channel_type": "Digital Output",
+               "port": 12,
+               "channel_index": null,
+               "sample_rate": null,
+               "sample_rate_unit": null,
+               "event_based_sampling": null
+            },
+            {
+               "object_type": "DAQ channel",
+               "channel_name": "Laser Trigger 3",
+               "channel_type": "Digital Output",
+               "port": 25,
+               "channel_index": null,
+               "sample_rate": null,
+               "sample_rate_unit": null,
+               "event_based_sampling": null
+            },
+            {
+               "object_type": "DAQ channel",
+               "channel_name": "Laser Trigger 4",
+               "channel_type": "Digital Output",
+               "port": 29,
+               "channel_index": null,
+               "sample_rate": null,
+               "sample_rate_unit": null,
+               "event_based_sampling": null
+            },
+            {
+               "object_type": "DAQ channel",
+               "channel_name": "Camera Trigger",
+               "channel_type": "Digital Output",
+               "port": 9,
+               "channel_index": null,
+               "sample_rate": null,
+               "sample_rate_unit": null,
+               "event_based_sampling": null
+            }
+         ],
+         "firmware_version": null,
+         "hardware_version": null
+      },
+      {
+         "object_type": "Device",
+         "name": "cuTTLefish TTL Buffer",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Champalimaud Foundation",
+            "abbreviation": "Champalimaud",
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "03g001n57"
+         },
+         "model": "cuTTLefish",
+         "additional_settings": null,
+         "notes": "Passive, straight-through TTL buffer. Sits electrically in-line between the Teensy laser trigger lines and the OBIS lasers, raising each TTL to a level adequate to drive them. Input IOn is internally wired to output IOn, so the Teensy pin -> laser mapping is exactly what the firmware LASER_PINS order implies. Not connected to the computer: produces no Harp register data and reports no whoAmI."
+      },
+      {
+         "object_type": "Harp device",
+         "name": "cuTTLefish Camera Timestamp Logger",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Champalimaud Foundation",
+            "abbreviation": "Champalimaud",
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "03g001n57"
+         },
+         "model": null,
+         "additional_settings": null,
+         "notes": "Active. Timestamps camera trigger rising edges in Harp time, received via a BNC split off the Teensy camera trigger line. Produces fib/Cuttlefish.harp/; camera trigger events are register 37 (RisingEdgeEvents). whoAmI 1403. Clocked by the shared White Rabbit. Must NOT be left in passive mode -- it then logs nothing and the session cannot be aligned to Harp time.",
+         "data_interface": "USB",
+         "channels": [
+            {
+               "object_type": "DAQ channel",
+               "channel_name": "Camera Trigger In",
+               "channel_type": "Digital Input",
+               "port": 0,
+               "channel_index": null,
+               "sample_rate": null,
+               "sample_rate_unit": null,
+               "event_based_sampling": null
+            }
+         ],
+         "firmware_version": "0.1",
+         "hardware_version": "0.0",
+         "harp_device_type": {
+            "whoami": 1403,
+            "name": "cuTTLefish"
+         },
+         "core_version": null,
+         "tag_version": null,
+         "is_clock_generator": false
+      },
+      {
+         "object_type": "Harp device",
+         "name": "White Rabbit Clock Generator",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Champalimaud Foundation",
+            "abbreviation": "Champalimaud",
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "03g001n57"
+         },
+         "model": null,
+         "additional_settings": null,
+         "notes": "Supplies the Harp clock. SHARED WITH THE BEHAVIOR RIG -- it is the single synchronized clock that permits merging HSFP and behavior metadata into one raw asset, and must be declared identically in the behavior rig's instrument file.",
+         "data_interface": "USB",
+         "channels": [],
+         "firmware_version": null,
+         "hardware_version": null,
+         "harp_device_type": {
+            "whoami": 1404,
+            "name": "WhiteRabbit"
+         },
+         "core_version": null,
+         "tag_version": null,
+         "is_clock_generator": true
+      },
+      {
+         "object_type": "Device",
+         "name": "OBIS Laser Box 1",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LX/LS Laser Box",
+         "additional_settings": null,
+         "notes": "Control devices for OBIS lasers 405 LX, 445 LX, 488 LX, 640 LX, and 594 LS."
+      },
+      {
+         "object_type": "Device",
+         "name": "OBIS Laser Box 2",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "OBIS LX/LS Laser Box",
+         "additional_settings": null,
+         "notes": "Control devices for OBIS lasers 514 LX, 532 LS, and 561 LS."
+      },
+      {
+         "object_type": "Device",
+         "name": "Galaxy 8 Laser Combiner",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": "Galaxy 8 Laser Combiner",
+         "additional_settings": null,
+         "notes": "Combines the output of 8 OBIS lasers into a single output fiber."
+      },
+      {
+         "object_type": "Fiber patch cord",
+         "name": "Galaxy 8 Output Fiber",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Coherent Scientific",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "031tysd23"
+         },
+         "model": null,
+         "additional_settings": null,
+         "notes": "distal end connector type = FC/APC; length = 2 m",
+         "core_diameter": "3",
+         "numerical_aperture": "0.055",
+         "photobleaching_date": null
+      },
+      {
+         "object_type": "Fiber patch cord",
+         "name": "FC/PC MM Patch Cord",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Thorlabs",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "04gsnvb07"
+         },
+         "model": "M43L02",
+         "additional_settings": null,
+         "notes": "converts from single-mode to multi-mode output",
+         "core_diameter": "105",
+         "numerical_aperture": "0.22",
+         "photobleaching_date": null
+      },
+      {
+         "object_type": "Device",
+         "name": "Laser De-Speckler",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "MKS Newport",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "00k17f049"
+         },
+         "model": "F-DS-AFS105-FC/PC",
+         "additional_settings": null,
+         "notes": null
+      },
+      {
+         "object_type": "Device",
+         "name": "1x2 Splitter Branching Patchcord Attenuating",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Doric",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "059n53q30"
+         },
+         "model": "SBP(2)_200/220/PKMJ/PKMJ-0.22_1m_FCM-2xFCM_T0.01",
+         "additional_settings": {
+            "core_diameter": 200,
+            "numerical_aperture": 0.22
+         },
+         "notes": "Splits the laser output into two paths, one for each fiber implant. Contains an attenuation filter that transmits 1% of input light."
+      },
+      {
+         "object_type": "Device",
+         "name": "Variable Optic Attenuator FC/PC MM 0",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Thorlabs",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "04gsnvb07"
+         },
+         "model": "VOAMMF",
+         "additional_settings": null,
+         "notes": "Attenuates the laser power for patch cord 0 (top)."
+      },
+      {
+         "object_type": "Device",
+         "name": "Wideband MM Circulator 0",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Thorlabs",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "04gsnvb07"
+         },
+         "model": "WMC3L1F",
+         "additional_settings": {
+            "port1_core_diameter": 105,
+            "port1_numerical_aperture": 0.22,
+            "port2_core_diameter": 200,
+            "port2_numerical_aperture": 0.39,
+            "port3_core_diameter": 200,
+            "port3_numerical_aperture": 0.39
+         },
+         "notes": "Separates laser input from fluorescence emission for patch cord 0 (top)."
+      },
+      {
+         "object_type": "Fiber patch cord",
+         "name": "Mono Fiber-optic Patch Cord 0",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Doric",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "059n53q30"
+         },
+         "model": "MFP_200/220/900-0.37_2m_FCM-MF1.25_LAF",
+         "additional_settings": null,
+         "notes": null,
+         "core_diameter": "200",
+         "numerical_aperture": "0.37",
+         "photobleaching_date": null
+      },
+      {
+         "object_type": "Device",
+         "name": "Variable Optic Attenuator FC/PC MM 1",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Thorlabs",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "04gsnvb07"
+         },
+         "model": "VOAMMF",
+         "additional_settings": null,
+         "notes": "Attenuates the laser power for patch cord 1 (bottom)."
+      },
+      {
+         "object_type": "Device",
+         "name": "Wideband MM Circulator 1",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Thorlabs",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "04gsnvb07"
+         },
+         "model": "WMC3L1F",
+         "additional_settings": {
+            "port1_core_diameter": 105,
+            "port1_numerical_aperture": 0.22,
+            "port2_core_diameter": 200,
+            "port2_numerical_aperture": 0.39,
+            "port3_core_diameter": 200,
+            "port3_numerical_aperture": 0.39
+         },
+         "notes": "Separates laser input from fluorescence emission for patch cord 1 (bottom)."
+      },
+      {
+         "object_type": "Fiber patch cord",
+         "name": "Mono Fiber-optic Patch Cord 1",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Doric",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "059n53q30"
+         },
+         "model": "MFP_200/220/900-0.37_2m_FCM-MF1.25_LAF",
+         "additional_settings": null,
+         "notes": null,
+         "core_diameter": "200",
+         "numerical_aperture": "0.37",
+         "photobleaching_date": null
+      },
+      {
+         "object_type": "Fiber patch cord",
+         "name": "Bundle Branching Fiber-optic Patch Cord",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Doric",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "059n53q30"
+         },
+         "model": "BBP(2)_200/220/3000/900-0.37_2m_FCM-2xMF1.25_LAF",
+         "additional_settings": null,
+         "notes": null,
+         "core_diameter": "200",
+         "numerical_aperture": "0.37",
+         "photobleaching_date": null
+      },
+      {
+         "object_type": "Objective",
+         "name": "CFI60 Plan Apochromat Lambda D 10x",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Nikon",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "0280y9h11"
+         },
+         "model": "MRD00105",
+         "additional_settings": null,
+         "notes": "CFI60 Plan Apochromat Lambda 10x Objective Lens, N.A. 0.45, W.D. 4.0mm, F.O.V. 25mm, DIC, Spring Loaded",
+         "numerical_aperture": "0.45",
+         "magnification": "10",
+         "immersion": "air",
+         "objective_type": null
+      },
+      {
+         "object_type": "Device",
+         "name": "Slit",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Ealing",
+            "abbreviation": null,
+            "registry": null,
+            "registry_identifier": null
+         },
+         "model": "74-1137-000",
+         "additional_settings": null,
+         "notes": "Slit used to allow only fiber light to pass through."
+      },
+      {
+         "object_type": "Device",
+         "name": "Prism",
+         "serial_number": null,
+         "manufacturer": {
+            "name": "Edmund Optics",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "01j1gwp17"
+         },
+         "model": "49-435",
+         "additional_settings": {
+            "material": "N-SF11"
+         },
+         "notes": "Oriented at Brewster's angle."
+      },
+      {
+         "object_type": "Detector",
+         "name": "Hamamatsu Orca Flash 4 v3",
+         "serial_number": "304273",
+         "manufacturer": {
+            "name": "Hamamatsu",
+            "abbreviation": null,
+            "registry": "Research Organization Registry (ROR)",
+            "registry_identifier": "03natb733"
+         },
+         "model": "C13440-20CU",
+         "additional_settings": null,
+         "notes": "sCMOS camera used to detect fluorescence emission. Readout noise (rms)(electron) 1.72; conversion factor (electron/count) 0.48",
+         "detector_type": "Camera",
+         "data_interface": "USB",
+         "cooling": "Air",
+         "frame_rate": null,
+         "frame_rate_unit": null,
+         "immersion": "air",
+         "chroma": "Monochrome",
+         "sensor_width": 2048,
+         "sensor_height": 2048,
+         "size_unit": "pixel",
+         "sensor_format": null,
+         "sensor_format_unit": null,
+         "bit_depth": 16,
+         "bin_mode": "No binning",
+         "bin_width": null,
+         "bin_height": null,
+         "bin_unit": "pixel",
+         "gain": null,
+         "crop_offset_x": null,
+         "crop_offset_y": null,
+         "crop_width": null,
+         "crop_height": null,
+         "crop_unit": "pixel",
+         "recording_software": null,
+         "driver": null,
+         "driver_version": null
+      }
+   ]
+}
