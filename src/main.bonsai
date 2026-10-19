@@ -14,7 +14,7 @@
             <Expression xsi:type="ExternalizedMapping">
               <Property Name="Subject" />
             <Property Name="AcquisitionRoot" /><Property Name="SegmentId" /></Expression>
-            <Expression xsi:type="GroupWorkflow"><Name>Registered recording root</Name><Workflow><Nodes><Expression xsi:type="ExternalizedMapping"><Property Name="Subject" /><Property Name="AcquisitionRoot" /><Property Name="SegmentId" /></Expression><Expression xsi:type="Combinator"><Combinator xsi:type="p1:HsfpRootPath"><Subject>000000</Subject><AcquisitionRoot /><SegmentId /></Combinator></Expression><Expression xsi:type="rx:AsyncSubject"><Name>LoggingRootPath</Name></Expression></Nodes><Edges><Edge From="1" To="2" Label="Source1" /></Edges></Workflow></Expression><Expression xsi:type="ExternalizedMapping">
+            <Expression xsi:type="GroupWorkflow"><Name>Registered recording root</Name><Workflow><Nodes><Expression xsi:type="ExternalizedMapping"><Property Name="Subject" /><Property Name="AcquisitionRoot" /><Property Name="SegmentId" /></Expression><Expression xsi:type="Combinator"><Combinator xsi:type="p1:HsfpRootPath"><Subject>000000</Subject><AcquisitionRoot /><SegmentId /></Combinator></Expression><Expression xsi:type="rx:AsyncSubject"><Name>LoggingRootPath</Name></Expression></Nodes><Edges><Edge From="0" To="1" Label="Source1" /><Edge From="1" To="2" Label="Source1" /></Edges></Workflow></Expression><Expression xsi:type="ExternalizedMapping">
               <Property Name="Value" DisplayName="ChannelCount" />
             </Expression>
             <Expression xsi:type="Combinator">
@@ -257,7 +257,7 @@
                 <port:ReceivedBytesThreshold>1</port:ReceivedBytesThreshold>
               </Combinator>
             </Expression>
-            <Expression xsi:type="WorkflowOutput" /></Nodes><Edges><Edge From="1" To="2" Label="Source1" /></Edges></Workflow></Expression><Expression xsi:type="Combinator">
+            <Expression xsi:type="WorkflowOutput" /></Nodes><Edges><Edge From="0" To="1" Label="Source1" /><Edge From="1" To="2" Label="Source1" /></Edges></Workflow></Expression><Expression xsi:type="Combinator">
               <Combinator xsi:type="port:SerialReadLine">
                 <port:PortName>Teensy</port:PortName>
               </Combinator>
@@ -399,7 +399,7 @@
                 <harp:PortName>COM8</harp:PortName>
               </Combinator>
             </Expression>
-            <Expression xsi:type="WorkflowOutput" /></Nodes><Edges><Edge From="1" To="2" Label="Source1" /></Edges></Workflow></Expression><Expression xsi:type="rx:PublishSubject">
+            <Expression xsi:type="WorkflowOutput" /></Nodes><Edges><Edge From="0" To="1" Label="Source1" /><Edge From="1" To="2" Label="Source1" /></Edges></Workflow></Expression><Expression xsi:type="rx:PublishSubject">
               <Name>CuttlefishEvents</Name>
             </Expression>
             <Expression xsi:type="SubscribeSubject">

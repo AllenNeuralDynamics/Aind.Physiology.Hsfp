@@ -182,3 +182,24 @@ def test_externalized_properties_exist_on_the_connected_nested_workflow():
             requested = {prop.get("Name") for prop in source.findall("b:Property", ns)}
             missing = requested - exposed
             assert not missing, f"{target.findtext('b:Name', namespaces=ns) or 'unnamed group'} lacks {missing}"
+
+
+def test_externalized_mappings_have_connected_targets():
+    import xml.etree.ElementTree as E
+    from pathlib import Path
+
+    root = E.parse(Path(__file__).parents[1] / "src/main.bonsai").getroot()
+    ns = {"b": "https://bonsai-rx.org/2018/workflow"}
+    xsi = "{http://www.w3.org/2001/XMLSchema-instance}type"
+    disconnected = []
+    for workflow in root.findall(".//b:Workflow", ns):
+        nodes = workflow.find("b:Nodes", ns)
+        edges = workflow.find("b:Edges", ns)
+        if nodes is None:
+            continue
+        connected_sources = {int(edge.get("From")) for edge in edges} if edges is not None else set()
+        for index, node in enumerate(nodes):
+            if node.get(xsi) == "ExternalizedMapping" and index not in connected_sources:
+                properties = [prop.get("Name") for prop in node.findall("b:Property", ns)]
+                disconnected.append(properties)
+    assert not disconnected, f"Externalized mappings have no target: {disconnected}"
