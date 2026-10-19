@@ -15,7 +15,6 @@ class HsfpRigConfig(Rig):
     instrument_directory: Path
     camera_settings: Path
     trigger_firmware_source: Path
-    procedures_file: Path
     bonsai_executable: Path
     teensy_port: str
     cuttlefish_port: str

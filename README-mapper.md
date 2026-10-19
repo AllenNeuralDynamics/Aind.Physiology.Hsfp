@@ -14,7 +14,7 @@ Run offline:
 uv run hsfp-map-acquisition C:/output_data/<acquisition-root>
 ```
 
-The mapper has no service calls or hardware control. It requires saved session/segment inputs, schema-valid instrument and Procedures snapshots, applied camera readback and recorded per-channel Timestamp CSVs. Power calibration values apply to both fibers as confirmed; original measurement location/date remain provenance. Color map string `None` and JSON null remain distinct. Channel names `Fiber_N_[wavelength]` derive from connected implanted fiber, not cord index. Only observed frame rate is reported.
+The mapper has no service calls or hardware control. It requires saved session/segment inputs, schema-valid instrument and Procedures snapshots, applied camera readback and recorded per-channel Timestamp CSVs. The launcher fetches Procedures by subject from the aind-metadata-service before acquisition and preserves the response and validated snapshot under fib/Logs; operators do not supply a Procedures file. Resume and offline mapping reuse the snapshot. Power calibration values apply to both fibers as confirmed; original measurement location/date remain provenance. Color map string `None` and JSON null remain distinct. Channel names `Fiber_N_[wavelength]` derive from connected implanted fiber, not cord index. Only observed frame rate is reported.
 
 For standalone subject_details, weight measurements remain null. The pinned schema does not permit a null weight_unit; the unused unit is omitted from the written JSON, rather than fabricating a measured weight. The required object_type discriminator is schema-generated.
 
