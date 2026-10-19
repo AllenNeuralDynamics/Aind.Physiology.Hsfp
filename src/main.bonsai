@@ -88,7 +88,7 @@
             </Expression>
             <Expression xsi:type="PropertySource" TypeArguments="p2:C13440,sys:String">
               <MemberName>SettingsPath</MemberName>
-              <Value>C:\git\Aind.Physiology.Hsfp\local\HSFP-default-camera-config.xml</Value>
+              <Value>C:\git\Aind.Experiment.Hsfp\local\CameraXML\HSFP-default-camera-config.xml</Value>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Take">
@@ -141,7 +141,7 @@
                 <p2:CropMode>Auto</p2:CropMode>
                 <p2:EnableBundling>false</p2:EnableBundling>
                 <p2:BundleSize>1</p2:BundleSize>
-                <p2:SettingsPath>C:\local-HSFP\20260402_C13440Config_HSFP.xml</p2:SettingsPath>
+                <p2:SettingsPath>C:\git\Aind.Experiment.Hsfp\local\CameraXML\HSFP-default-camera-config.xml</p2:SettingsPath>
               </Combinator>
             </Expression>
             <Expression xsi:type="Combinator">
@@ -206,7 +206,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p2:CsvWriter">
-                <p2:FileName>C:/output_data/000000/000000_20260402T110814\fib/session_params_.csv</p2:FileName>
+                <p2:FileName>C:/output_data/000000/000000_20261019T125559/fib/session_params_.csv</p2:FileName>
                 <p2:Suffix>Timestamp</p2:Suffix>
                 <p2:Overwrite>false</p2:Overwrite>
               </Combinator>
