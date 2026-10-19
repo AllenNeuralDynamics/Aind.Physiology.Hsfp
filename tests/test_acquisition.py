@@ -155,3 +155,30 @@ def test_workflow_edges_and_exposed_root_contract():
     assert not any(
         e.attrib.get("Path", "").endswith("GenerateRootLoggingPath.bonsai") for e in root.findall(".//b:Expression", ns)
     )
+
+
+
+def test_externalized_properties_exist_on_the_connected_nested_workflow():
+    import xml.etree.ElementTree as E
+    from pathlib import Path
+
+    root = E.parse(Path(__file__).parents[1] / "src/main.bonsai").getroot()
+    ns = {"b": "https://bonsai-rx.org/2018/workflow"}
+    xsi = "{http://www.w3.org/2001/XMLSchema-instance}type"
+    for workflow in root.findall(".//b:Workflow", ns):
+        nodes, edges = workflow.find("b:Nodes", ns), workflow.find("b:Edges", ns)
+        if nodes is None or edges is None:
+            continue
+        for edge in edges:
+            source, target = nodes[int(edge.get("From"))], nodes[int(edge.get("To"))]
+            if source.get(xsi) != "ExternalizedMapping" or target.get(xsi) != "GroupWorkflow":
+                continue
+            exposed = {
+                prop.get("DisplayName", prop.get("Name"))
+                for mapping in target.findall("b:Workflow/b:Nodes/b:Expression", ns)
+                if mapping.get(xsi) == "ExternalizedMapping"
+                for prop in mapping.findall("b:Property", ns)
+            }
+            requested = {prop.get("Name") for prop in source.findall("b:Property", ns)}
+            missing = requested - exposed
+            assert not missing, f"{target.findtext('b:Name', namespaces=ns) or 'unnamed group'} lacks {missing}"

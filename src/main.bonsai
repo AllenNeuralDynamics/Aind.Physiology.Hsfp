@@ -6,7 +6,7 @@
         <Property Name="Subject" />
         <Property Name="ChunkSize" />
         <Property Name="ChannelCount" />
-      <Property Name="AcquisitionRoot" /><Property Name="SegmentId" /><Property Name="TeensyPort" /><Property Name="CuttlefishPort" /><Property Name="LookupTablePath" /></Expression>
+      <Property Name="AcquisitionRoot" /><Property Name="SegmentId" /></Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Init</Name>
         <Workflow>
@@ -59,6 +59,7 @@
       </Expression>
       <Expression xsi:type="ExternalizedMapping">
         <Property Name="SettingsPath" />
+        <Property Name="LookupTablePath" />
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Camera</Name>
@@ -573,7 +574,14 @@
           <rx:DueTime>PT0.5S</rx:DueTime>
         </Combinator>
       </Expression>
-    <Expression xsi:type="Combinator"><Combinator xsi:type="p1:HsfpRecordingEnd" /></Expression></Nodes>
+    <Expression xsi:type="Combinator"><Combinator xsi:type="p1:HsfpRecordingEnd" /></Expression>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="TeensyPort" />
+      </Expression>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="CuttlefishPort" />
+      </Expression>
+    </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />
       <Edge From="2" To="3" Label="Source1" />
@@ -592,6 +600,9 @@
       <Edge From="19" To="20" Label="Source1" />
       <Edge From="20" To="21" Label="Source1" />
       <Edge From="21" To="22" Label="Source1" />
-    <Edge From="16" To="23" Label="Source1" /></Edges>
+    <Edge From="16" To="23" Label="Source1" />
+      <Edge From="24" To="6" Label="Source1" />
+      <Edge From="25" To="7" Label="Source1" />
+    </Edges>
   </Workflow>
 </WorkflowBuilder>
