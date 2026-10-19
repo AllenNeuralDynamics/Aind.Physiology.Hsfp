@@ -26,7 +26,6 @@ from aind_data_schema.core.instrument import Instrument
 from aind_data_schema_models.modalities import Modality
 from aind_data_schema_models.units import PowerUnit, SizeUnit, TimeUnit
 
-from .. import __version__
 from ..data_contract import atomic_json, read_events, sha256
 from ..procedures_source import fiber_implants_from_procedures
 from ..session_input import SessionInput
@@ -193,7 +192,10 @@ def build_acquisition(root: Path) -> Acquisition:
                     power_measured_at=cal["measured_at"],
                 )
             )
-            calibration_sources[name] = cal
+            calibration_sources[name] = {
+                "source": "instrument_fib.json",
+                "calibration_date": cal["calibration_date"],
+            }
             rate_path = safe_path(segment, item["metadata_csv"])
             rates[f"frame_ch{index}"] = {"wavelength_nm": wavelength, "rate_hz": observed_rate(rate_path)}
         cord_configs = []
@@ -261,37 +263,35 @@ def build_acquisition(root: Path) -> Acquisition:
         acquisition_code = config["acquisition_code"]
         if not acquisition_code.get("commit_hash"):
             raise ValueError("Acquisition code commit identity is missing")
-        # Use actual saved code version/dirty state; mapper provenance is separately identified.
+        # Keep the agreed acquisition settings here; detailed evidence remains in saved sources.
         parameters = {
             "hsfp": {
-                "contract_version": "1.0.0",
                 "segment_id": sid,
                 "indicators_by_fiber": saved.indicators_by_fiber,
-                "indicator_provenance": saved.indicator_provenance,
-                "fiber_connections": saved.connections,
-                "procedures_validation_report": "fib/Logs/procedures_validation.json",
-                "fiber_names": saved.fiber_names,
                 "channel_order": order,
                 "observed_per_channel_rate_hz": rates,
-                "frame_rate_estimator": "(saved_frame_count-1)/(last_camera_timestamp-first_camera_timestamp)",
                 "power_calibration_sources": calibration_sources,
-                "calibrated_powers_apply_to_both_fibers": True,
-                "camera_applied": camera,
+                "camera_readback": camera_path.relative_to(root).as_posix(),
                 "writer": config["writer"],
                 "firmware": config["firmware"],
                 "lookup_table": config["lookup_table"],
                 "source_directory": segment.relative_to(root).as_posix(),
-                "end_provenance": {"event": end.event, "source": end.source, "details": end.details},
-                "acquisition_provenance": acquisition_code,
-                "mapper": {"version": __version__, "source_sha256": sha256(Path(__file__))},
             }
         }
+        if "dirty" in acquisition_code:
+            parameters["hsfp"]["acquisition_provenance"] = {"dirty": acquisition_code["dirty"]}
+        if end.event == "end_inferred":
+            parameters["hsfp"]["end_provenance"] = {
+                "event": end.event, "source": end.source, "details": end.details,
+            }
         streams.append(
             DataStream(
                 stream_start_time=start.timestamp,
                 stream_end_time=end.timestamp,
                 modalities=[Modality.FIB],
                 active_devices=active,
+                # The pinned FIB validator requires a stream-level light-source config;
+                # channel-nested light sources do not satisfy that requirement.
                 configurations=[*lasers, *cord_configs],
                 connections=connections,
                 code=[
@@ -336,10 +336,13 @@ def build_acquisition(root: Path) -> Acquisition:
     )
 
 
-def map_acquisition(root: Path) -> Path:
-    model = build_acquisition(root)
-    # Validate serialized form before replacing any earlier valid output.
-    payload = json.loads(model.model_dump_json())
+def acquisition_payload(model: Acquisition) -> dict:
+    """Omit unused model fields while retaining null values inside the biological map."""
+    # Pydantic's exclude_none omits model fields, not entries in nested ordinary dicts.
+    payload = json.loads(model.model_dump_json(exclude_none=True))
+    # All other standalone subject details were explicitly agreed to remain null.
+    if model.subject_details is not None:
+        payload["subject_details"] = json.loads(model.subject_details.model_dump_json())
     # Required non-null schema default does not represent a weight measurement; omit the unused unit.
     if (
         payload.get("subject_details")
@@ -350,6 +353,12 @@ def map_acquisition(root: Path) -> Path:
     roundtrip = Acquisition.model_validate(payload)
     if str(roundtrip.acquisition_start_tz) != str(model.acquisition_start_tz):
         raise ValueError("Local timezone lost on serialization")
+    return payload
+
+
+def map_acquisition(root: Path) -> Path:
+    # All source checks and the serialized schema round-trip precede replacement.
+    payload = acquisition_payload(build_acquisition(root))
     target = root / "acquisition_fib.json"
     atomic_json(target, payload)
     return target

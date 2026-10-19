@@ -28,9 +28,7 @@ def test_unrelated_viral_errors_preserve_source_and_allow_valid_acquisition(reco
     assert len(report["full_document_schema_errors"]) == 1
     assert report["full_document_schema_errors"][0]["loc"][-1] == "name"
     assert "upstream schema errors" in caplog.text
-    assert output["data_streams"][0]["code"][0]["parameters"]["hsfp"]["procedures_validation_report"] == (
-        "fib/Logs/procedures_validation.json"
-    )
+    assert "procedures_validation_report" not in output["data_streams"][0]["code"][0]["parameters"]["hsfp"]
     # Rebuilding with identical sources must not alter the scientific document or its report.
     before = (root / "acquisition_fib.json").read_bytes()
     map_acquisition(root)
