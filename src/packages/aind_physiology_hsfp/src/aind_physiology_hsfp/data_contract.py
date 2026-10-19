@@ -2,13 +2,17 @@
 
 import hashlib
 import json
+import logging
 import os
-from datetime import datetime, timezone
+import time
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from .session_input import JournalEvent, SessionInput
+
+logger = logging.getLogger(__name__)
 
 
 def sha256(path: Path) -> str:
@@ -80,9 +84,26 @@ def finalize_root(root: Path, session: SessionInput) -> Path:
     with lock.open("x", encoding="utf-8") as stream:
         stream.write(root.name)
     try:
-        if target.exists():
-            raise FileExistsError(target)
-        root.rename(target)
+        for attempt in range(6):
+            if target.exists():
+                raise FileExistsError(target)
+            try:
+                root.rename(target)
+                break
+            except PermissionError as exc:
+                # Only retry Windows access/share locks, after all writers have exited.
+                # ACL restrictions and persistent open handles still need operator action.
+                if getattr(exc, "winerror", None) not in {5, 32, 33}:
+                    raise
+                if attempt == 5:
+                    raise PermissionError(
+                        f"Windows could not rename the completed recording folder. "
+                        f"Recording retained at: {root}. Intended final folder: {target}. "
+                        "Close Bonsai and any programs using files in this recording, then run "
+                        "recover-metadata and select the retained folder. Do not start a new recording."
+                    ) from exc
+                logger.warning("Windows denied recording-folder rename; retrying in 1 second: %s", root)
+                time.sleep(1)
     finally:
         lock.unlink(missing_ok=True)
     return target
@@ -103,4 +124,4 @@ def allocate_segment(root: Path) -> tuple[str, Path]:
 
 
 def utcnow() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
