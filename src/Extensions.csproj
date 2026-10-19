@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
+    <!-- Keep SDK builds within the syntax supported by Bonsai's script compiler. -->
+    <LangVersion>5</LangVersion>
     <UseWindowsForms>true</UseWindowsForms>
   </PropertyGroup>
 

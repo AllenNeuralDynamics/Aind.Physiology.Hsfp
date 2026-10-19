@@ -78,7 +78,12 @@ public class HsfpRootPath : Source<string>
 [Description("Hamamatsu camera with an applied DCAM snapshot on its first emitted frame.")]
 public class HsfpCamera : C13440
 {
-    public string DeviceName { get; set; } = "Hamamatsu Orca Flash 4 v3";
+    public HsfpCamera()
+    {
+        DeviceName = "Hamamatsu Orca Flash 4 v3";
+    }
+
+    public string DeviceName { get; set; }
 
     public override IObservable<IFrameContainer> Generate()
     {

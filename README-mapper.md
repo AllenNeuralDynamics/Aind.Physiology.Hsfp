@@ -6,6 +6,8 @@ Use the sibling Aind.Experiment.Hsfp clabe launcher for new recordings. The work
 
 `HsfpCamera` subclasses the pinned Hamamatsu 0.5.0 node, records applied DCAM property IDs/values/text/units on the first frame and journals that first accepted-frame boundary. This is a host UTC recording boundary, not a clock-synchronized exposure timestamp. `HsfpRecordingEnd` records a stop on normal pipeline completion, never on cancellation/error. A Windows build and rig pilot must verify camera readback and recording completion before use. The csproj dependency is aligned with Bonsai.config's Hamamatsu 0.5.0.
 
+Bonsai compiles `src/Extensions/*.cs` when loading the workflow, separately from the SDK build. `Extensions.csproj` limits the SDK build to C# 5 so it rejects newer syntax before the rig launch. Keep property defaults in constructors rather than auto-property initializers. The SDK build does not replace a successful load in Bonsai; check the launcher's stderr for script compilation errors if the editor reports missing externalized properties.
+
 One acquisition contains multiple segment streams. Raw payloads are under `fib/segments/segment_NNNN/fib/`; the inner fib preserves current modality suffixes. Sources/readbacks are isolated per segment. The root instrument snapshot remains fixed across resumes. Existing processing readers require explicit support for this layout before pipeline use.
 
 Run offline:
