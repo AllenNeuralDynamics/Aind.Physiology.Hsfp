@@ -132,6 +132,22 @@ def test_original_acquisition_graph_preserved_except_explicit_metadata_hooks():
     camera = named_group(nodes, "Camera")
     custom = next(node for node in camera.iter() if node.get(XSI) == "p1:HsfpCamera")
     custom.set(XSI, "p2:C13440")
+    default_settings = r"C:/git/Aind.Physiology.Hsfp/local/HSFP-default-camera-config.xml"
+    settings = custom.find("{clr-namespace:AllenNeuralDynamics.HamamatsuCamera;assembly=AllenNeuralDynamics.HamamatsuCamera}SettingsPath")
+    assert settings.text == default_settings
+    source = next(
+        node for node in camera.iter()
+        if node.get(XSI) == "PropertySource" and node.findtext("b:MemberName", namespaces=NS) == "SettingsPath"
+    )
+    assert source.findtext("b:Value", namespaces=NS) == default_settings
+    original_camera = named_group(old_nodes, "Camera")
+    original_source = next(
+        node for node in original_camera.iter()
+        if node.get(XSI) == "PropertySource" and node.findtext("b:MemberName", namespaces=NS) == "SettingsPath"
+    )
+    source.find("b:Value", NS).text = original_source.findtext("b:Value", namespaces=NS)
+    original_node = next(node for node in original_camera.iter() if node.get(XSI) == "p2:C13440")
+    settings.text = original_node.find(settings.tag).text
     for name in ("Teensy", "Cuttlefish"):
         group = named_group(nodes, name)
         for mapping in group.findall("b:Workflow/b:Nodes/b:Expression", NS):

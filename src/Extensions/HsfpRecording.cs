@@ -63,7 +63,10 @@ public class HsfpRootPath : Source<string>
                     throw new InvalidOperationException("Supply both AcquisitionRoot and SegmentId, or leave both empty for standalone recording.");
                 var parent = Environment.GetEnvironmentVariable("HSFP_MANUAL_OUTPUT_DIRECTORY");
                 if (string.IsNullOrWhiteSpace(parent)) parent = @"C:\output_data";
-                var name = "manual_" + DateTimeOffset.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "_" + Guid.NewGuid().ToString("N");
+                if (string.IsNullOrWhiteSpace(Subject) || Subject.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0 ||
+                    Subject.Contains("_") || Subject.EndsWith(".") || Subject.EndsWith(" "))
+                    throw new InvalidOperationException("Set Subject to a nonempty filename-safe subject ID without underscores before standalone recording.");
+                var name = Subject + "_" + DateTimeOffset.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "_" + Guid.NewGuid().ToString("N");
                 var manualRoot = Path.GetFullPath(Path.Combine(parent, name));
                 var manualSegment = Path.Combine(manualRoot, "fib", "segment_0001");
                 Directory.CreateDirectory(manualSegment);
