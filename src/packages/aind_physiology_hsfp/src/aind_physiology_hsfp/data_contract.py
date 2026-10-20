@@ -10,7 +10,7 @@ from pathlib import Path
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
-from .session_input import JournalEvent, SessionInput
+from .session_input import CalibrationInput, JournalEvent, SessionInput
 
 logger = logging.getLogger(__name__)
 
@@ -54,21 +54,22 @@ def read_events(root: Path) -> list[JournalEvent]:
     return events
 
 
-def canonical_name(session: SessionInput, first_start: datetime) -> str:
+def canonical_name(session: SessionInput | CalibrationInput, first_start: datetime) -> str:
     if first_start.tzinfo is None:
         raise ValueError("Cannot name an acquisition from a naive timestamp")
     local = first_start.astimezone(ZoneInfo(session.site_timezone))
-    return f"{session.subject_id}_{local:%Y-%m-%d_%H-%M-%S}"
+    prefix = "calibration" if isinstance(session, CalibrationInput) else session.subject_id
+    return f"{prefix}_{local:%Y-%m-%d_%H-%M-%S}"
 
 
-def finalization_target(root: Path, session: SessionInput) -> Path:
+def finalization_target(root: Path, session: SessionInput | CalibrationInput) -> Path:
     starts = [e.timestamp for e in read_events(root) if e.event == "recording_start"]
     if not starts:
         raise ValueError("No recording start; acquisition root cannot be finalized")
     return root.parent / canonical_name(session, min(starts))
 
 
-def finalize_root(root: Path, session: SessionInput) -> Path:
+def finalize_root(root: Path, session: SessionInput | CalibrationInput) -> Path:
     """Call only after Bonsai and all writers exit. No overwrite or nonstandard suffixes."""
     target = finalization_target(root, session)
     if root == target:

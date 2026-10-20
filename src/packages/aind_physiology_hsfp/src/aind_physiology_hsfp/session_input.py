@@ -1,9 +1,10 @@
 """Persisted operator inputs. Biological colors are independent of excitation lasers."""
 
 from datetime import datetime
-from typing import Self
+from typing import Literal, Self
 from zoneinfo import ZoneInfo
 
+from aind_data_schema.components.subjects import CalibrationObject
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 ACQUISITION_TYPES = ("HSFP", "HSFP_Pavlovian", "HSFP_DynamicForaging", "HSFP_VrForaging")
@@ -92,6 +93,38 @@ class SessionInput(StrictModel):
         if len(set(self.buffer_lasers.values())) != 5:
             raise ValueError("Each current buffer output must identify a distinct laser")
         return self
+
+
+class CalibrationInput(StrictModel):
+    """Hardware-only recording, with no subject or biological metadata."""
+
+    recording_mode: Literal["calibration"] = "calibration"
+    subject_id: Literal["calibration"] = "calibration"
+    acquisition_type: Literal["HSFP_calibration"] = "HSFP_calibration"
+    calibration_object: CalibrationObject = Field(
+        default_factory=lambda: CalibrationObject(empty=True, description="HSFP calibration without a mouse")
+    )
+    experimenters: list[str] = Field(min_length=1)
+    site_timezone: str = "America/Los_Angeles"
+    notes_before: str | None = None
+    notes_after: str | None = None
+    buffer_lasers: dict[str, str] = Field(default_factory=lambda: dict(DEFAULT_LASERS))
+    configuration_confirmed: bool = False
+
+    _timezone = field_validator("site_timezone")(SessionInput.timezone_exists.__func__)
+    _experimenters = field_validator("experimenters")(SessionInput.nonblank_values.__func__)
+
+    @model_validator(mode="after")
+    def supported_outputs(self) -> Self:
+        if set(self.buffer_lasers) != {f"IO{i}" for i in range(5)} or len(set(self.buffer_lasers.values())) != 5:
+            raise ValueError("Current mode c requires five distinct lasers on IO0 through IO4")
+        return self
+
+
+def recording_input(data: dict) -> SessionInput | CalibrationInput:
+    if data.get("recording_mode") == "calibration":
+        return CalibrationInput.model_validate(data)
+    return SessionInput.model_validate(data)
 
 
 class JournalEvent(StrictModel):

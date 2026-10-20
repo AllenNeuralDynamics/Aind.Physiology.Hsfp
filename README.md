@@ -18,17 +18,12 @@ During the early development phase, this repository is intended for internal use
 6. Do NOT commit packages  or the `.temp` and `local` folders to git
 
 ## Running the acquisition
-### Running manually
-- Open Bonsai from the bootstrapped environment in `./.bonsai/bonsai.exe`
-- Open the workflow file `./src/main.bonsai`
-- Manually set the 4 highest level properties:
-    - `ChunkSize`: number of frames to stack in a single tiff _(default = 1000)_
-    - `SettingsPath`: path to the camera settings file _(default = C:/git/Aind.Physiology.Hsfp/local/HSFP-default-camera-config.xml)_
-    - `Subject`: subject ID for the current acquisition _(default = 000000)_
-    - `ChannelCount`: number of laser channels to deinterleave _(default = 5)_
-- Launch the workflow by clicking the "Start" button in the Bonsai editor
-- Wait for the Teensy message `Experiment manually stopped`to display, then click Start
+### Running manually on the acquisition mapper branch
 
-### Running via CLI
-The workflow can be launched via the Bonsai Command Line Interface (CLI). Additional documentatoin can be found [here](https://bonsai-rx.org/docs/articles/cli.html). To run the acquisition workflow using the CLI, use the following command: <br>
+After deployment, open `.bonsai/Bonsai.exe` and load `src/main.bonsai` directly. Settings can be inspected by opening HsfpCamera while stopped; preview does not create a recording. Set the top-level SettingsPath to your local XML and verify ports, ChannelCount (5) and ChunkSize.
+
+Leave AcquisitionRoot and SegmentId empty for a standalone hardware recording. Start the workflow, wait for camera/serial startup, then use StartExperiment (`c`) and EndExperiment (`s`). Each run writes a unique `manual_<local-time>_<id>` folder under `C:/output_data` (override with the HSFP_MANUAL_OUTPUT_DIRECTORY environment variable before opening Bonsai). No subject-service calls or biological acquisition_fib.json generation occur. Use the launcher for complete animal metadata or its calibration-hsfp option for preserved no-mouse calibration sources. See README-mapper.md and the wrapper README for details.
+
+### Historical CLI reference
+The workflow can be launched via the Bonsai Command Line Interface (CLI). Additional documentation can be found [here](https://bonsai-rx.org/docs/articles/cli.html). To run the acquisition workflow using the CLI, use the following command: <br>
 `"./.bonsai/bonsai.exe" "./src/main.bonsai" -p Subject=000000 -p SettingsPath="C:/git/Aind.Physiology.Hsfp/local/HSFP-default-camera-config.xml" -p ChannelCount-5 -p ChunkSize=1000`

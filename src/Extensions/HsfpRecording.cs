@@ -1,4 +1,5 @@
 using Bonsai;
+using Bonsai.Design;
 using AllenNeuralDynamics.HamamatsuCamera;
 using AllenNeuralDynamics.HamamatsuCamera.Models;
 using Newtonsoft.Json;
@@ -9,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Reactive.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 // Recording context is process-local. A launcher run reserves exactly one segment.
 internal static class HsfpRecordingContext
@@ -45,7 +47,7 @@ internal static class HsfpRecordingContext
     }
 }
 
-[Description("Uses a launcher-reserved segment root; never generates an independent acquisition name.")]
+[Description("Uses the launcher-reserved segment, or a new standalone recording when both root properties are empty.")]
 public class HsfpRootPath : Source<string>
 {
     public string AcquisitionRoot { get; set; }
@@ -56,7 +58,21 @@ public class HsfpRootPath : Source<string>
     {
         return Observable.Defer(() => {
             if (string.IsNullOrWhiteSpace(AcquisitionRoot) || string.IsNullOrWhiteSpace(SegmentId))
-                throw new InvalidOperationException("Launch through Aind.Experiment.Hsfp to reserve acquisition and segment paths.");
+            {
+                if (!string.IsNullOrWhiteSpace(AcquisitionRoot) || !string.IsNullOrWhiteSpace(SegmentId))
+                    throw new InvalidOperationException("Supply both AcquisitionRoot and SegmentId, or leave both empty for standalone recording.");
+                var parent = Environment.GetEnvironmentVariable("HSFP_MANUAL_OUTPUT_DIRECTORY");
+                if (string.IsNullOrWhiteSpace(parent)) parent = @"C:\output_data";
+                var name = "manual_" + DateTimeOffset.Now.ToString("yyyy-MM-dd_HH-mm-ss") + "_" + Guid.NewGuid().ToString("N");
+                var manualRoot = Path.GetFullPath(Path.Combine(parent, name));
+                var manualSegment = Path.Combine(manualRoot, "fib", "segment_0001");
+                Directory.CreateDirectory(manualSegment);
+                // This is a hardware recording, not a launcher/animal metadata contract.
+                using (var file = new FileStream(Path.Combine(manualSegment, "segment_input.json"), FileMode.CreateNew, FileAccess.Write))
+                using (var writer = new StreamWriter(file))
+                    writer.Write(JsonConvert.SerializeObject(new { recording_mode = "standalone", subject_label = Subject }, Formatting.Indented));
+                return Initialize(manualRoot, "segment_0001", manualSegment);
+            }
             if (!System.Text.RegularExpressions.Regex.IsMatch(SegmentId, "^segment_[0-9]+$"))
                 throw new InvalidOperationException("Invalid segment identifier.");
             var root = Path.GetFullPath(AcquisitionRoot);
@@ -65,17 +81,24 @@ public class HsfpRootPath : Source<string>
                 throw new InvalidOperationException("Segment sources must be saved before starting Bonsai.");
             if (Directory.Exists(Path.Combine(segment, "fib")))
                 throw new IOException("Segment already contains recording data. Reserve a new segment; never overwrite.");
-            Directory.CreateDirectory(Path.Combine(segment, "fib"));
-            HsfpRecordingContext.Root = root;
-            HsfpRecordingContext.SegmentId = SegmentId;
-            HsfpRecordingContext.SegmentPath = segment;
-            HsfpRecordingContext.Started = HsfpRecordingContext.Stopped = false;
-            return Observable.Return(segment);
+            return Initialize(root, SegmentId, segment);
         });
+    }
+
+    private static IObservable<string> Initialize(string root, string segmentId, string segment)
+    {
+        Directory.CreateDirectory(Path.Combine(segment, "fib"));
+        HsfpRecordingContext.Root = root;
+        HsfpRecordingContext.SegmentId = segmentId;
+        HsfpRecordingContext.SegmentPath = segment;
+        HsfpRecordingContext.Started = HsfpRecordingContext.Stopped = false;
+        Console.WriteLine("HSFP recording directory: " + root);
+        return Observable.Return(segment);
     }
 }
 
-[Description("Hamamatsu camera with an applied DCAM snapshot on its first emitted frame.")]
+[Editor(typeof(HsfpCameraEditor), typeof(ComponentEditor))]
+[Description("Hamamatsu camera with an applied DCAM snapshot on its first recorded frame; settings preview records no metadata.")]
 public class HsfpCamera : C13440
 {
     public HsfpCamera()
@@ -85,8 +108,13 @@ public class HsfpCamera : C13440
 
     public string DeviceName { get; set; }
 
+    internal bool EditingSettings;
+
     public override IObservable<IFrameContainer> Generate()
     {
+        // The inherited settings editor subscribes to Generate for live preview.
+        // Never treat that preview as a recorded segment, even after a prior run.
+        if (EditingSettings) return base.Generate();
         return Observable.Create<IFrameContainer>(observer => {
             bool captured = false;
             var subscription = base.Generate().Do(frame => {
@@ -136,5 +164,19 @@ public class HsfpRecordingEnd
     public IObservable<T> Process<T>(IObservable<T> source)
     {
         return source.Do(_ => { }, () => HsfpRecordingContext.Journal("recording_stop"));
+    }
+}
+
+// Delegate to the pinned camera editor, marking its preview subscription explicitly.
+public class HsfpCameraEditor : WorkflowComponentEditor
+{
+    public override bool EditComponent(ITypeDescriptorContext context, object component, IServiceProvider provider, IWin32Window owner)
+    {
+        var camera = (HsfpCamera)component;
+        var editor = (WorkflowComponentEditor)TypeDescriptor.GetEditor(typeof(C13440), typeof(ComponentEditor));
+        if (editor == null) throw new InvalidOperationException("Hamamatsu camera settings editor is unavailable.");
+        camera.EditingSettings = true;
+        try { return editor.EditComponent(context, camera, provider, owner); }
+        finally { camera.EditingSettings = false; }
     }
 }

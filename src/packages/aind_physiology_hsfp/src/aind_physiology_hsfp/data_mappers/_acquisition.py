@@ -22,12 +22,14 @@ from aind_data_schema.core.acquisition import (
     DataStream,
 )
 from aind_data_schema.core.instrument import Instrument
+from aind_data_schema.core.procedures import Procedures
+from aind_data_schema.core.subject import Subject
 from aind_data_schema_models.modalities import Modality
 from aind_data_schema_models.units import PowerUnit, SizeUnit, TimeUnit
 
 from ..data_contract import atomic_json, read_events, sha256, validate_segment_layout
 from ..procedures_source import fiber_implants_from_procedures
-from ..session_input import SessionInput
+from ..session_input import CalibrationInput, recording_input
 
 REPOSITORY_URL = "https://github.com/AllenNeuralDynamics/Aind.Physiology.Hsfp"
 
@@ -119,18 +121,46 @@ def _calibration(instrument: dict, name: str) -> tuple[dict, float]:
     return latest, power
 
 
+def write_calibration_metadata(root: Path, session: CalibrationInput) -> None:
+    """Create AIND calibration Subject and empty Procedures without replacing different documents."""
+    models = {
+        "subject.json": Subject(subject_id="calibration", subject_details=session.calibration_object),
+        "procedures.json": Procedures(subject_id="calibration"),
+    }
+    payloads = {name: json.loads(model.model_dump_json(exclude_none=True)) for name, model in models.items()}
+    for name, model in models.items():
+        path = root / name
+        if path.exists() and type(model).model_validate(load_json(path)) != model:
+            raise ValueError(f"Existing {name} differs from confirmed calibration inputs; refusing to overwrite")
+    for name, payload in payloads.items():
+        path = root / name
+        if not path.exists():
+            atomic_json(path, payload)
+
+
 def build_acquisition(root: Path) -> Acquisition:
     root = root.resolve()
     validate_segment_layout(root)
-    session = SessionInput.model_validate(load_json(root / "fib/Logs/session_input.json"))
+    inputs = load_json(root / "fib/Logs/session_input.json")
+    session = recording_input(inputs)
+    calibration = isinstance(session, CalibrationInput)
     if not session.configuration_confirmed:
         raise ValueError("Session configuration was not confirmed")
     instrument = load_json(root / "instrument_fib.json")
     Instrument.model_validate(instrument)
-    procedures = load_json(root / "fib/Logs/procedures_source.json")
-    implants = fiber_implants_from_procedures(
-        procedures, session.subject_id, report_path=root / "fib/Logs/procedures_validation.json"
-    )
+    if calibration:
+        procedures = Procedures.model_validate(load_json(root / "procedures.json"))
+        subject = Subject.model_validate(load_json(root / "subject.json"))
+        if procedures.subject_id != "calibration" or procedures.subject_procedures or procedures.specimen_procedures:
+            raise ValueError("Calibration requires empty Procedures for subject calibration")
+        if subject.subject_id != "calibration" or subject.subject_details != session.calibration_object:
+            raise ValueError("Calibration Subject differs from confirmed calibration object")
+        implants = {}
+    else:
+        procedures = load_json(root / "fib/Logs/procedures_source.json")
+        implants = fiber_implants_from_procedures(
+            procedures, session.subject_id, report_path=root / "fib/Logs/procedures_validation.json"
+        )
     devices = named_devices(instrument)
     events = read_events(root)
     ids = list(dict.fromkeys(e.segment_id for e in events if e.event == "recording_start"))
@@ -155,7 +185,11 @@ def build_acquisition(root: Path) -> Acquisition:
             raise ValueError("Segment ends before its start")
         segment = root / "fib" / sid
         config = load_json(segment / "segment_input.json")
-        saved = SessionInput.model_validate(config["session"])
+        saved = recording_input(config["session"])
+        if isinstance(saved, CalibrationInput) != calibration:
+            raise ValueError("Recording mode differs from acquisition")
+        if calibration and saved.calibration_object != session.calibration_object:
+            raise ValueError("Calibration object differs between segments")
         if saved.subject_id != session.subject_id or saved.site_timezone != session.site_timezone:
             raise ValueError("Segment subject/timezone differs from acquisition")
         if not saved.configuration_confirmed:
@@ -201,11 +235,17 @@ def build_acquisition(root: Path) -> Acquisition:
         cord_configs = []
         optical_active = []
         connections = []
-        inverse = {name: fiber for fiber, name in saved.fiber_names.items()}
-        for cord, implant in saved.connections.items():
-            if cord not in devices or implant not in implants:
+        inverse = {} if calibration else {name: fiber for fiber, name in saved.fiber_names.items()}
+        cord_connections = (
+            {name: None for name in devices if name.startswith("Mono Fiber-optic Patch Cord ")}
+            if calibration else saved.connections
+        )
+        if not cord_connections:
+            raise ValueError("No physical patch cords found in instrument")
+        for cord, implant in cord_connections.items():
+            if cord not in devices or (not calibration and implant not in implants):
                 raise ValueError(f"Connection references unknown device: {cord} → {implant}")
-            fiber = inverse[implant]
+            fiber = f"PatchCord_{cord.rsplit(' ', 1)[-1]}" if calibration else inverse[implant]
             common_optics = [
                 "Galaxy 8 Laser Combiner",
                 "Galaxy 8 Output Fiber",
@@ -242,7 +282,8 @@ def build_acquisition(root: Path) -> Acquisition:
                     ],
                 )
             )
-            connections.append(Connection(source_device=cord, target_device=implant))
+            if not calibration:
+                connections.append(Connection(source_device=cord, target_device=implant))
         for port, laser in saved.buffer_lasers.items():
             connections.append(Connection(source_device="cuTTLefish TTL Buffer", source_port=port, target_device=laser))
         extra_active = [*config["active_device_names"], *optical_active]
@@ -253,8 +294,8 @@ def build_acquisition(root: Path) -> Acquisition:
                 [
                     detector.device_name,
                     *[v.device_name for v in lasers],
-                    *saved.connections,
-                    *saved.connections.values(),
+                    *cord_connections,
+                    *[implant for implant in cord_connections.values() if implant is not None],
                     *extra_active,
                 ]
             )
@@ -266,8 +307,8 @@ def build_acquisition(root: Path) -> Acquisition:
         parameters = {
             "hsfp": {
                 "segment_id": sid,
-                # The pinned configurations union has no structured per-fiber map.
-                "intended_measurements_by_fiber": saved.intended_measurements_by_fiber,
+                # Calibration has no implanted fibers or intended biological measurements.
+                **({} if calibration else {"intended_measurements_by_fiber": saved.intended_measurements_by_fiber}),
                 "channel_order": order,
                 "observed_per_channel_rate_hz": rates,
                 "power_calibration_sources": calibration_sources,
@@ -312,7 +353,7 @@ def build_acquisition(root: Path) -> Acquisition:
     tz = ZoneInfo(session.site_timezone)
     # Only platform is supplied by standalone HSFP. Override schema's default unit values to null.
     subject_details = None
-    if session.acquisition_type == "HSFP":
+    if not calibration and session.acquisition_type == "HSFP":
         subject_details = AcquisitionSubjectDetails(mouse_platform_name=session.platform_name)
         for field in type(subject_details).model_fields:
             if field not in {"mouse_platform_name", "object_type", "weight_unit"}:
@@ -325,7 +366,7 @@ def build_acquisition(root: Path) -> Acquisition:
         acquisition_end_time=streams[-1].stream_end_time.astimezone(tz),
         experimenters=session.experimenters,
         acquisition_type=session.acquisition_type,
-        ethics_review_id=session.ethics_review_id,
+        ethics_review_id=None if calibration else session.ethics_review_id,
         notes=notes,
         subject_details=subject_details,
         data_streams=streams,
