@@ -10,7 +10,6 @@ from zoneinfo import ZoneInfo
 from aind_data_schema.components.configs import (
     Channel,
     DetectorConfig,
-    DeviceConfig,
     LaserConfig,
     PatchCordConfig,
     TriggerType,
@@ -26,7 +25,7 @@ from aind_data_schema.core.instrument import Instrument
 from aind_data_schema_models.modalities import Modality
 from aind_data_schema_models.units import PowerUnit, SizeUnit, TimeUnit
 
-from ..data_contract import atomic_json, read_events, sha256
+from ..data_contract import atomic_json, read_events, sha256, validate_segment_layout
 from ..procedures_source import fiber_implants_from_procedures
 from ..session_input import SessionInput
 
@@ -122,6 +121,7 @@ def _calibration(instrument: dict, name: str) -> tuple[dict, float]:
 
 def build_acquisition(root: Path) -> Acquisition:
     root = root.resolve()
+    validate_segment_layout(root)
     session = SessionInput.model_validate(load_json(root / "fib/Logs/session_input.json"))
     if not session.configuration_confirmed:
         raise ValueError("Session configuration was not confirmed")
@@ -153,7 +153,7 @@ def build_acquisition(root: Path) -> Acquisition:
                 safe_path(root, details[key]).read_bytes()
         if end.timestamp < start.timestamp:
             raise ValueError("Segment ends before its start")
-        segment = root / "fib/segments" / sid
+        segment = root / "fib" / sid
         config = load_json(segment / "segment_input.json")
         saved = SessionInput.model_validate(config["session"])
         if saved.subject_id != session.subject_id or saved.site_timezone != session.site_timezone:
@@ -199,6 +199,7 @@ def build_acquisition(root: Path) -> Acquisition:
             rate_path = safe_path(segment, item["metadata_csv"])
             rates[f"frame_ch{index}"] = {"wavelength_nm": wavelength, "rate_hz": observed_rate(rate_path)}
         cord_configs = []
+        optical_active = []
         connections = []
         inverse = {name: fiber for fiber, name in saved.fiber_names.items()}
         for cord, implant in saved.connections.items():
@@ -223,6 +224,7 @@ def build_acquisition(root: Path) -> Acquisition:
             ]
             if any(name not in devices for name in optical_names):
                 raise ValueError("Instrument optical profile changed; update mapping rather than guess components")
+            optical_active.extend(optical_names)
             cord_configs.append(
                 PatchCordConfig(
                     device_name=cord,
@@ -234,7 +236,7 @@ def build_acquisition(root: Path) -> Acquisition:
                             intended_measurement=None,
                             emission_wavelength=None,
                             variable_power=False,
-                            additional_device_names=[DeviceConfig(device_name=n) for n in optical_names],
+                            additional_device_names=None,
                         )
                         for laser in lasers
                     ],
@@ -243,9 +245,6 @@ def build_acquisition(root: Path) -> Acquisition:
             connections.append(Connection(source_device=cord, target_device=implant))
         for port, laser in saved.buffer_lasers.items():
             connections.append(Connection(source_device="cuTTLefish TTL Buffer", source_port=port, target_device=laser))
-        optical_active = [
-            v.device_name for cord in cord_configs for c in cord.channels for v in (c.additional_device_names or [])
-        ]
         extra_active = [*config["active_device_names"], *optical_active]
         if not set(extra_active) <= set(devices):
             raise ValueError("Active device names do not resolve in instrument")
@@ -267,7 +266,8 @@ def build_acquisition(root: Path) -> Acquisition:
         parameters = {
             "hsfp": {
                 "segment_id": sid,
-                "indicators_by_fiber": saved.indicators_by_fiber,
+                # The pinned configurations union has no structured per-fiber map.
+                "intended_measurements_by_fiber": saved.intended_measurements_by_fiber,
                 "channel_order": order,
                 "observed_per_channel_rate_hz": rates,
                 "power_calibration_sources": calibration_sources,
@@ -340,6 +340,12 @@ def acquisition_payload(model: Acquisition) -> dict:
     """Omit unused model fields while retaining null values inside the biological map."""
     # Pydantic's exclude_none omits model fields, not entries in nested ordinary dicts.
     payload = json.loads(model.model_dump_json(exclude_none=True))
+    # Explicitly retain the requested null, while omitting other unused optional fields.
+    for stream in payload["data_streams"]:
+        for config in stream["configurations"]:
+            if config["object_type"] == "Patch cord config":
+                for channel in config["channels"]:
+                    channel["additional_device_names"] = None
     # All other standalone subject details were explicitly agreed to remain null.
     if model.subject_details is not None:
         payload["subject_details"] = json.loads(model.subject_details.model_dump_json())

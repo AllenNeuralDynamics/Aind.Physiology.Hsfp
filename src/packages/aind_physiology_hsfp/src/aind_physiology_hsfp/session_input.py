@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import Self
 from zoneinfo import ZoneInfo
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator, model_validator
 
 ACQUISITION_TYPES = ("HSFP", "HSFP_Pavlovian", "HSFP_DynamicForaging", "HSFP_VrForaging")
 PLATFORM_NAMES = ("mouse_tube_foraging",)
@@ -25,7 +25,7 @@ class StrictModel(BaseModel):
 class SessionInput(StrictModel):
     """One acquisition's confirmed inputs, preserved across recording restarts."""
 
-    contract_version: str = "1.0.0"
+    contract_version: str = "1.1.0"
     subject_id: str
     experimenters: list[str] = Field(min_length=1)
     acquisition_type: str = "HSFP"
@@ -36,7 +36,9 @@ class SessionInput(StrictModel):
     notes_before: str | None = None
     notes_after: str | None = None
     # Values are biological measurements, literal "None" = empty, null = not provided.
-    indicators_by_fiber: dict[str, dict[str, str | None]]
+    intended_measurements_by_fiber: dict[str, dict[str, str | None]] = Field(
+        validation_alias=AliasChoices("intended_measurements_by_fiber", "indicators_by_fiber")
+    )
     indicator_provenance: dict[str, dict[str, str]] = Field(default_factory=dict)
     # Physical instrument cord -> exact implanted device name in Procedures.
     connections: dict[str, str]
@@ -71,9 +73,9 @@ class SessionInput(StrictModel):
     def coherent(self) -> Self:
         if self.acquisition_type not in ACQUISITION_TYPES or self.platform_name not in PLATFORM_NAMES:
             raise ValueError("Unknown acquisition type or platform")
-        if set(self.indicators_by_fiber) != set(self.fiber_names):
+        if set(self.intended_measurements_by_fiber) != set(self.fiber_names):
             raise ValueError("Biological map and implanted-fiber map must have identical Fiber_N keys")
-        for fiber, values in self.indicators_by_fiber.items():
+        for fiber, values in self.intended_measurements_by_fiber.items():
             if not fiber.startswith("Fiber_") or not fiber[6:].isdigit():
                 raise ValueError("Fiber keys must be Fiber_N")
             if set(values) != set(INDICATOR_COLORS) or any(v == "" for v in values.values()):

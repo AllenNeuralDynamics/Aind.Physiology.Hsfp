@@ -20,7 +20,7 @@ def test_swapped_connections_color_semantics_and_shared_camera(recording):
     assert all(
         c.intended_measurement is None and c.emission_wavelength is None for cord in cords for c in cord.channels
     )
-    values = stream.code[0].parameters.model_dump()["hsfp"]["indicators_by_fiber"]
+    values = stream.code[0].parameters.model_dump()["hsfp"]["intended_measurements_by_fiber"]
     assert values["Fiber_0"]["blue"] == "None"
     assert values["Fiber_0"]["yellow"] is None
     assert len(stream.configurations) == 7
@@ -60,7 +60,7 @@ def test_incomplete_segment_does_not_replace_valid_output(recording):
 
 def test_camera_xml_is_not_silently_treated_as_readback(recording):
     root, _, _ = recording
-    path = root / "fib/segments/segment_0001/camera_applied.json"
+    path = root / "fib/segment_0001/camera_applied.json"
     d = json.loads(path.read_text())
     d["source"] = "input_xml"
     path.write_text(json.dumps(d))
@@ -84,7 +84,7 @@ def test_naming_local_date_dst_and_no_overwrite(recording):
 
 def test_unknown_instrument_reference_rejected(recording):
     root, _, _ = recording
-    path = root / "fib/segments/segment_0001/segment_input.json"
+    path = root / "fib/segment_0001/segment_input.json"
     d = json.loads(path.read_text())
     d["session"]["buffer_lasers"]["IO0"] = "Unknown laser"
     path.write_text(json.dumps(d))
@@ -118,7 +118,7 @@ def test_deterministic_rebuild(recording):
 
 def test_missing_camera_enum_is_not_guessed(recording):
     root, _, _ = recording
-    path = root / "fib/segments/segment_0001/camera_applied.json"
+    path = root / "fib/segment_0001/camera_applied.json"
     data = json.loads(path.read_text())
     data["properties"][0]["value"] = 0
     path.write_text(json.dumps(data))

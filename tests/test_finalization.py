@@ -15,7 +15,7 @@ def windows_lock(code=5):
 @pytest.mark.parametrize("code", [5, 32, 33])
 def test_finalization_retries_transient_windows_lock(recording, monkeypatch, code):
     root, session, _ = recording
-    payload = root / "fib/segments/segment_0001/fib/raw-sentinel.tiff"
+    payload = root / "fib/segment_0001/fib/raw-sentinel.tiff"
     payload.write_bytes(b"unchanged raw payload")
     original_rename = Path.rename
     attempts, sleeps = [], []

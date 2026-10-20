@@ -60,7 +60,7 @@ public class HsfpRootPath : Source<string>
             if (!System.Text.RegularExpressions.Regex.IsMatch(SegmentId, "^segment_[0-9]+$"))
                 throw new InvalidOperationException("Invalid segment identifier.");
             var root = Path.GetFullPath(AcquisitionRoot);
-            var segment = Path.Combine(root, "fib", "segments", SegmentId);
+            var segment = Path.Combine(root, "fib", SegmentId);
             if (!File.Exists(Path.Combine(segment, "segment_input.json")))
                 throw new InvalidOperationException("Segment sources must be saved before starting Bonsai.");
             if (Directory.Exists(Path.Combine(segment, "fib")))

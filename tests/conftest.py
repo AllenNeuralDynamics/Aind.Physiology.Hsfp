@@ -31,7 +31,7 @@ def recording(tmp_path):
         experimenters=["Operator"],
         ethics_review_id=["1234"],
         ethics_source="operator",
-        indicators_by_fiber={
+        intended_measurements_by_fiber={
             f"Fiber_{n}": {**dict.fromkeys(INDICATOR_COLORS), "blue": "None", "green": "glutamate"} for n in [0, 1]
         },
         fiber_names={"Fiber_0": "Implant 0", "Fiber_1": "Implant 1"},

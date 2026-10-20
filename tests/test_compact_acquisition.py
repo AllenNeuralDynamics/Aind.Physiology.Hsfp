@@ -8,7 +8,7 @@ def test_compact_output_keeps_agreed_values_and_source_evidence(recording):
     root, _, _ = recording
     source_names = [
         'instrument_fib.json', 'fib/Logs/session_input.json', 'fib/Logs/procedures_source.json',
-        'fib/segments/segment_0001/segment_input.json', 'fib/segments/segment_0001/camera_applied.json',
+        'fib/segment_0001/segment_input.json', 'fib/segment_0001/camera_applied.json',
     ]
     camera_path = root / source_names[-1]
     camera = json.loads(camera_path.read_text())
@@ -21,7 +21,7 @@ def test_compact_output_keeps_agreed_values_and_source_evidence(recording):
     session = json.loads(session_path.read_text())
     session['indicator_provenance'] = {
         fiber: {color: 'service' for color in values}
-        for fiber, values in session['indicators_by_fiber'].items()
+        for fiber, values in session['intended_measurements_by_fiber'].items()
     }
     session_path.write_text(json.dumps(session))
     originals = {name: (root / name).read_bytes() for name in source_names}
@@ -30,13 +30,13 @@ def test_compact_output_keeps_agreed_values_and_source_evidence(recording):
     stream = output['data_streams'][0]
     hsfp = stream['code'][0]['parameters']['hsfp']
     assert set(hsfp) == {
-        'segment_id', 'indicators_by_fiber', 'channel_order', 'observed_per_channel_rate_hz',
+        'segment_id', 'intended_measurements_by_fiber', 'channel_order', 'observed_per_channel_rate_hz',
         'power_calibration_sources', 'camera_readback', 'writer', 'firmware', 'lookup_table',
         'source_directory', 'acquisition_provenance',
     }
-    assert hsfp['indicators_by_fiber'] == session['indicators_by_fiber']
-    assert hsfp['indicators_by_fiber']['Fiber_0']['yellow'] is None
-    assert hsfp['indicators_by_fiber']['Fiber_0']['blue'] == 'None'
+    assert hsfp['intended_measurements_by_fiber'] == session['intended_measurements_by_fiber']
+    assert hsfp['intended_measurements_by_fiber']['Fiber_0']['yellow'] is None
+    assert hsfp['intended_measurements_by_fiber']['Fiber_0']['blue'] == 'None'
     assert (root / hsfp['camera_readback']).read_bytes() == originals[source_names[-1]]
     assert hsfp['acquisition_provenance'] == {'dirty': False}
     assert 'version' not in stream['code'][0]  # unused optional field
@@ -50,7 +50,7 @@ def test_compact_output_keeps_agreed_values_and_source_evidence(recording):
     cords = [c for c in stream['configurations'] if c['object_type'] == 'Patch cord config']
     channels = [channel for cord in cords for channel in cord['channels']]
     assert len(cords) == 2 and len(channels) == 10
-    assert sum(len(c['additional_device_names']) for c in channels) == 110
+    assert all(c['additional_device_names'] is None for c in channels)
     assert all(c['variable_power'] is False for c in channels)
     assert len([c for c in stream['configurations'] if c['object_type'] == 'Laser config']) == 5
     assert output['subject_details']['animal_weight_prior'] is None

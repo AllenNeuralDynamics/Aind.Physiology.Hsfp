@@ -109,8 +109,19 @@ def finalize_root(root: Path, session: SessionInput) -> Path:
     return target
 
 
+def validate_segment_layout(root: Path) -> None:
+    """Do not mix the previous nested layout with direct fib/segment_NNNN folders."""
+    previous = root / "fib/segments"
+    if previous.is_dir() and any(p.is_dir() and p.name.startswith("segment_") for p in previous.iterdir()):
+        raise ValueError(
+            "Move existing fib/segments/segment_* folders directly into fib/ before using this acquisition. "
+            "Then run recover-metadata to refresh acquisition references."
+        )
+
+
 def allocate_segment(root: Path) -> tuple[str, Path]:
-    parent = root / "fib/segments"
+    validate_segment_layout(root)
+    parent = root / "fib"
     parent.mkdir(parents=True, exist_ok=True)
     for number in range(1, 1000000):
         sid = f"segment_{number:04d}"
