@@ -30,23 +30,27 @@ def test_compact_output_keeps_agreed_values_and_source_evidence(recording):
     stream = output['data_streams'][0]
     hsfp = stream['code'][0]['parameters']['hsfp']
     assert set(hsfp) == {
-        'segment_id', 'intended_measurements_by_fiber', 'channel_order', 'observed_per_channel_rate_hz',
-        'power_calibration_sources', 'camera_readback', 'writer', 'firmware', 'lookup_table',
+        'segment_id', 'intended_measurements_by_fiber', 'imaging',
+        'writer', 'firmware', 'lookup_table',
         'source_directory', 'acquisition_provenance',
     }
     assert hsfp['intended_measurements_by_fiber'] == session['intended_measurements_by_fiber']
     assert hsfp['intended_measurements_by_fiber']['Fiber_0']['yellow'] is None
     assert hsfp['intended_measurements_by_fiber']['Fiber_0']['blue'] == 'None'
-    assert (root / hsfp['camera_readback']).read_bytes() == originals[source_names[-1]]
+    assert 'camera_readback' not in hsfp
+    assert 'power_calibration_sources' not in hsfp
     assert hsfp['acquisition_provenance'] == {'dirty': False}
     assert 'version' not in stream['code'][0]  # unused optional field
     assert stream['code'][0]['commit_hash'] == 'a' * 40
     instrument = json.loads(originals['instrument_fib.json'])
-    for laser, reference in hsfp['power_calibration_sources'].items():
-        assert set(reference) == {'source', 'calibration_date'}
-        assert reference['source'] == 'instrument_fib.json'
-        assert any(c['device_name'] == laser and c['calibration_date'] == reference['calibration_date']
-                   for c in instrument['calibrations'])
+    for laser in (c for c in stream['configurations'] if c['object_type'] == 'Laser config'):
+        calibration = max(
+            (c for c in instrument['calibrations'] if c['device_name'] == laser['device_name']),
+            key=lambda c: c['calibration_date'],
+        )
+        assert laser['power'] == calibration['output'][0]
+        assert laser['power_unit'] == calibration['output_unit']
+        assert laser['power_measured_at'] == calibration['measured_at']
     cords = [c for c in stream['configurations'] if c['object_type'] == 'Patch cord config']
     channels = [channel for cord in cords for channel in cord['channels']]
     assert len(cords) == 2 and len(channels) == 10

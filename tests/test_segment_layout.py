@@ -34,9 +34,10 @@ def test_mapper_emits_resolvable_direct_paths_for_all_segments(recording):
     for i, stream in enumerate(output["data_streams"], 1):
         values = stream["code"][0]["parameters"]["hsfp"]
         assert values["source_directory"] == f"fib/segment_{i:04d}"
-        assert values["camera_readback"] == f"fib/segment_{i:04d}/camera_applied.json"
+        assert "camera_readback" not in values
+        assert "power_calibration_sources" not in values
         assert (root / values["source_directory"]).is_dir()
-        assert (root / values["camera_readback"]).is_file()
+        assert (root / values["source_directory"] / "camera_applied.json").is_file()
     assert not (root / "fib/segments").exists()
 
 

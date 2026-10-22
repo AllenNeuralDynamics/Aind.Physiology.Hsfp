@@ -44,7 +44,7 @@ def test_multisegment_bounds_and_observed_rates(recording):
     assert len(acq.data_streams) == 2
     assert (acq.data_streams[1].stream_start_time - acq.data_streams[0].stream_end_time).total_seconds() == 1740
     parameters = acq.data_streams[0].code[0].parameters.model_dump()["hsfp"]
-    assert parameters["observed_per_channel_rate_hz"]["frame_ch0"]["rate_hz"] == pytest.approx(30)
+    assert parameters["imaging"]["images"][0]["observed_frame_rate_hz"] == pytest.approx(30)
     assert "configured_camera_trigger_rate_hz" not in parameters
 
 

@@ -10,6 +10,7 @@ from zoneinfo import ZoneInfo
 from aind_data_schema.components.configs import (
     Channel,
     DetectorConfig,
+    InterleavedStrategy,
     LaserConfig,
     PatchCordConfig,
     TriggerType,
@@ -59,8 +60,8 @@ def named_devices(value) -> dict[str, dict]:
     return found
 
 
-def observed_rate(path: Path) -> float:
-    """Saved-frame rate over the recorded timestamp span; gaps remain in the denominator."""
+def _timestamp_span(path: Path) -> tuple[int, float, float]:
+    """Validate one saved channel and summarize its observed camera timestamps."""
     previous = first = last = None
     count = 0
     with path.open(encoding="utf-8-sig", newline="") as stream:
@@ -77,6 +78,12 @@ def observed_rate(path: Path) -> float:
             count += 1
     if count < 2:
         raise ValueError(f"At least two valid timestamps needed for observed rate: {path}")
+    return count, first, last
+
+
+def observed_rate(path: Path) -> float:
+    """Saved-frame rate over the recorded timestamp span; gaps remain in the denominator."""
+    count, first, last = _timestamp_span(path)
     return (count - 1) / (last - first)
 
 
@@ -209,8 +216,8 @@ def build_acquisition(root: Path) -> Acquisition:
         if config.get("first_frame_buffer_port") != "IO0":
             raise ValueError("Unknown first-frame phase")
         lasers = []
-        calibration_sources = {}
-        rates = {}
+        images = []
+        timing = []
         for index, item in enumerate(order):
             name = saved.buffer_lasers[item["buffer_port"]]
             if name not in devices:
@@ -226,12 +233,31 @@ def build_acquisition(root: Path) -> Acquisition:
                     power_measured_at=cal["measured_at"],
                 )
             )
-            calibration_sources[name] = {
-                "source": "instrument_fib.json",
-                "calibration_date": cal["calibration_date"],
-            }
             rate_path = safe_path(segment, item["metadata_csv"])
-            rates[f"frame_ch{index}"] = {"wavelength_nm": wavelength, "rate_hz": observed_rate(rate_path)}
+            count, first, last = _timestamp_span(rate_path)
+            timing.append((count, first, last))
+            images.append(
+                {
+                    "channel_name": f"frame_ch{index}",
+                    "buffer_port": item["buffer_port"],
+                    "wavelength_nm": wavelength,
+                    "metadata_csv": item["metadata_csv"],
+                    "observed_frame_rate_hz": (count - 1) / (last - first),
+                }
+            )
+        # All channel timestamps share this segment's camera clock. Count each
+        # exposure once; the two fiber traces are present in the same image.
+        camera_rate = (sum(count for count, _, _ in timing) - 1) / (
+            max(last for _, _, last in timing) - min(first for _, first, _ in timing)
+        )
+        imaging = {
+            # Serialize the concrete strategy directly: ImagingConfig's base-typed
+            # sampling_strategy drops image_index_sequence in schema 2.9.1.
+            "sampling_strategy": InterleavedStrategy(
+                frame_rate=camera_rate, image_index_sequence=list(range(len(images)))
+            ).model_dump(mode="json"),
+            "images": images,
+        }
         cord_configs = []
         optical_active = []
         connections = []
@@ -309,10 +335,7 @@ def build_acquisition(root: Path) -> Acquisition:
                 "segment_id": sid,
                 # Calibration has no implanted fibers or intended biological measurements.
                 **({} if calibration else {"intended_measurements_by_fiber": saved.intended_measurements_by_fiber}),
-                "channel_order": order,
-                "observed_per_channel_rate_hz": rates,
-                "power_calibration_sources": calibration_sources,
-                "camera_readback": camera_path.relative_to(root).as_posix(),
+                "imaging": imaging,
                 "writer": config["writer"],
                 "firmware": config["firmware"],
                 "lookup_table": config["lookup_table"],
