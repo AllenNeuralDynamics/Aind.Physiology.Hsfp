@@ -9,7 +9,7 @@ __all__ = ["build_acquisition", "map_acquisition"]
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Map saved HSFP acquisition sources to acquisition_fib.json")
+    parser = argparse.ArgumentParser(description="Map saved HSFP acquisition sources to metadata/acquisition_fib.json")
     parser.add_argument("acquisition_root", type=Path)
     args = parser.parse_args()
     print(map_acquisition(args.acquisition_root))

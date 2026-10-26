@@ -28,7 +28,11 @@ def test_swapped_connections_color_semantics_and_shared_camera(recording):
 
 def test_timezone_roundtrip_and_empty_fields(recording):
     root, _, _ = recording
-    output = json.loads(map_acquisition(root).read_text())
+    path = map_acquisition(root)
+    assert path == root / "metadata/acquisition_fib.json"
+    assert not (root / "acquisition_fib.json").exists()
+    assert not (root / "instrument_fib.json").exists()
+    output = json.loads(path.read_text())
     assert output["acquisition_start_tz"] == "America/Los_Angeles"
     assert output["acquisition_start_time"].startswith("2026-10-16T17:30")
     assert output["subject_details"]["mouse_platform_name"] == "mouse_tube_foraging"
@@ -128,7 +132,7 @@ def test_missing_camera_enum_is_not_guessed(recording):
 
 def test_instrument_change_after_first_start_rejected(recording):
     root, _, _ = recording
-    path = root / "instrument_fib.json"
+    path = root / "metadata/instrument_fib.json"
     data = json.loads(path.read_text())
     data["notes"] = "modified during acquisition"
     path.write_text(json.dumps(data))

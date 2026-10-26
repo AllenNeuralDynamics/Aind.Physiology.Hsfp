@@ -23,7 +23,8 @@ from aind_physiology_hsfp.session_input import (
 def recording(tmp_path):
     root = tmp_path / ".hsfp-pending-test"
     root.mkdir()
-    shutil.copy2(Path(__file__).parent / "fixtures/instrument_fib.json", root / "instrument_fib.json")
+    (root / "metadata").mkdir()
+    shutil.copy2(Path(__file__).parent / "fixtures/instrument_fib.json", root / "metadata/instrument_fib.json")
     procedures = json.loads((Path(__file__).parent / "fixtures/procedures.json").read_text())
     atomic_json(root / "fib/Logs/procedures_source.json", procedures)
     session = SessionInput(
@@ -44,7 +45,7 @@ def recording(tmp_path):
         sid, segment = allocate_segment(root)
         config = {
             "session": session.model_dump(mode="json"),
-            "instrument_sha256": sha256(root / "instrument_fib.json"),
+            "instrument_sha256": sha256(root / "metadata/instrument_fib.json"),
             "channel_order": [{"buffer_port": f"IO{i}", "metadata_csv": f"fib/metadata_ch{i}.csv"} for i in range(5)],
             "first_frame_buffer_port": "IO0",
             "active_device_names": ["Teensy 4.1", "cuTTLefish TTL Buffer"],

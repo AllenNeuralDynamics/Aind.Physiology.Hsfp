@@ -18,7 +18,7 @@ def test_interleaved_camera_rate_counts_exposures_and_preserves_per_channel_rate
             counters.remove(7)
         csv_path = root / f"fib/segment_0001/fib/metadata_ch{channel}.csv"
         csv_path.write_text("FrameCounter,Timestamp\n" + "".join(f"{c},{c / 150:.12f}\n" for c in counters))
-    source_paths = [root / "instrument_fib.json", *root.glob("fib/segment_0001/fib/metadata_ch*.csv")]
+    source_paths = [root / "metadata/instrument_fib.json", *root.glob("fib/segment_0001/fib/metadata_ch*.csv")]
     original = {path: path.read_bytes() for path in source_paths}
 
     payload = json.loads(map_acquisition(root).read_text())

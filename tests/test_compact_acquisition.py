@@ -7,7 +7,7 @@ from aind_physiology_hsfp.data_mappers import map_acquisition
 def test_compact_output_keeps_agreed_values_and_source_evidence(recording):
     root, _, _ = recording
     source_names = [
-        'instrument_fib.json', 'fib/Logs/session_input.json', 'fib/Logs/procedures_source.json',
+        'metadata/instrument_fib.json', 'fib/Logs/session_input.json', 'fib/Logs/procedures_source.json',
         'fib/segment_0001/segment_input.json', 'fib/segment_0001/camera_applied.json',
     ]
     camera_path = root / source_names[-1]
@@ -42,7 +42,7 @@ def test_compact_output_keeps_agreed_values_and_source_evidence(recording):
     assert hsfp['acquisition_provenance'] == {'dirty': False}
     assert 'version' not in stream['code'][0]  # unused optional field
     assert stream['code'][0]['commit_hash'] == 'a' * 40
-    instrument = json.loads(originals['instrument_fib.json'])
+    instrument = json.loads(originals['metadata/instrument_fib.json'])
     for laser in (c for c in stream['configurations'] if c['object_type'] == 'Laser config'):
         calibration = max(
             (c for c in instrument['calibrations'] if c['device_name'] == laser['device_name']),

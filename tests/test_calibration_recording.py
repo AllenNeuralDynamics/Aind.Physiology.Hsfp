@@ -35,10 +35,10 @@ def test_calibration_generates_valid_subject_empty_procedures_and_acquisition(re
     assert model.acquisition_type == 'HSFP_calibration'
     assert model.subject_details is None
     assert model.ethics_review_id is None
-    subject = Subject.model_validate_json((root / 'subject.json').read_text())
+    subject = Subject.model_validate_json((root / 'metadata/subject.json').read_text())
     assert subject.subject_details.empty is True
     assert subject.subject_details.description == 'HSFP calibration without a mouse'
-    procedures = Procedures.model_validate_json((root / 'procedures.json').read_text())
+    procedures = Procedures.model_validate_json((root / 'metadata/procedures.json').read_text())
     assert procedures.subject_id == 'calibration'
     assert procedures.subject_procedures == procedures.specimen_procedures == []
     stream = payload['data_streams'][0]
@@ -48,7 +48,7 @@ def test_calibration_generates_valid_subject_empty_procedures_and_acquisition(re
     assert len(channels) == 10
     assert channels[0]['channel_name'] == 'PatchCord_0_405'
     assert all(connection['target_device'] not in ['Implant 0', 'Implant 1'] for connection in stream['connections'])
-    originals = {name: (root / name).read_bytes() for name in ['subject.json', 'procedures.json']}
+    originals = {name: (root / name).read_bytes() for name in ['metadata/subject.json', 'metadata/procedures.json']}
     write_calibration_metadata(root, session)
     assert all((root / name).read_bytes() == data for name, data in originals.items())
 
@@ -57,8 +57,9 @@ def test_calibration_documents_are_not_silently_replaced(tmp_path):
     from aind_physiology_hsfp.data_mappers._acquisition import write_calibration_metadata
 
     session = CalibrationInput(experimenters=['Operator'])
-    (tmp_path / 'subject.json').write_text('{"wrong": "document"}')
+    (tmp_path / 'metadata').mkdir()
+    (tmp_path / 'metadata/subject.json').write_text('{"wrong": "document"}')
     with pytest.raises(ValueError):
         write_calibration_metadata(tmp_path, session)
-    assert (tmp_path / 'subject.json').read_text() == '{"wrong": "document"}'
-    assert not (tmp_path / 'procedures.json').exists()
+    assert (tmp_path / 'metadata/subject.json').read_text() == '{"wrong": "document"}'
+    assert not (tmp_path / 'metadata/procedures.json').exists()

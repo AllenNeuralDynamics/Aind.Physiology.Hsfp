@@ -136,11 +136,11 @@ def write_calibration_metadata(root: Path, session: CalibrationInput) -> None:
     }
     payloads = {name: json.loads(model.model_dump_json(exclude_none=True)) for name, model in models.items()}
     for name, model in models.items():
-        path = root / name
+        path = root / "metadata" / name
         if path.exists() and type(model).model_validate(load_json(path)) != model:
             raise ValueError(f"Existing {name} differs from confirmed calibration inputs; refusing to overwrite")
     for name, payload in payloads.items():
-        path = root / name
+        path = root / "metadata" / name
         if not path.exists():
             atomic_json(path, payload)
 
@@ -153,11 +153,11 @@ def build_acquisition(root: Path) -> Acquisition:
     calibration = isinstance(session, CalibrationInput)
     if not session.configuration_confirmed:
         raise ValueError("Session configuration was not confirmed")
-    instrument = load_json(root / "instrument_fib.json")
+    instrument = load_json(root / "metadata/instrument_fib.json")
     Instrument.model_validate(instrument)
     if calibration:
-        procedures = Procedures.model_validate(load_json(root / "procedures.json"))
-        subject = Subject.model_validate(load_json(root / "subject.json"))
+        procedures = Procedures.model_validate(load_json(root / "metadata/procedures.json"))
+        subject = Subject.model_validate(load_json(root / "metadata/subject.json"))
         if procedures.subject_id != "calibration" or procedures.subject_procedures or procedures.specimen_procedures:
             raise ValueError("Calibration requires empty Procedures for subject calibration")
         if subject.subject_id != "calibration" or subject.subject_details != session.calibration_object:
@@ -201,7 +201,7 @@ def build_acquisition(root: Path) -> Acquisition:
             raise ValueError("Segment subject/timezone differs from acquisition")
         if not saved.configuration_confirmed:
             raise ValueError("Unconfirmed segment configuration")
-        if config["instrument_sha256"] != sha256(root / "instrument_fib.json"):
+        if config["instrument_sha256"] != sha256(root / "metadata/instrument_fib.json"):
             raise ValueError("Instrument snapshot changed during acquisition")
         camera_path = segment / "camera_applied.json"
         camera = load_json(camera_path)
@@ -429,6 +429,6 @@ def acquisition_payload(model: Acquisition) -> dict:
 def map_acquisition(root: Path) -> Path:
     # All source checks and the serialized schema round-trip precede replacement.
     payload = acquisition_payload(build_acquisition(root))
-    target = root / "acquisition_fib.json"
+    target = root / "metadata/acquisition_fib.json"
     atomic_json(target, payload)
     return target
