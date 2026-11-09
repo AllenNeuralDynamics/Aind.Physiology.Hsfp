@@ -425,7 +425,7 @@
                 <harp:DumpRegisters>true</harp:DumpRegisters>
                 <harp:VisualIndicators>On</harp:VisualIndicators>
                 <harp:Heartbeat>Enabled</harp:Heartbeat>
-                <harp:IgnoreErrors>false</harp:IgnoreErrors>
+                <harp:IgnoreErrors>true</harp:IgnoreErrors>
                 <harp:PortName>COM8</harp:PortName>
               </Combinator>
             </Expression>
