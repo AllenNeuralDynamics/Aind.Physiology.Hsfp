@@ -36,7 +36,7 @@
               <Combinator xsi:type="rx:Merge" />
             </Expression>
             <Expression xsi:type="MemberSelector">
-              <Selector>Image</Selector>
+              <Selector>Item1.Image</Selector>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>thisStream</Name>
@@ -59,7 +59,14 @@
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:SelectRectangles">
                 <p1:label>Channel</p1:label>
-                <p1:Rectangles />
+                <p1:Rectangles>
+                  <p1:Rect>
+                    <p1:X>1475</p1:X>
+                    <p1:Y>30</p1:Y>
+                    <p1:Width>147</p1:Width>
+                    <p1:Height>53</p1:Height>
+                  </p1:Rect>
+                </p1:Rectangles>
                 <p1:Refresh>false</p1:Refresh>
               </Combinator>
             </Expression>

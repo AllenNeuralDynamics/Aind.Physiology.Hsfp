@@ -53,7 +53,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:AppendModalitySuffix">
-                <p1:Modality>Behavior</p1:Modality>
+                <p1:Modality>Fib</p1:Modality>
               </Combinator>
             </Expression>
             <Expression xsi:type="Format">
@@ -66,6 +66,8 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:FileCopy">
+                <p1:SourcePath>C:/git/Aind.Physiology.Hsfp/local/HSFP-default-camera-config.xml</p1:SourcePath>
+                <p1:DestinationPath>C:\output_data\000000_2026-11-17_15-06-39_68b236cd52824716a6c9899d7142e2f6\fib\segment_0001\fib/camera_settings.xml</p1:DestinationPath>
                 <p1:Overwrite>false</p1:Overwrite>
               </Combinator>
             </Expression>
@@ -89,8 +91,156 @@
               </PropertyMappings>
             </Expression>
             <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.HarpUtils:LogHarpDeviceWithMetadata.bonsai">
-              <DeviceMetadata />
-              <Modality>Behavior</Modality>
+              <DeviceMetadata>%YAML 1.1
+---
+# yaml-language-server: $schema=https://harp-tech.org/draft-02/schema/device.json
+device: Cuttlefish
+whoAmI: 1403
+firmwareVersion: "0.1"
+hardwareTargets: "0.0"
+registers:
+  PinDirection: &amp;IORegister
+    address: 32
+    type: U8
+    access: Write
+    maskType: Pins
+    description: "Set the direction of the pins. 0 = input; 1 = output"
+  PinState:
+    &lt;&lt;: *IORegister
+    address: 33
+    description: "Read or write the state of the pins."
+  PinSet:
+    &lt;&lt;: *IORegister
+    address: 34
+    description: "Set pins specified in the mask to logic HIGH by setting the
+                  corresponding bit."
+  PinClear:
+    &lt;&lt;: *IORegister
+    address: 35
+    description: "Set specified pins in the mask to logic LOW by setting the
+                  corresponding bit."
+  EnableRisingEdgeEvents:
+    &lt;&lt;: *IORegister
+    address: 36
+    description: "Enable Events from the RisingEdgeEvents register for the
+                  specified pins in the mask when any of the corresponding
+                  pins transitions from logic LOW to logic HIGH."
+  RisingEdgeEvents:
+    &lt;&lt;: *IORegister
+    address: 37
+    access: Event
+    description: "Event Only. Returns a timestamped message with the Port state
+                  when any of the pins specified in the EnableRisingEdgeEvents
+                  register transitions from logic LOW to logic HIGH."
+  EnableFallingEdgeEvents:
+    &lt;&lt;: *IORegister
+    address: 38
+    description: "Enable Events from the FallingEdgeEvents register for the
+                  specified pins in the mask when any of the corresponding
+                  pins transitions from logic HIGH to logic LOW."
+  FallingEdgeEvents:
+    &lt;&lt;: *IORegister
+    address: 39
+    access: Event
+    description: "Event Only. Returns a timestamped message with the Port state
+                  when any of the pins specified in the EnableFallingEdgeEvents
+                  register transitions from logic HIGH to logic LOW."
+  PwmState:
+    address: 40
+    access: [Write, Event]
+    type: U8
+    maskType: EnableFlag
+    description: "Write a nonzero value to this register to start the PWM
+                  schedule. Write zero to stop the schedule. Receive an
+                  event with payload=0 when the pwm schedule has finished."
+  PwmSettings0: &amp;PwmSettingsRegister
+    address: 41
+    type: U8
+    access: Write
+    length: 17
+    description: "Configure the settings of the PWM output on pin 0."
+    interfaceType: PwmSettingsPayload
+    payloadSpec:
+      OffsetUs:
+        offset: 0
+        length: 4
+        interfaceType: uint
+        description: "How long (in microseconds) the output remains LOW before
+                      switching HIGH in one period."
+      OnDurationUs:
+        offset: 4
+        length: 4
+        interfaceType: uint
+        description: "How long (in microseconds) the output remains HIGH in one
+                      period."
+      OffDurationUs:
+        offset: 8
+        length: 4
+        interfaceType: uint
+        description: "How long (in microseconds) the output remains LOW in one
+                      period."
+      Cycles:
+        offset: 12
+        length: 4
+        interfaceType: uint
+        description: "How many pulses to produce, or zero to pulse until
+                      disabled."
+      Invert:
+        offset: 16
+        interfaceType: bool
+        description: "Whether the output is inverted (on-time refers to the
+                      output being LOW instead)."
+  PwmSettings1:
+    &lt;&lt;: *PwmSettingsRegister
+    address: 42
+    description: "Configure the settings of the PWM output on pin 1."
+  PwmSettings2:
+    &lt;&lt;: *PwmSettingsRegister
+    address: 43
+    description: "Configure the settings of the PWM output on pin 2."
+  PwmSettings3:
+    &lt;&lt;: *PwmSettingsRegister
+    address: 44
+    description: "Configure the settings of the PWM output on pin 3."
+  PwmSettings4:
+    &lt;&lt;: *PwmSettingsRegister
+    address: 45
+    description: "Configure the settings of the PWM output on pin 4."
+  PwmSettings5:
+    &lt;&lt;: *PwmSettingsRegister
+    address: 46
+    description: "Configure the settings of the PWM output on pin 5."
+  PwmSettings6:
+    &lt;&lt;: *PwmSettingsRegister
+    address: 47
+    description: "Configure the settings of the PWM output on pin 6."
+  PwmSettings7:
+    &lt;&lt;: *PwmSettingsRegister
+    address: 48
+    description: "Configure the settings of the PWM output on pin 7."
+  ScheduleStatus:
+    address: 49
+    access: Event
+    type: U8
+    description: "Event Only. Emitted when the PWM schedule encounters an
+                  error while running. A value of 1 indicates a missed
+                  deadline, after which the schedule is aborted."
+
+bitMasks:
+  Pins:
+    description: "Available pins on the device"
+    bits:
+      None: 0x0
+      Pin0: 0x1
+      Pin1: 0x2
+      Pin2: 0x4
+      Pin3: 0x8
+      Pin4: 0x10
+      Pin5: 0x20
+      Pin6: 0x40
+      Pin7: 0x80
+</DeviceMetadata>
+              <Modality>Fib</Modality>
               <DeviceName>Cuttlefish</DeviceName>
             </Expression>
             <Expression xsi:type="SubscribeSubject">

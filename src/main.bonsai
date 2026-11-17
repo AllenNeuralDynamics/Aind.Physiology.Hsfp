@@ -213,7 +213,7 @@
             </Expression>
             <Expression xsi:type="rx:GroupBy">
               <rx:KeySelector>Item2.Item1</rx:KeySelector>
-              <rx:ElementSelector>Item1</rx:ElementSelector>
+              <rx:ElementSelector>Item1,Item2.Item2</rx:ElementSelector>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>ChannelCount</Name>
@@ -251,7 +251,7 @@
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p2:CsvWriter">
-                <p2:FileName>C:\output_data\000000_2026-11-17_14-32-32_f7fe8d079d1c4ac3ad729d681bd3ac8d\fib\segment_0001\fib/session_params_.csv</p2:FileName>
+                <p2:FileName>C:\output_data\000000_2026-11-17_15-06-39_68b236cd52824716a6c9899d7142e2f6\fib\segment_0001\fib/session_params_.csv</p2:FileName>
                 <p2:Suffix>Timestamp</p2:Suffix>
                 <p2:Overwrite>false</p2:Overwrite>
               </Combinator>

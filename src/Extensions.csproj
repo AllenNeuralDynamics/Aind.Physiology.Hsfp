@@ -17,6 +17,7 @@
     <PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
     <PackageReference Include="Bonsai.Design" Version="2.9.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="AllenNeuralDynamics.Cuttlefish" Version="0.5.1" />
   </ItemGroup>
 
 </Project>
