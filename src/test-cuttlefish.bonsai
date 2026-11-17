@@ -1,0 +1,272 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="2.9.0"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
+                 xmlns:harp="clr-namespace:Bonsai.Harp;assembly=Bonsai.Harp"
+                 xmlns:p1="clr-namespace:AllenNeuralDynamics.Cuttlefish;assembly=AllenNeuralDynamics.Cuttlefish"
+                 xmlns:p2="clr-namespace:System.Reactive;assembly=System.Reactive.Core"
+                 xmlns:gui="clr-namespace:Bonsai.Gui;assembly=Bonsai.Gui"
+                 xmlns="https://bonsai-rx.org/2018/workflow">
+  <Workflow>
+    <Nodes>
+      <Expression xsi:type="rx:BehaviorSubject" TypeArguments="harp:HarpMessage">
+        <rx:Name>CuttlefishCommands</rx:Name>
+      </Expression>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="PortName" DisplayName="CuttlefishPort" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="p1:Device">
+          <harp:OperationMode>Active</harp:OperationMode>
+          <harp:OperationLed>On</harp:OperationLed>
+          <harp:DumpRegisters>true</harp:DumpRegisters>
+          <harp:VisualIndicators>On</harp:VisualIndicators>
+          <harp:Heartbeat>Enabled</harp:Heartbeat>
+          <harp:IgnoreErrors>true</harp:IgnoreErrors>
+          <harp:PortName>COM9</harp:PortName>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="rx:PublishSubject">
+        <Name>CuttlefishEvents</Name>
+      </Expression>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>CuttlefishEvents</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:Take">
+          <rx:Count>1</rx:Count>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="p1:CreateMessage">
+          <harp:MessageType>Write</harp:MessageType>
+          <harp:Payload xsi:type="p1:CreatePinDirectionPayload">
+            <p1:PinDirection>None</p1:PinDirection>
+          </harp:Payload>
+        </Builder>
+      </Expression>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="MulticastSubject">
+          <Name>CuttlefishCommands</Name>
+        </Builder>
+      </Expression>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="Combinator">
+          <Combinator xsi:type="rx:Delay">
+            <rx:DueTime>PT0.05S</rx:DueTime>
+          </Combinator>
+        </Builder>
+      </Expression>
+      <Expression xsi:type="p1:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="p1:CreateEnableRisingEdgeEventsPayload">
+          <p1:EnableRisingEdgeEvents>Pin0 Pin1 Pin2 Pin3 Pin4 Pin5 Pin6 Pin7</p1:EnableRisingEdgeEvents>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>CuttlefishCommands</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:Delay">
+          <rx:DueTime>PT0.05S</rx:DueTime>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="p1:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="p1:CreatePwmSettings0Payload">
+          <p1:OffsetUs>0</p1:OffsetUs>
+          <p1:OnDurationUs>100</p1:OnDurationUs>
+          <p1:OffDurationUs>6567</p1:OffDurationUs>
+          <p1:Cycles>0</p1:Cycles>
+          <p1:Invert>false</p1:Invert>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>CuttlefishCommands</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:Delay">
+          <rx:DueTime>PT0.05S</rx:DueTime>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="p1:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="p1:CreatePwmSettings1Payload">
+          <p1:OffsetUs>0</p1:OffsetUs>
+          <p1:OnDurationUs>1000</p1:OnDurationUs>
+          <p1:OffDurationUs>32335</p1:OffDurationUs>
+          <p1:Cycles>0</p1:Cycles>
+          <p1:Invert>false</p1:Invert>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>CuttlefishCommands</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:Delay">
+          <rx:DueTime>PT0.05S</rx:DueTime>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="p1:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="p1:CreatePwmSettings2Payload">
+          <p1:OffsetUs>6667</p1:OffsetUs>
+          <p1:OnDurationUs>1000</p1:OnDurationUs>
+          <p1:OffDurationUs>32335</p1:OffDurationUs>
+          <p1:Cycles>0</p1:Cycles>
+          <p1:Invert>false</p1:Invert>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>CuttlefishCommands</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:Delay">
+          <rx:DueTime>PT0.05S</rx:DueTime>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="p1:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="p1:CreatePwmSettings3Payload">
+          <p1:OffsetUs>13334</p1:OffsetUs>
+          <p1:OnDurationUs>1000</p1:OnDurationUs>
+          <p1:OffDurationUs>32335</p1:OffDurationUs>
+          <p1:Cycles>0</p1:Cycles>
+          <p1:Invert>false</p1:Invert>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>CuttlefishCommands</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:Delay">
+          <rx:DueTime>PT0.05S</rx:DueTime>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="p1:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="p1:CreatePwmSettings4Payload">
+          <p1:OffsetUs>20001</p1:OffsetUs>
+          <p1:OnDurationUs>1000</p1:OnDurationUs>
+          <p1:OffDurationUs>32335</p1:OffDurationUs>
+          <p1:Cycles>0</p1:Cycles>
+          <p1:Invert>false</p1:Invert>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>CuttlefishCommands</Name>
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:Delay">
+          <rx:DueTime>PT0.05S</rx:DueTime>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="p1:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="p1:CreatePwmSettings5Payload">
+          <p1:OffsetUs>26668</p1:OffsetUs>
+          <p1:OnDurationUs>1000</p1:OnDurationUs>
+          <p1:OffDurationUs>32335</p1:OffDurationUs>
+          <p1:Cycles>0</p1:Cycles>
+          <p1:Invert>false</p1:Invert>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>CuttlefishCommands</Name>
+      </Expression>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>CuttlefishEvents</Name>
+      </Expression>
+      <Expression xsi:type="p1:Parse">
+        <harp:Register xsi:type="p1:TimestampedRisingEdgeEvents" />
+      </Expression>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
+          <rx:Name>TriggerReadDump</rx:Name>
+        </Builder>
+      </Expression>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="harp:CreateMessage">
+          <harp:MessageType>Write</harp:MessageType>
+          <harp:Payload xsi:type="harp:CreateOperationControlPayload">
+            <harp:OperationMode>Active</harp:OperationMode>
+            <harp:DumpRegisters>true</harp:DumpRegisters>
+            <harp:MuteReplies>false</harp:MuteReplies>
+            <harp:VisualIndicators>On</harp:VisualIndicators>
+            <harp:OperationLed>On</harp:OperationLed>
+            <harp:Heartbeat>Enabled</harp:Heartbeat>
+          </harp:Payload>
+        </Builder>
+      </Expression>
+      <Expression xsi:type="Disable">
+        <Builder xsi:type="MulticastSubject">
+          <Name>CuttlefishCommands</Name>
+        </Builder>
+      </Expression>
+      <Expression xsi:type="gui:ButtonBuilder">
+        <gui:Enabled>true</gui:Enabled>
+        <gui:Visible>true</gui:Visible>
+        <gui:Text>Start</gui:Text>
+      </Expression>
+      <Expression xsi:type="p1:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="p1:CreatePwmStatePayload">
+          <p1:PwmState>Enabled</p1:PwmState>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>CuttlefishCommands</Name>
+      </Expression>
+      <Expression xsi:type="gui:ButtonBuilder">
+        <gui:Enabled>true</gui:Enabled>
+        <gui:Visible>true</gui:Visible>
+        <gui:Text>Stop</gui:Text>
+      </Expression>
+      <Expression xsi:type="p1:CreateMessage">
+        <harp:MessageType>Write</harp:MessageType>
+        <harp:Payload xsi:type="p1:CreatePwmStatePayload">
+          <p1:PwmState>Disabled</p1:PwmState>
+        </harp:Payload>
+      </Expression>
+      <Expression xsi:type="MulticastSubject">
+        <Name>CuttlefishCommands</Name>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge From="0" To="2" Label="Source1" />
+      <Edge From="1" To="2" Label="Source2" />
+      <Edge From="2" To="3" Label="Source1" />
+      <Edge From="4" To="5" Label="Source1" />
+      <Edge From="5" To="6" Label="Source1" />
+      <Edge From="6" To="7" Label="Source1" />
+      <Edge From="7" To="8" Label="Source1" />
+      <Edge From="8" To="9" Label="Source1" />
+      <Edge From="9" To="10" Label="Source1" />
+      <Edge From="10" To="11" Label="Source1" />
+      <Edge From="11" To="12" Label="Source1" />
+      <Edge From="12" To="13" Label="Source1" />
+      <Edge From="13" To="14" Label="Source1" />
+      <Edge From="14" To="15" Label="Source1" />
+      <Edge From="15" To="16" Label="Source1" />
+      <Edge From="16" To="17" Label="Source1" />
+      <Edge From="17" To="18" Label="Source1" />
+      <Edge From="18" To="19" Label="Source1" />
+      <Edge From="19" To="20" Label="Source1" />
+      <Edge From="20" To="21" Label="Source1" />
+      <Edge From="21" To="22" Label="Source1" />
+      <Edge From="22" To="23" Label="Source1" />
+      <Edge From="23" To="24" Label="Source1" />
+      <Edge From="24" To="25" Label="Source1" />
+      <Edge From="25" To="26" Label="Source1" />
+      <Edge From="26" To="27" Label="Source1" />
+      <Edge From="27" To="28" Label="Source1" />
+      <Edge From="29" To="30" Label="Source1" />
+      <Edge From="31" To="32" Label="Source1" />
+      <Edge From="32" To="33" Label="Source1" />
+      <Edge From="34" To="35" Label="Source1" />
+      <Edge From="35" To="36" Label="Source1" />
+      <Edge From="37" To="38" Label="Source1" />
+      <Edge From="38" To="39" Label="Source1" />
+    </Edges>
+  </Workflow>
+</WorkflowBuilder>
