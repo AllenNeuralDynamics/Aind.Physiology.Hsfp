@@ -1,0 +1,28 @@
+[build-system]
+requires = ["uv_build>=0.8.22"]
+build-backend = "uv_build"
+
+[project]
+name = "aind-physiology-hsfp"
+description = "A repository for Hyperspectral Fiber Photometry (HSFP) data acquisition"
+authors = [
+    { name = "Bruno Cruz", email = "bruno.cruz@alleninstitute.org" },
+    { name = "Carrie Stine", email = "carrie.stine@alleninstitute.org" },
+]
+license = "MIT"
+requires-python = ">=3.11"
+version = "0.1.0"
+readme = { file = "README.md", content-type = "text/markdown" }
+classifiers = ["Programming Language :: Python :: 3.11", "License :: OSI Approved :: MIT License", "Operating System :: Microsoft :: Windows"]
+dependencies = ["aind_behavior_services>=0.13.9", "pydantic-settings"]
+
+[project.urls]
+Repository = "https://github.com/AllenNeuralDynamics/Aind.Physiology.Hsfp/"
+Issues = "https://github.com/AllenNeuralDynamics/Aind.Physiology.Hsfp/issues"
+Changelog = "https://github.com/AllenNeuralDynamics/Aind.Physiology.Hsfp/releases"
+
+[project.optional-dependencies]
+data = ["contraqctor >= 0.6", "tifffile"]
+
+[project.scripts]
+hsfp = "aind_physiology_hsfp.cli:main"

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["uv_build>=0.8.22"]
+build-backend = "uv_build"
+
+[project]
+name = "aind-physiology-hsfp-data-mappers"
+description = "Internal data mappers for the AIND HSFP acquisition system."
+authors = [
+    { name = "Bruno Cruz", email = "bruno.cruz@alleninstitute.org" },
+    { name = "Carrie Stine", email = "carrie.stine@alleninstitute.org" },
+]
+license = "MIT"
+version = "0.1.0"
+requires-python = ">=3.11"
+readme = { file = "README.md", content-type = "text/markdown" }
+classifiers = ["Programming Language :: Python :: 3.11", "Operating System :: Microsoft :: Windows", "Private :: Do Not Upload"]
+dependencies = [
+    "aind-physiology-hsfp[data]",
+    "aind-data-schema>=2.9",
+    "gitpython",
+    "pydantic-settings",
+    "aind-clabe>=0.13",
+    "pandas",
+]
+
+[project.scripts]
+hsfp-data-mapper = "aind_physiology_hsfp_data_mappers:main"
+
+[tool.uv.sources]
+aind-physiology-hsfp = { workspace = true }

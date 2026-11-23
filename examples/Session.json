@@ -1,0 +1,16 @@
+{
+  "aind_behavior_services_pkg_version": "0.13.9",
+  "version": "0.13.9",
+  "experiment": "AindPhysioHsfp",
+  "experimenter": [
+    "Foo",
+    "Bar"
+  ],
+  "date": "2025-01-01T12:00:00Z",
+  "session_name": "test_2025-01-01T120000Z",
+  "subject": "test",
+  "notes": "test session",
+  "commit_hash": null,
+  "allow_dirty_repo": true,
+  "skip_hardware_validation": false
+}

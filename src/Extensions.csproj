@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">            
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <!-- Keep SDK builds within the syntax supported by Bonsai's script compiler. -->
-    <LangVersion>5</LangVersion>
+    <LangVersion>7.3</LangVersion>
     <UseWindowsForms>true</UseWindowsForms>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,12 +13,17 @@
     <PackageReference Include="AllenNeuralDynamics.HamamatsuCamera" Version="0.5.0" />
     <PackageReference Include="OpenCV.Net" Version="3.4.2" />
     <PackageReference Include="Bonsai.Vision" Version="2.9.0" />
+    <PackageReference Include="OpenTK" Version="3.1.0" />
     <PackageReference Include="OpenTK.GLControl" Version="3.1.0" />
     <PackageReference Include="Bonsai.Vision.Design" Version="2.9.0" />
     <PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
     <PackageReference Include="Bonsai.Design" Version="2.9.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="AllenNeuralDynamics.Cuttlefish" Version="0.5.1" />
+    <PackageReference Include="Bonsai.ImGui" Version="0.2.0" />
+    <PackageReference Include="Bonsai.ImPlot" Version="0.2.0" />
+    <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
+    <PackageReference Include="Hexa.NET.ImPlot" Version="2.2.9" />
   </ItemGroup>
 
 </Project>

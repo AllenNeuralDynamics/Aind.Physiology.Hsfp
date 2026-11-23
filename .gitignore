@@ -101,3 +101,9 @@ ipython_config.py
 
 /src/packages/**/__pycache__/
 /src/packages/**/*.py[cod]
+
+# uv cache
+.uv-cache/
+
+# C# solution files
+*.sln

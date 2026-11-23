@@ -2,9 +2,14 @@
 <WorkflowBuilder Version="2.9.0"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
+                 xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
                  xmlns:p1="clr-namespace:AllenNeuralDynamics.Core;assembly=AllenNeuralDynamics.Core"
-                 xmlns:sys="clr-namespace:System;assembly=mscorlib"
-                 xmlns:p2="clr-namespace:AllenNeuralDynamics.Cuttlefish;assembly=AllenNeuralDynamics.Cuttlefish"
+                 xmlns:p2="clr-namespace:AindPhysiologyHsfp;assembly=Extensions"
+                 xmlns:p3="clr-namespace:AllenNeuralDynamics.HamamatsuCamera;assembly=AllenNeuralDynamics.HamamatsuCamera"
+                 xmlns:harp="clr-namespace:Bonsai.Harp;assembly=Bonsai.Harp"
+                 xmlns:p4="clr-namespace:AllenNeuralDynamics.VersionControl;assembly=AllenNeuralDynamics.VersionControl"
+                 xmlns:p5="clr-namespace:AllenNeuralDynamics.Cuttlefish;assembly=AllenNeuralDynamics.Cuttlefish"
+                 xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
                  xmlns="https://bonsai-rx.org/2018/workflow">
   <Workflow>
     <Nodes>
@@ -12,9 +17,12 @@
         <Name>Logging</Name>
         <Workflow>
           <Nodes>
-            <Expression xsi:type="PropertySource" TypeArguments="p1:AppendModalitySuffix,sys:Nullable(p1:Modality)">
-              <MemberName>Modality</MemberName>
-              <Value>Fib</Value>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>LoggingRootPath</Name>
+            </Expression>
+            <Expression xsi:type="scr:ExpressionTransform">
+              <scr:Name>DateTime.Now</scr:Name>
+              <scr:Expression>DateTime.Now.ToString("yyyy-MM-ddTHHmmss")</scr:Expression>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Take">
@@ -22,255 +30,602 @@
               </Combinator>
             </Expression>
             <Expression xsi:type="rx:AsyncSubject">
-              <Name>Modality</Name>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="IntProperty">
-                <Value>0</Value>
-              </Combinator>
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>CameraSettingsPath</Name>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="SourcePath" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="ExternalizedMapping">
-              <Property Name="Name" DisplayName="SubjectName" />
+              <Name>DateTimeSuffix</Name>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
               <Name>LoggingRootPath</Name>
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>Modality</Name>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="Modality" />
-              </PropertyMappings>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:AppendModalitySuffix">
                 <p1:Modality>Fib</p1:Modality>
               </Combinator>
             </Expression>
-            <Expression xsi:type="Format">
-              <Format>{0}/camera_settings.xml</Format>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="DestinationPath" />
-              </PropertyMappings>
-            </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="p1:FileCopy">
-                <p1:SourcePath>C:/git/Aind.Physiology.Hsfp/local/HSFP-default-camera-config.xml</p1:SourcePath>
-                <p1:DestinationPath>C:\output_data\000000_2026-11-17_15-06-39_68b236cd52824716a6c9899d7142e2f6\fib\segment_0001\fib/camera_settings.xml</p1:DestinationPath>
-                <p1:Overwrite>false</p1:Overwrite>
+              <Combinator xsi:type="rx:Take">
+                <rx:Count>1</rx:Count>
               </Combinator>
             </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>CuttlefishEvents</Name>
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>Modality</Name>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="Modality" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="p2:GetDeviceMetadata" />
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="DeviceMetadata" />
-              </PropertyMappings>
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.HarpUtils:LogHarpDeviceWithMetadata.bonsai">
-              <DeviceMetadata>%YAML 1.1
----
-# yaml-language-server: $schema=https://harp-tech.org/draft-02/schema/device.json
-device: Cuttlefish
-whoAmI: 1403
-firmwareVersion: "0.1"
-hardwareTargets: "0.0"
-registers:
-  PinDirection: &amp;IORegister
-    address: 32
-    type: U8
-    access: Write
-    maskType: Pins
-    description: "Set the direction of the pins. 0 = input; 1 = output"
-  PinState:
-    &lt;&lt;: *IORegister
-    address: 33
-    description: "Read or write the state of the pins."
-  PinSet:
-    &lt;&lt;: *IORegister
-    address: 34
-    description: "Set pins specified in the mask to logic HIGH by setting the
-                  corresponding bit."
-  PinClear:
-    &lt;&lt;: *IORegister
-    address: 35
-    description: "Set specified pins in the mask to logic LOW by setting the
-                  corresponding bit."
-  EnableRisingEdgeEvents:
-    &lt;&lt;: *IORegister
-    address: 36
-    description: "Enable Events from the RisingEdgeEvents register for the
-                  specified pins in the mask when any of the corresponding
-                  pins transitions from logic LOW to logic HIGH."
-  RisingEdgeEvents:
-    &lt;&lt;: *IORegister
-    address: 37
-    access: Event
-    description: "Event Only. Returns a timestamped message with the Port state
-                  when any of the pins specified in the EnableRisingEdgeEvents
-                  register transitions from logic LOW to logic HIGH."
-  EnableFallingEdgeEvents:
-    &lt;&lt;: *IORegister
-    address: 38
-    description: "Enable Events from the FallingEdgeEvents register for the
-                  specified pins in the mask when any of the corresponding
-                  pins transitions from logic HIGH to logic LOW."
-  FallingEdgeEvents:
-    &lt;&lt;: *IORegister
-    address: 39
-    access: Event
-    description: "Event Only. Returns a timestamped message with the Port state
-                  when any of the pins specified in the EnableFallingEdgeEvents
-                  register transitions from logic HIGH to logic LOW."
-  PwmState:
-    address: 40
-    access: [Write, Event]
-    type: U8
-    maskType: EnableFlag
-    description: "Write a nonzero value to this register to start the PWM
-                  schedule. Write zero to stop the schedule. Receive an
-                  event with payload=0 when the pwm schedule has finished."
-  PwmSettings0: &amp;PwmSettingsRegister
-    address: 41
-    type: U8
-    access: Write
-    length: 17
-    description: "Configure the settings of the PWM output on pin 0."
-    interfaceType: PwmSettingsPayload
-    payloadSpec:
-      OffsetUs:
-        offset: 0
-        length: 4
-        interfaceType: uint
-        description: "How long (in microseconds) the output remains LOW before
-                      switching HIGH in one period."
-      OnDurationUs:
-        offset: 4
-        length: 4
-        interfaceType: uint
-        description: "How long (in microseconds) the output remains HIGH in one
-                      period."
-      OffDurationUs:
-        offset: 8
-        length: 4
-        interfaceType: uint
-        description: "How long (in microseconds) the output remains LOW in one
-                      period."
-      Cycles:
-        offset: 12
-        length: 4
-        interfaceType: uint
-        description: "How many pulses to produce, or zero to pulse until
-                      disabled."
-      Invert:
-        offset: 16
-        interfaceType: bool
-        description: "Whether the output is inverted (on-time refers to the
-                      output being LOW instead)."
-  PwmSettings1:
-    &lt;&lt;: *PwmSettingsRegister
-    address: 42
-    description: "Configure the settings of the PWM output on pin 1."
-  PwmSettings2:
-    &lt;&lt;: *PwmSettingsRegister
-    address: 43
-    description: "Configure the settings of the PWM output on pin 2."
-  PwmSettings3:
-    &lt;&lt;: *PwmSettingsRegister
-    address: 44
-    description: "Configure the settings of the PWM output on pin 3."
-  PwmSettings4:
-    &lt;&lt;: *PwmSettingsRegister
-    address: 45
-    description: "Configure the settings of the PWM output on pin 4."
-  PwmSettings5:
-    &lt;&lt;: *PwmSettingsRegister
-    address: 46
-    description: "Configure the settings of the PWM output on pin 5."
-  PwmSettings6:
-    &lt;&lt;: *PwmSettingsRegister
-    address: 47
-    description: "Configure the settings of the PWM output on pin 6."
-  PwmSettings7:
-    &lt;&lt;: *PwmSettingsRegister
-    address: 48
-    description: "Configure the settings of the PWM output on pin 7."
-  ScheduleStatus:
-    address: 49
-    access: Event
-    type: U8
-    description: "Event Only. Emitted when the PWM schedule encounters an
-                  error while running. A value of 1 indicates a missed
-                  deadline, after which the schedule is aborted."
-
-bitMasks:
-  Pins:
-    description: "Available pins on the device"
-    bits:
-      None: 0x0
-      Pin0: 0x1
-      Pin1: 0x2
-      Pin2: 0x4
-      Pin3: 0x8
-      Pin4: 0x10
-      Pin5: 0x20
-      Pin6: 0x40
-      Pin7: 0x80
-</DeviceMetadata>
-              <Modality>Fib</Modality>
-              <DeviceName>Cuttlefish</DeviceName>
-            </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>FrameStreams</Name>
-            </Expression>
-            <Expression xsi:type="IncludeWorkflow" Path="Extensions\LogHsfpFrameStream.bonsai" />
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:Merge" />
+            <Expression xsi:type="rx:Defer">
+              <Name>Fib</Name>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="WorkflowInput">
+                    <Name>Source1</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="StringProperty">
+                      <Value>hsfp</Value>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>DateTimeSuffix</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Zip" />
+                  </Expression>
+                  <Expression xsi:type="Format">
+                    <Format>{0}/{1}_{2}</Format>
+                    <Selector>Item1, Item2, Item3</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Take">
+                      <rx:Count>1</rx:Count>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="rx:AsyncSubject">
+                    <Name>LoggingRootPath</Name>
+                  </Expression>
+                  <Expression xsi:type="rx:Defer">
+                    <Name>Logs</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="StringProperty">
+                            <Value>Logs</Value>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Take">
+                            <rx:Count>1</rx:Count>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="rx:AsyncSubject">
+                          <Name>DeviceName</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>SessionSchema</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p2:SerializeToJson">
+                            <p2:Formatting>None</p2:Formatting>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>DeviceName</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DeviceName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:LogDataSchema.bonsai">
+                          <SubjectName>LoggingRootPath</SubjectName>
+                          <Modality xsi:nil="true" />
+                          <DeviceName xsi:nil="true" />
+                          <LogName>session_output</LogName>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>RigSchema</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p2:SerializeToJson">
+                            <p2:Formatting>None</p2:Formatting>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>DeviceName</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DeviceName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:LogDataSchema.bonsai">
+                          <SubjectName>LoggingRootPath</SubjectName>
+                          <Modality xsi:nil="true" />
+                          <DeviceName xsi:nil="true" />
+                          <LogName>rig_output</LogName>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>TaskSchema</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p2:SerializeToJson">
+                            <p2:Formatting>None</p2:Formatting>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>DeviceName</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DeviceName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:LogDataSchema.bonsai">
+                          <SubjectName>LoggingRootPath</SubjectName>
+                          <Modality xsi:nil="true" />
+                          <DeviceName xsi:nil="true" />
+                          <LogName>task_output</LogName>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>RawRigSchema</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>DeviceName</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DeviceName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:LogAllText.bonsai">
+                          <SubjectName>LoggingRootPath</SubjectName>
+                          <Modality xsi:nil="true" />
+                          <DeviceName xsi:nil="true" />
+                          <LogName>rig_input</LogName>
+                          <Extension>json</Extension>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>RawSessionSchema</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>DeviceName</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DeviceName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:LogAllText.bonsai">
+                          <SubjectName>LoggingRootPath</SubjectName>
+                          <Modality xsi:nil="true" />
+                          <DeviceName xsi:nil="true" />
+                          <LogName>session_input</LogName>
+                          <Extension>json</Extension>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>RawTaskSchema</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>DeviceName</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DeviceName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:LogAllText.bonsai">
+                          <SubjectName>LoggingRootPath</SubjectName>
+                          <Modality xsi:nil="true" />
+                          <DeviceName xsi:nil="true" />
+                          <LogName>task_input</LogName>
+                          <Extension>json</Extension>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="7" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source2" />
+                        <Edge From="8" To="9" Label="Source1" />
+                        <Edge From="9" To="12" Label="Source1" />
+                        <Edge From="10" To="11" Label="Source1" />
+                        <Edge From="11" To="12" Label="Source2" />
+                        <Edge From="13" To="14" Label="Source1" />
+                        <Edge From="14" To="17" Label="Source1" />
+                        <Edge From="15" To="16" Label="Source1" />
+                        <Edge From="16" To="17" Label="Source2" />
+                        <Edge From="18" To="21" Label="Source1" />
+                        <Edge From="19" To="20" Label="Source1" />
+                        <Edge From="20" To="21" Label="Source2" />
+                        <Edge From="22" To="25" Label="Source1" />
+                        <Edge From="23" To="24" Label="Source1" />
+                        <Edge From="24" To="25" Label="Source2" />
+                        <Edge From="26" To="29" Label="Source1" />
+                        <Edge From="27" To="28" Label="Source1" />
+                        <Edge From="28" To="29" Label="Source2" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Camera</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>LoggingRootPath</Name>
+                        </Expression>
+                        <Expression xsi:type="Format">
+                          <Format>{0}/camera_applied.json</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>CameraSnapshotPath</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="IntProperty">
+                            <Value>0</Value>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>RigSchema</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Camera.SettingsPath</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="SourcePath" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>LoggingRootPath</Name>
+                        </Expression>
+                        <Expression xsi:type="Format">
+                          <Format>{0}/camera_settings.xml</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DestinationPath" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p1:FileCopy">
+                            <p1:Overwrite>false</p1:Overwrite>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>CameraFrames</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>ChannelCount</Name>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DeinterleaveCount" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p3:Processing">
+                            <p3:DeinterleaveCount>5</p3:DeinterleaveCount>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>LoggingRootPath</Name>
+                        </Expression>
+                        <Expression xsi:type="Format">
+                          <Format>{0}/camera_parameters.csv</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="FileName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p3:CsvWriter">
+                            <p3:Suffix>None</p3:Suffix>
+                            <p3:Overwrite>false</p3:Overwrite>
+                          </Combinator>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="3" To="10" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="10" Label="Source2" />
+                        <Edge From="7" To="8" Label="Source1" />
+                        <Edge From="8" To="9" Label="Source1" />
+                        <Edge From="9" To="10" Label="Source3" />
+                        <Edge From="11" To="14" Label="Source1" />
+                        <Edge From="12" To="13" Label="Source1" />
+                        <Edge From="13" To="14" Label="Source2" />
+                        <Edge From="14" To="18" Label="Source1" />
+                        <Edge From="15" To="16" Label="Source1" />
+                        <Edge From="16" To="17" Label="Source1" />
+                        <Edge From="17" To="18" Label="Source2" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>FrameStreams</Name>
+                  </Expression>
+                  <Expression xsi:type="IncludeWorkflow" Path="Extensions\LogHsfpFrameStream.bonsai" />
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>SoftwareEvents</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>SoftwareEvent</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>HarpTimestampSource</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:ObserveOn">
+                            <rx:Scheduler>TaskPoolScheduler</rx:Scheduler>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:WithLatestFrom" />
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="harp:CreateTimestamped" />
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p1:TimestampSoftwareEvent" />
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="Extensions\LogSoftwareEventsDemux.bonsai">
+                          <LoggerName>SoftwareEvents</LoggerName>
+                          <SubjectName>LoggingRootPath</SubjectName>
+                          <Modality xsi:nil="true" />
+                        </Expression>
+                        <Expression xsi:type="GroupWorkflow">
+                          <Name>Metadata</Name>
+                          <Workflow>
+                            <Nodes>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Repository</Name>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p4:IsRepositoryClean">
+                                  <p4:IgnoreUntracked>false</p4:IgnoreUntracked>
+                                </Combinator>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p1:CreateSoftwareEvent">
+                                  <p1:EventName>RepositoryStatus</p1:EventName>
+                                </Combinator>
+                              </Expression>
+                              <Expression xsi:type="MulticastSubject">
+                                <Name>SoftwareEvent</Name>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="rx:Timestamp" />
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>Timestamp.UtcDateTime</Selector>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p1:CreateSoftwareEvent">
+                                  <p1:EventName>StartSessionTime</p1:EventName>
+                                </Combinator>
+                              </Expression>
+                              <Expression xsi:type="MulticastSubject">
+                                <Name>SoftwareEvent</Name>
+                              </Expression>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>EndExperiment</Name>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="rx:Timestamp" />
+                              </Expression>
+                              <Expression xsi:type="MemberSelector">
+                                <Selector>Timestamp.UtcDateTime</Selector>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p1:CreateSoftwareEvent">
+                                  <p1:EventName>EndSessionTime</p1:EventName>
+                                </Combinator>
+                              </Expression>
+                              <Expression xsi:type="MulticastSubject">
+                                <Name>SoftwareEvent</Name>
+                              </Expression>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>Annotations</Name>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p1:CreateSoftwareEvent">
+                                  <p1:EventName>Annotations</p1:EventName>
+                                </Combinator>
+                              </Expression>
+                              <Expression xsi:type="MulticastSubject">
+                                <Name>SoftwareEvent</Name>
+                              </Expression>
+                              <Expression xsi:type="SubscribeSubject">
+                                <Name>CurrentRoiSettings</Name>
+                              </Expression>
+                              <Expression xsi:type="Combinator">
+                                <Combinator xsi:type="p1:CreateSoftwareEvent">
+                                  <p1:EventName>Regions</p1:EventName>
+                                </Combinator>
+                              </Expression>
+                              <Expression xsi:type="MulticastSubject">
+                                <Name>SoftwareEvent</Name>
+                              </Expression>
+                            </Nodes>
+                            <Edges>
+                              <Edge From="0" To="1" Label="Source1" />
+                              <Edge From="1" To="2" Label="Source1" />
+                              <Edge From="2" To="3" Label="Source1" />
+                              <Edge From="3" To="4" Label="Source1" />
+                              <Edge From="4" To="5" Label="Source1" />
+                              <Edge From="5" To="6" Label="Source1" />
+                              <Edge From="6" To="7" Label="Source1" />
+                              <Edge From="8" To="9" Label="Source1" />
+                              <Edge From="9" To="10" Label="Source1" />
+                              <Edge From="10" To="11" Label="Source1" />
+                              <Edge From="11" To="12" Label="Source1" />
+                              <Edge From="13" To="14" Label="Source1" />
+                              <Edge From="14" To="15" Label="Source1" />
+                              <Edge From="16" To="17" Label="Source1" />
+                              <Edge From="17" To="18" Label="Source1" />
+                            </Edges>
+                          </Workflow>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:DelaySubscription">
+                            <rx:DueTime>PT0.5S</rx:DueTime>
+                          </Combinator>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="3" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source2" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="7" To="8" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Harp</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>CuttlefishEvents</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p5:GetDeviceMetadata" />
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DeviceMetadata" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.HarpUtils:LogHarpDeviceWithMetadata.bonsai">
+                          <DeviceMetadata />
+                          <Modality xsi:nil="true" />
+                          <DeviceName>Cuttlefish</DeviceName>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>CuttlefishCommands</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p5:GetDeviceMetadata" />
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="DeviceMetadata" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.HarpUtils:LogHarpDeviceWithMetadata.bonsai">
+                          <DeviceMetadata />
+                          <Modality xsi:nil="true" />
+                          <DeviceName>HarpCommands/Cuttlefish</DeviceName>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="3" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source2" />
+                        <Edge From="4" To="7" Label="Source1" />
+                        <Edge From="5" To="6" Label="Source1" />
+                        <Edge From="6" To="7" Label="Source2" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>FrameMetadata</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>HsfpFrames</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>LoggingRootPath</Name>
+                        </Expression>
+                        <Expression xsi:type="Format">
+                          <Format>{0}/frame_metadata.csv</Format>
+                          <Selector>it</Selector>
+                        </Expression>
+                        <Expression xsi:type="PropertyMapping">
+                          <PropertyMappings>
+                            <Property Name="FileName" />
+                          </PropertyMappings>
+                        </Expression>
+                        <Expression xsi:type="io:CsvWriter">
+                          <io:Append>false</io:Append>
+                          <io:Overwrite>false</io:Overwrite>
+                          <io:Suffix>None</io:Suffix>
+                          <io:IncludeHeader>true</io:IncludeHeader>
+                          <io:Selector>FrameCounter,Timestamp,Seconds,Channel</io:Selector>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="4" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source2" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="GroupWorkflow">
+                    <Name>Regions</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>LoggingRootPath</Name>
+                        </Expression>
+                        <Expression xsi:type="MulticastSubject">
+                          <Name>EpochPath</Name>
+                        </Expression>
+                        <Expression xsi:type="SubscribeSubject">
+                          <Name>CurrentRoiSettings</Name>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="rx:Take">
+                            <rx:Count>1</rx:Count>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p2:SerializeToJson">
+                            <p2:Formatting>Indented</p2:Formatting>
+                          </Combinator>
+                        </Expression>
+                        <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:LogAllText.bonsai">
+                          <SubjectName>LoggingRootPath</SubjectName>
+                          <Modality xsi:nil="true" />
+                          <DeviceName xsi:nil="true" />
+                          <LogName>regions</LogName>
+                          <Extension>json</Extension>
+                        </Expression>
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                        <Edge From="3" To="4" Label="Source1" />
+                        <Edge From="4" To="5" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="3" Label="Source1" />
+                  <Edge From="1" To="3" Label="Source2" />
+                  <Edge From="2" To="3" Label="Source3" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="9" To="10" Label="Source1" />
+                </Edges>
+              </Workflow>
             </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
             <Edge From="1" To="2" Label="Source1" />
-            <Edge From="3" To="13" Label="Source1" />
+            <Edge From="2" To="3" Label="Source1" />
             <Edge From="4" To="5" Label="Source1" />
-            <Edge From="5" To="13" Label="Source2" />
+            <Edge From="5" To="6" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
-            <Edge From="7" To="10" Label="Source1" />
-            <Edge From="8" To="9" Label="Source1" />
-            <Edge From="9" To="10" Label="Source2" />
-            <Edge From="10" To="11" Label="Source1" />
-            <Edge From="11" To="12" Label="Source1" />
-            <Edge From="12" To="13" Label="Source3" />
-            <Edge From="14" To="19" Label="Source1" />
-            <Edge From="15" To="16" Label="Source1" />
-            <Edge From="16" To="19" Label="Source2" />
-            <Edge From="17" To="18" Label="Source1" />
-            <Edge From="18" To="19" Label="Source3" />
-            <Edge From="20" To="21" Label="Source1" />
-            <Edge From="21" To="22" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>

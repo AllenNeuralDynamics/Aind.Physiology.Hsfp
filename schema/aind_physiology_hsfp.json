@@ -1,0 +1,669 @@
+{
+  "$defs": {
+    "AindPhysioHsfpRig": {
+      "description": "Complete rig configuration model for the AIND HSFP system.",
+      "properties": {
+        "aind_behavior_services_pkg_version": {
+          "default": "0.13.9",
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+          "title": "aind_behavior_services package version",
+          "type": "string"
+        },
+        "version": {
+          "const": "0.1.0",
+          "default": "0.1.0",
+          "title": "Version",
+          "type": "string"
+        },
+        "computer_name": {
+          "description": "Computer name",
+          "title": "Computer Name",
+          "type": "string"
+        },
+        "rig_name": {
+          "description": "Rig name",
+          "title": "Rig Name",
+          "type": "string"
+        },
+        "data_directory": {
+          "description": "Directory where data will be saved to",
+          "format": "path",
+          "title": "Data Directory",
+          "type": "string"
+        },
+        "camera": {
+          "$ref": "#/$defs/HsfpCamera",
+          "description": "Camera that records the dispersed fiber output.",
+          "title": "Camera"
+        },
+        "cuttlefish": {
+          "$ref": "#/$defs/HarpCuttlefish",
+          "description": "cuTTLefish board that triggers the camera and the lasers.",
+          "title": "cuTTLefish"
+        },
+        "lasers": {
+          "description": "Lasers, in the order in which they fire. Laser N is triggered by cuTTLefish pin N + 1 and defines acquisition channel N.",
+          "items": {
+            "$ref": "#/$defs/LaserChannel"
+          },
+          "maxItems": 7,
+          "minItems": 1,
+          "title": "Lasers",
+          "type": "array"
+        },
+        "tiff_chunk_size": {
+          "default": 1000,
+          "description": "Number of frames per TIFF file.",
+          "exclusiveMinimum": 0,
+          "title": "Tiff Chunk Size",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "computer_name",
+        "rig_name",
+        "data_directory",
+        "camera",
+        "cuttlefish"
+      ],
+      "title": "AindPhysioHsfpRig",
+      "type": "object"
+    },
+    "AindPhysioHsfpTaskLogic": {
+      "additionalProperties": false,
+      "description": "Task logic for the AIND HSFP system.",
+      "properties": {
+        "name": {
+          "const": "AindPhysioHsfp",
+          "default": "AindPhysioHsfp",
+          "title": "Name",
+          "type": "string"
+        },
+        "description": {
+          "default": "",
+          "description": "Description of the task.",
+          "title": "Description",
+          "type": "string"
+        },
+        "task_parameters": {
+          "$ref": "#/$defs/AindPhysioHsfpTaskParameters",
+          "description": "Parameters of the task"
+        },
+        "version": {
+          "const": "0.1.0",
+          "default": "0.1.0",
+          "title": "Version",
+          "type": "string"
+        },
+        "stage_name": {
+          "default": null,
+          "description": "Optional stage name the `Task` object instance represents.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stage Name"
+        }
+      },
+      "title": "AindPhysioHsfpTaskLogic",
+      "type": "object"
+    },
+    "AindPhysioHsfpTaskParameters": {
+      "additionalProperties": true,
+      "description": "Parameters of the HSFP task.",
+      "properties": {
+        "rng_seed": {
+          "default": null,
+          "description": "Seed of the random number generator",
+          "oneOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Rng Seed"
+        },
+        "aind_behavior_services_pkg_version": {
+          "default": "0.13.9",
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+          "title": "aind_behavior_services package version",
+          "type": "string"
+        },
+        "measurements": {
+          "description": "Fibers recorded in the experiment.",
+          "items": {
+            "$ref": "#/$defs/Measurement"
+          },
+          "title": "Measurements",
+          "type": "array"
+        }
+      },
+      "title": "AindPhysioHsfpTaskParameters",
+      "type": "object"
+    },
+    "BaseModel": {
+      "properties": {},
+      "title": "BaseModel",
+      "type": "object"
+    },
+    "CameraRegion": {
+      "description": "Rectangular region of the camera sensor, defined by its top-left corner, width and height (px).",
+      "properties": {
+        "x": {
+          "default": 0,
+          "description": "X coordinate of the top-left corner (px).",
+          "minimum": 0,
+          "title": "X",
+          "type": "integer"
+        },
+        "y": {
+          "default": 0,
+          "description": "Y coordinate of the top-left corner (px).",
+          "minimum": 0,
+          "title": "Y",
+          "type": "integer"
+        },
+        "width": {
+          "default": 0,
+          "description": "Width of the region (px).",
+          "minimum": 0,
+          "title": "Width",
+          "type": "integer"
+        },
+        "height": {
+          "default": 0,
+          "description": "Height of the region (px).",
+          "minimum": 0,
+          "title": "Height",
+          "type": "integer"
+        }
+      },
+      "title": "CameraRegion",
+      "type": "object"
+    },
+    "FiberRoi": {
+      "description": "Regions of interest of one fiber: one rectangle of the camera image per acquisition channel.",
+      "properties": {
+        "fiber_number": {
+          "description": "Number of the implanted fiber (Fiber_N in the procedures).",
+          "minimum": 0,
+          "title": "Fiber Number",
+          "type": "integer"
+        },
+        "regions": {
+          "description": "Region of the camera image of this fiber, per acquisition channel (index = channel).",
+          "items": {
+            "$ref": "#/$defs/CameraRegion"
+          },
+          "minItems": 1,
+          "title": "Regions",
+          "type": "array"
+        },
+        "enabled": {
+          "default": true,
+          "description": "Whether the fiber is recorded.",
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "fiber_number",
+        "regions"
+      ],
+      "title": "FiberRoi",
+      "type": "object"
+    },
+    "HarpCuttlefish": {
+      "properties": {
+        "device_type": {
+          "const": "cuTTLefish",
+          "default": "cuTTLefish",
+          "title": "Device Type",
+          "type": "string"
+        },
+        "calibration": {
+          "default": null,
+          "description": "Calibration for the device.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BaseModel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "who_am_i": {
+          "const": 1403,
+          "default": 1403,
+          "title": "Who Am I",
+          "type": "integer"
+        },
+        "serial_number": {
+          "default": null,
+          "description": "Device serial number",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Serial Number"
+        },
+        "port_name": {
+          "description": "Device port name",
+          "title": "Port Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "port_name"
+      ],
+      "title": "HarpCuttlefish",
+      "type": "object"
+    },
+    "HsfpCamera": {
+      "description": "Hamamatsu camera that images the dispersed fiber output.",
+      "properties": {
+        "device_type": {
+          "const": "HsfpCamera",
+          "default": "HsfpCamera",
+          "title": "Device Type",
+          "type": "string"
+        },
+        "calibration": {
+          "default": null,
+          "description": "Calibration for the device.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/BaseModel"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "device_name": {
+          "default": "Hamamatsu Orca Flash 4 v3",
+          "description": "Name of the camera, as it appears in the instrument metadata.",
+          "title": "Device Name",
+          "type": "string"
+        },
+        "settings_path": {
+          "description": "Path to the Hamamatsu camera settings (.xml) file.",
+          "title": "Settings Path",
+          "type": "string"
+        },
+        "lookup_table_path": {
+          "default": null,
+          "description": "Optional path to a lookup table (.csv) file.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Lookup Table Path"
+        },
+        "region": {
+          "$ref": "#/$defs/CameraRegion",
+          "default": {
+            "x": 63,
+            "y": 881,
+            "width": 1976,
+            "height": 236
+          },
+          "description": "Region of the sensor that is cropped and recorded (px)."
+        },
+        "trigger": {
+          "$ref": "#/$defs/PwmSettings",
+          "default": {
+            "offset_us": 0,
+            "on_duration_us": 100,
+            "off_duration_us": 6567,
+            "cycles": 0,
+            "invert": false
+          },
+          "description": "PWM settings of the camera trigger, on cuTTLefish pin 0."
+        }
+      },
+      "required": [
+        "settings_path"
+      ],
+      "title": "HsfpCamera",
+      "type": "object"
+    },
+    "IntendedMeasurements": {
+      "description": "Biological signal measured in each color band of one fiber. A null value means the band is not used.",
+      "properties": {
+        "blue": {
+          "default": null,
+          "description": "Intended measurement in the blue band.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Blue"
+        },
+        "green": {
+          "default": null,
+          "description": "Intended measurement in the green band.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Green"
+        },
+        "yellow": {
+          "default": null,
+          "description": "Intended measurement in the yellow band.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Yellow"
+        },
+        "orange": {
+          "default": null,
+          "description": "Intended measurement in the orange band.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Orange"
+        },
+        "red": {
+          "default": null,
+          "description": "Intended measurement in the red band.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Red"
+        },
+        "iso": {
+          "default": null,
+          "description": "Intended measurement in the isosbestic band.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Iso"
+        }
+      },
+      "title": "IntendedMeasurements",
+      "type": "object"
+    },
+    "LaserChannel": {
+      "description": "A laser triggered by one cuTTLefish PWM output. Each laser defines one acquired channel.\n\nThe N-th laser of the rig (channel N) is triggered by cuTTLefish pin N + 1. Pin 0 triggers the camera.",
+      "properties": {
+        "laser_name": {
+          "description": "Name of the laser, as it appears in the instrument metadata.",
+          "title": "Laser Name",
+          "type": "string"
+        },
+        "wavelength": {
+          "description": "Excitation wavelength (nm).",
+          "exclusiveMinimum": 0,
+          "title": "Wavelength",
+          "type": "integer"
+        },
+        "pwm": {
+          "$ref": "#/$defs/PwmSettings",
+          "description": "PWM settings of the laser trigger."
+        },
+        "power": {
+          "default": null,
+          "description": "Power (uW) at the fiber tip. If not set, it is taken from the instrument.",
+          "oneOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Power"
+        }
+      },
+      "required": [
+        "laser_name",
+        "wavelength",
+        "pwm"
+      ],
+      "title": "LaserChannel",
+      "type": "object"
+    },
+    "Measurement": {
+      "description": "A recorded fiber: the implanted fiber and the patch cord connected to it.",
+      "properties": {
+        "fiber_number": {
+          "description": "Number of the implanted fiber (Fiber_N in the procedures).",
+          "minimum": 0,
+          "title": "Fiber Number",
+          "type": "integer"
+        },
+        "patch_cord": {
+          "description": "Index of the patch cord connected to the fiber.",
+          "minimum": 0,
+          "title": "Patch Cord",
+          "type": "integer"
+        },
+        "intended_measurements": {
+          "$ref": "#/$defs/IntendedMeasurements",
+          "description": "Intended measurement in each color band."
+        },
+        "enabled": {
+          "default": true,
+          "description": "Whether the fiber is recorded.",
+          "title": "Enabled",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "fiber_number",
+        "patch_cord"
+      ],
+      "title": "Measurement",
+      "type": "object"
+    },
+    "PwmSettings": {
+      "description": "Settings of one PWM output of the cuTTLefish board (mirrors the firmware PwmSettings register).",
+      "properties": {
+        "offset_us": {
+          "default": 0,
+          "description": "Time (us) the output stays LOW before going HIGH in each period.",
+          "minimum": 0,
+          "title": "Offset Us",
+          "type": "integer"
+        },
+        "on_duration_us": {
+          "description": "Time (us) the output stays HIGH in each period.",
+          "minimum": 1,
+          "title": "On Duration Us",
+          "type": "integer"
+        },
+        "off_duration_us": {
+          "description": "Time (us) the output stays LOW in each period.",
+          "minimum": 0,
+          "title": "Off Duration Us",
+          "type": "integer"
+        },
+        "cycles": {
+          "default": 0,
+          "description": "Number of pulses to produce. 0 pulses until disabled.",
+          "minimum": 0,
+          "title": "Cycles",
+          "type": "integer"
+        },
+        "invert": {
+          "default": false,
+          "description": "Whether the output is inverted (HIGH refers to the output being LOW).",
+          "title": "Invert",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "on_duration_us",
+        "off_duration_us"
+      ],
+      "title": "PwmSettings",
+      "type": "object"
+    },
+    "RoiSettings": {
+      "description": "Regions of interest used to integrate the fluorescence of each fiber, in each channel.",
+      "properties": {
+        "rois": {
+          "description": "Regions of interest, one entry per fiber.",
+          "items": {
+            "$ref": "#/$defs/FiberRoi"
+          },
+          "title": "Rois",
+          "type": "array"
+        }
+      },
+      "title": "RoiSettings",
+      "type": "object"
+    },
+    "Session": {
+      "properties": {
+        "aind_behavior_services_pkg_version": {
+          "default": "0.13.9",
+          "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-((?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+([0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$",
+          "title": "aind_behavior_services package version",
+          "type": "string"
+        },
+        "version": {
+          "const": "0.13.9",
+          "default": "0.13.9",
+          "title": "Version",
+          "type": "string"
+        },
+        "experiment": {
+          "default": null,
+          "description": "Name of the experiment",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Experiment"
+        },
+        "experimenter": {
+          "default": [],
+          "description": "Name of the experimenter",
+          "items": {
+            "type": "string"
+          },
+          "title": "Experimenter",
+          "type": "array"
+        },
+        "date": {
+          "description": "Date of the experiment",
+          "format": "date-time",
+          "title": "Date",
+          "type": "string"
+        },
+        "session_name": {
+          "default": null,
+          "description": "Name of the session. This will be used to create a folder in the root path. If not provided, it will be generated using subject and date.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Session Name"
+        },
+        "subject": {
+          "description": "Name of the subject",
+          "title": "Subject",
+          "type": "string"
+        },
+        "notes": {
+          "default": null,
+          "description": "Notes about the experiment",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Notes"
+        },
+        "commit_hash": {
+          "default": null,
+          "description": "Commit hash of the repository",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Commit Hash"
+        },
+        "allow_dirty_repo": {
+          "default": false,
+          "description": "Allow running from a dirty repository",
+          "title": "Allow Dirty Repo",
+          "type": "boolean"
+        },
+        "skip_hardware_validation": {
+          "default": false,
+          "description": "Skip hardware validation",
+          "title": "Skip Hardware Validation",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "subject"
+      ],
+      "title": "Session",
+      "type": "object"
+    }
+  }
+}

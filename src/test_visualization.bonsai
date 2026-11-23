@@ -1,0 +1,349 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="2.9.0"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xmlns:p1="clr-namespace:AindPhysiologyHsfp;assembly=Extensions"
+                 xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
+                 xmlns:p2="clr-namespace:System.Reactive;assembly=System.Reactive.Core"
+                 xmlns:sys="clr-namespace:System;assembly=mscorlib"
+                 xmlns:p3="clr-namespace:AllenNeuralDynamics.AindBehaviorServices.DataTypes;assembly=AllenNeuralDynamics.AindBehaviorServices"
+                 xmlns:p4="clr-namespace:AllenNeuralDynamics.VersionControl;assembly=AllenNeuralDynamics.VersionControl"
+                 xmlns:p5="clr-namespace:AllenNeuralDynamics.Core;assembly=AllenNeuralDynamics.Core"
+                 xmlns:scr="clr-namespace:Bonsai.Scripting.Expressions;assembly=Bonsai.Scripting.Expressions"
+                 xmlns:p6="clr-namespace:;assembly=Extensions"
+                 xmlns:ui="clr-namespace:Bonsai.Design;assembly=Bonsai.Design"
+                 xmlns="https://bonsai-rx.org/2018/workflow">
+  <Workflow>
+    <Nodes>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="RigPath" />
+        <Property Name="SessionPath" />
+        <Property Name="TaskPath" />
+      </Expression>
+      <Expression xsi:type="IncludeWorkflow" Path="Extensions\ReadSchemas.bonsai">
+        <RigPath>../local/AindPhysioHsfpRig.json</RigPath>
+        <SessionPath>../local/Session.json</SessionPath>
+        <TaskPath>../local/AindPhysioHsfpTaskLogic.json</TaskPath>
+      </Expression>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>DeserializeSchemas</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RawSessionSchema</Name>
+            </Expression>
+            <Expression xsi:type="p1:DeserializeFromJson">
+              <p1:Type xsi:type="TypeMapping" TypeArguments="p1:Session" />
+            </Expression>
+            <Expression xsi:type="rx:AsyncSubject">
+              <Name>SessionSchema</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RawRigSchema</Name>
+            </Expression>
+            <Expression xsi:type="p1:DeserializeFromJson">
+              <p1:Type xsi:type="TypeMapping" TypeArguments="p1:AindPhysioHsfpRig" />
+            </Expression>
+            <Expression xsi:type="rx:AsyncSubject">
+              <Name>RigSchema</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RawTaskSchema</Name>
+            </Expression>
+            <Expression xsi:type="p1:DeserializeFromJson">
+              <p1:Type xsi:type="TypeMapping" TypeArguments="p1:AindPhysioHsfpTaskLogic" />
+            </Expression>
+            <Expression xsi:type="rx:AsyncSubject">
+              <Name>TaskSchema</Name>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="1" Label="Source1" />
+            <Edge From="1" To="2" Label="Source1" />
+            <Edge From="3" To="4" Label="Source1" />
+            <Edge From="4" To="5" Label="Source1" />
+            <Edge From="6" To="7" Label="Source1" />
+            <Edge From="7" To="8" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>Init</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
+              <rx:Name>StartExperiment</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
+              <rx:Name>EndExperiment</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="sys:String">
+              <rx:Name>Annotations</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p3:SoftwareEvent">
+              <rx:Name>SoftwareEvent</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="sys:String">
+              <rx:Name>CameraSnapshotPath</rx:Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p4:CreateRepository">
+                <p4:Path>../.</p4:Path>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:AsyncSubject">
+              <Name>Repository</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>SessionSchema</Name>
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>SessionName</Selector>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="SessionName" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RigSchema</Name>
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>DataDirectory</Selector>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="RootFolder" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="IncludeWorkflow" Path="AllenNeuralDynamics.Core:GenerateRootLoggingPathFromSession.bonsai">
+              <RootFolder />
+              <SessionName xsi:nil="true" />
+              <SubjectName>LoggingRootPath</SubjectName>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RigSchema</Name>
+            </Expression>
+            <Expression xsi:type="scr:ExpressionTransform">
+              <scr:Name>LaserCount</scr:Name>
+              <scr:Expression>it.Lasers.Count</scr:Expression>
+            </Expression>
+            <Expression xsi:type="rx:AsyncSubject">
+              <Name>ChannelCount</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RigSchema</Name>
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>TiffChunkSize</Selector>
+            </Expression>
+            <Expression xsi:type="rx:AsyncSubject">
+              <Name>TiffChunkSize</Name>
+            </Expression>
+            <Expression xsi:type="GroupWorkflow">
+              <Name>ProtocolValidation</Name>
+              <Workflow>
+                <Nodes>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>Repository</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p4:IsRepositoryClean">
+                      <p4:IgnoreUntracked>false</p4:IgnoreUntracked>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="BitwiseNot" />
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>SessionSchema</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>AllowDirtyRepo</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Zip" />
+                  </Expression>
+                  <Expression xsi:type="scr:ExpressionTransform">
+                    <scr:Name>AllowDirty?</scr:Name>
+                    <scr:Expression>Item2 ? False : Item1</scr:Expression>
+                  </Expression>
+                  <Expression xsi:type="rx:Condition">
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p5:ThrowException">
+                      <p5:Message>Repository is not clean! Please discard all local changes, or set allow_dirty_repo in the session.</p5:Message>
+                    </Combinator>
+                  </Expression>
+                </Nodes>
+                <Edges>
+                  <Edge From="0" To="1" Label="Source1" />
+                  <Edge From="1" To="2" Label="Source1" />
+                  <Edge From="2" To="5" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source2" />
+                  <Edge From="5" To="6" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source1" />
+                  <Edge From="7" To="8" Label="Source1" />
+                </Edges>
+              </Workflow>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p1:RoiSettings">
+              <rx:Name>CurrentRoiSettings</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="sys:Int32">
+              <rx:Name>SelectedChannel</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="sys:String">
+              <rx:Name>EpochPath</rx:Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="BooleanProperty">
+                <Value>false</Value>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Take">
+                <rx:Count>1</rx:Count>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>StartExperiment</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Take">
+                <rx:Count>1</rx:Count>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="BooleanProperty">
+                <Value>true</Value>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>EndExperiment</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Take">
+                <rx:Count>1</rx:Count>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="BooleanProperty">
+                <Value>false</Value>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Merge" />
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject">
+              <Name>ExperimentState</Name>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge From="5" To="6" Label="Source1" />
+            <Edge From="7" To="8" Label="Source1" />
+            <Edge From="8" To="9" Label="Source1" />
+            <Edge From="9" To="13" Label="Source1" />
+            <Edge From="10" To="11" Label="Source1" />
+            <Edge From="11" To="12" Label="Source1" />
+            <Edge From="12" To="13" Label="Source2" />
+            <Edge From="14" To="15" Label="Source1" />
+            <Edge From="15" To="16" Label="Source1" />
+            <Edge From="17" To="18" Label="Source1" />
+            <Edge From="18" To="19" Label="Source1" />
+            <Edge From="24" To="25" Label="Source1" />
+            <Edge From="25" To="32" Label="Source1" />
+            <Edge From="26" To="27" Label="Source1" />
+            <Edge From="27" To="28" Label="Source1" />
+            <Edge From="28" To="32" Label="Source2" />
+            <Edge From="29" To="30" Label="Source1" />
+            <Edge From="30" To="31" Label="Source1" />
+            <Edge From="31" To="32" Label="Source3" />
+            <Edge From="32" To="33" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>SimulatedHardware</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>ChannelCount</Name>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="ChannelCount" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RigSchema</Name>
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>Camera.Region</Selector>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="Width" Selector="Width" />
+                <Property Name="Height" Selector="Height" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p6:SimulatedHsfpFrames">
+                <p6:ChannelCount>5</p6:ChannelCount>
+                <p6:FiberCount>2</p6:FiberCount>
+                <p6:Width>1976</p6:Width>
+                <p6:Height>236</p6:Height>
+                <p6:FrameRate>150</p6:FrameRate>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:PublishSubject">
+              <Name>HsfpFrames</Name>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="1" Label="Source1" />
+            <Edge From="1" To="5" Label="Source1" />
+            <Edge From="2" To="3" Label="Source1" />
+            <Edge From="3" To="4" Label="Source1" />
+            <Edge From="4" To="5" Label="Source2" />
+            <Edge From="5" To="6" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="IncludeWorkflow" Path="Extensions\Processing.bonsai" />
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="IntProperty">
+          <Value>0</Value>
+        </Combinator>
+      </Expression>
+      <Expression xsi:type="IncludeWorkflow" Path="Extensions\Visualization.bonsai" />
+      <Expression xsi:type="ui:VisualizerWindow">
+        <ui:Text>HsfpVisualizer</ui:Text>
+        <ui:Visible>true</ui:Visible>
+        <ui:Location xsi:nil="true" />
+        <ui:Size xsi:nil="true" />
+        <ui:WindowState xsi:nil="true" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="rx:DelaySubscription">
+          <rx:DueTime>PT0.5S</rx:DueTime>
+        </Combinator>
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge From="0" To="1" Label="Source1" />
+      <Edge From="6" To="7" Label="Source1" />
+      <Edge From="7" To="8" Label="Source1" />
+      <Edge From="8" To="9" Label="Source1" />
+    </Edges>
+  </Workflow>
+</WorkflowBuilder>

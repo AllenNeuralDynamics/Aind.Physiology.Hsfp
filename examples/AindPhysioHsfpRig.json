@@ -1,0 +1,97 @@
+{
+  "aind_behavior_services_pkg_version": "0.13.9",
+  "version": "0.1.0",
+  "computer_name": "test_computer",
+  "rig_name": "HSFP-1",
+  "data_directory": "C:\\data",
+  "camera": {
+    "device_type": "HsfpCamera",
+    "calibration": null,
+    "device_name": "Hamamatsu Orca Flash 4 v3",
+    "settings_path": "../examples/HSFP-default-camera-config.xml",
+    "lookup_table_path": null,
+    "region": {
+      "x": 63,
+      "y": 881,
+      "width": 1976,
+      "height": 236
+    },
+    "trigger": {
+      "offset_us": 0,
+      "on_duration_us": 100,
+      "off_duration_us": 6567,
+      "cycles": 0,
+      "invert": false
+    }
+  },
+  "cuttlefish": {
+    "device_type": "cuTTLefish",
+    "calibration": null,
+    "who_am_i": 1403,
+    "serial_number": null,
+    "port_name": "COM1"
+  },
+  "lasers": [
+    {
+      "laser_name": "OBIS 405 LX",
+      "wavelength": 405,
+      "pwm": {
+        "offset_us": 0,
+        "on_duration_us": 1000,
+        "off_duration_us": 32335,
+        "cycles": 0,
+        "invert": false
+      },
+      "power": null
+    },
+    {
+      "laser_name": "OBIS 445 LX",
+      "wavelength": 445,
+      "pwm": {
+        "offset_us": 6667,
+        "on_duration_us": 1000,
+        "off_duration_us": 32335,
+        "cycles": 0,
+        "invert": false
+      },
+      "power": null
+    },
+    {
+      "laser_name": "OBIS 488 LX",
+      "wavelength": 488,
+      "pwm": {
+        "offset_us": 13334,
+        "on_duration_us": 1000,
+        "off_duration_us": 32335,
+        "cycles": 0,
+        "invert": false
+      },
+      "power": null
+    },
+    {
+      "laser_name": "OBIS 514 LX",
+      "wavelength": 514,
+      "pwm": {
+        "offset_us": 20001,
+        "on_duration_us": 1000,
+        "off_duration_us": 32335,
+        "cycles": 0,
+        "invert": false
+      },
+      "power": null
+    },
+    {
+      "laser_name": "OBIS 561 LS",
+      "wavelength": 561,
+      "pwm": {
+        "offset_us": 26668,
+        "on_duration_us": 1000,
+        "off_duration_us": 32335,
+        "cycles": 0,
+        "invert": false
+      },
+      "power": null
+    }
+  ],
+  "tiff_chunk_size": 1000
+}

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="2.9.0"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
+                 xmlns:p1="clr-namespace:AllenNeuralDynamics.AindBehaviorServices.DataTypes;assembly=AllenNeuralDynamics.AindBehaviorServices"
+                 xmlns:p2="clr-namespace:AllenNeuralDynamics.Core;assembly=AllenNeuralDynamics.Core"
+                 xmlns="https://bonsai-rx.org/2018/workflow">
+  <Workflow>
+    <Nodes>
+      <Expression xsi:type="WorkflowInput">
+        <Name>Source1</Name>
+      </Expression>
+      <Expression xsi:type="rx:GroupBy">
+        <rx:KeySelector>Name</rx:KeySelector>
+        <rx:ElementSelector>it</rx:ElementSelector>
+      </Expression>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="LoggerName" />
+        <Property Name="SubjectName" />
+        <Property Name="Modality" />
+      </Expression>
+      <Expression xsi:type="rx:SelectMany">
+        <Name>Demux</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="WorkflowInput">
+              <Name>Source1</Name>
+            </Expression>
+            <Expression xsi:type="rx:ReplaySubject">
+              <Name>Data</Name>
+              <rx:BufferSize xsi:nil="true" />
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>Data</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Merge" />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p1:SerializeToJson" />
+            </Expression>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="Name" DisplayName="SubjectName" />
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>LoggingRootPath</Name>
+            </Expression>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="Modality" />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p2:AppendModalitySuffix">
+                <p2:Modality>Behavior</p2:Modality>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="ExternalizedMapping">
+              <Property Name="Value" DisplayName="LoggerName" />
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="StringProperty">
+                <Value>SoftwareEvents</Value>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>Data</Name>
+            </Expression>
+            <Expression xsi:type="MemberSelector">
+              <Selector>Key</Selector>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Zip" />
+            </Expression>
+            <Expression xsi:type="Format">
+              <Format>{0}/{1}/{2}.jsonl</Format>
+              <Selector>Item1,Item2,Item3</Selector>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="Path" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p2:JsonWriter">
+                <p2:Suffix>None</p2:Suffix>
+                <p2:Overwrite>false</p2:Overwrite>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="WorkflowOutput" />
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="1" Label="Source1" />
+            <Edge From="2" To="3" Label="Source1" />
+            <Edge From="3" To="4" Label="Source1" />
+            <Edge From="4" To="16" Label="Source1" />
+            <Edge From="5" To="6" Label="Source1" />
+            <Edge From="6" To="8" Label="Source1" />
+            <Edge From="7" To="8" Label="Source2" />
+            <Edge From="8" To="13" Label="Source1" />
+            <Edge From="9" To="10" Label="Source1" />
+            <Edge From="10" To="13" Label="Source2" />
+            <Edge From="11" To="12" Label="Source1" />
+            <Edge From="12" To="13" Label="Source3" />
+            <Edge From="13" To="14" Label="Source1" />
+            <Edge From="14" To="15" Label="Source1" />
+            <Edge From="15" To="16" Label="Source2" />
+            <Edge From="16" To="17" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="WorkflowOutput" />
+    </Nodes>
+    <Edges>
+      <Edge From="0" To="1" Label="Source1" />
+      <Edge From="1" To="3" Label="Source1" />
+      <Edge From="2" To="3" Label="Source2" />
+      <Edge From="3" To="4" Label="Source1" />
+    </Edges>
+  </Workflow>
+</WorkflowBuilder>

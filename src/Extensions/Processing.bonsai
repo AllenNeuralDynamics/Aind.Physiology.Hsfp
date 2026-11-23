@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="2.9.0"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
+                 xmlns:p1="clr-namespace:;assembly=Extensions"
+                 xmlns="https://bonsai-rx.org/2018/workflow">
+  <Workflow>
+    <Nodes>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>RoiActivity</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>HsfpFrames</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>CurrentRoiSettings</Name>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="RoiSettings" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p1:ComputeRoiActivity" />
+            </Expression>
+            <Expression xsi:type="rx:PublishSubject">
+              <Name>RoiActivity</Name>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="3" Label="Source1" />
+            <Edge From="1" To="2" Label="Source1" />
+            <Edge From="2" To="3" Label="Source2" />
+            <Edge From="3" To="4" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>AcquisitionHealth</Name>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>HsfpFrames</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>ChannelCount</Name>
+            </Expression>
+            <Expression xsi:type="PropertyMapping">
+              <PropertyMappings>
+                <Property Name="ChannelCount" />
+              </PropertyMappings>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p1:ComputeAcquisitionHealth">
+                <p1:ChannelCount>5</p1:ChannelCount>
+                <p1:Window>PT1S</p1:Window>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject">
+              <Name>AcquisitionHealth</Name>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="3" Label="Source1" />
+            <Edge From="1" To="2" Label="Source1" />
+            <Edge From="2" To="3" Label="Source2" />
+            <Edge From="3" To="4" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
+    </Nodes>
+    <Edges />
+  </Workflow>
+</WorkflowBuilder>

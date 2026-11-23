@@ -1,139 +1,171 @@
-"""Durable recording sources and safe AIND root finalization."""
+"""Data contract of one HSFP acquisition epoch (``<session>/fib/hsfp_<datetime>``)."""
 
-import hashlib
-import json
-import logging
+import dataclasses
 import os
-import time
-from datetime import UTC, datetime
 from pathlib import Path
-from uuid import uuid4
-from zoneinfo import ZoneInfo
 
-from .session_input import CalibrationInput, JournalEvent, SessionInput
+import numpy as np
+from aind_behavior_services.session import Session
+from contraqctor.contract import Dataset, DataStream, DataStreamCollection, FilePathBaseParam, csv
+from contraqctor.contract.harp import DeviceYmlByFile, HarpDevice
+from contraqctor.contract.json import PydanticModel, SoftwareEvents
 
-logger = logging.getLogger(__name__)
+from aind_physiology_hsfp import __semver__
+from aind_physiology_hsfp.extra_types import RoiSettings
+from aind_physiology_hsfp.rig import AindPhysioHsfpRig
+from aind_physiology_hsfp.task_logic import AindPhysioHsfpTaskLogic
 
-
-def sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def atomic_json(path: Path, value: dict) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.{uuid4().hex}.tmp")
-    try:
-        with temporary.open("x", encoding="utf-8") as stream:
-            json.dump(value, stream, indent=2, allow_nan=False)
-            stream.write("\n")
-            stream.flush()
-            os.fsync(stream.fileno())
-        os.replace(temporary, path)
-    finally:
-        temporary.unlink(missing_ok=True)
+CAMERA_APPLIED_SETTINGS = "camera_applied.json"
 
 
-def append_event(root: Path, event: JournalEvent) -> None:
-    path = root / "fib/recording_segments.jsonl"
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("a", encoding="utf-8") as stream:
-        stream.write(event.model_dump_json() + "\n")
-        stream.flush()
-        os.fsync(stream.fileno())
+@dataclasses.dataclass
+class TiffStackReader:
+    """Reads the chunked TIFF stack (``frame_0000.tiff``, ``frame_0001.tiff``, ...) of one channel."""
+
+    files: list[Path]
+
+    @property
+    def number_of_frames(self) -> int:
+        import tifffile
+
+        total = 0
+        for file in self.files:
+            with tifffile.TiffFile(file) as tif:
+                total += len(tif.pages)
+        return total
+
+    def get_frames(self, frame_indices: list[int]) -> list[np.ndarray]:
+        import tifffile
+
+        offsets: list[tuple[Path, int, int]] = []
+        start = 0
+        for file in self.files:
+            with tifffile.TiffFile(file) as tif:
+                count = len(tif.pages)
+            offsets.append((file, start, count))
+            start += count
+        frames = []
+        for index in frame_indices:
+            for file, first, count in offsets:
+                if first <= index < first + count:
+                    frames.append(tifffile.imread(file, key=index - first))
+                    break
+            else:
+                raise IndexError(f"Frame {index} is out of range ({start} frames).")
+        return frames
 
 
-def read_events(root: Path) -> list[JournalEvent]:
-    path = root / "fib/recording_segments.jsonl"
-    events = []
-    for index, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if line.strip():
-            try:
-                events.append(JournalEvent.model_validate_json(line))
-            except ValueError as exc:
-                raise ValueError(f"Invalid journal line {index}; preserve it for explicit recovery") from exc
-    return events
+class TiffStack(DataStream[TiffStackReader, FilePathBaseParam]):
+    """Raw frames of one channel, stored as a directory of TIFF chunks."""
+
+    make_params = FilePathBaseParam
+
+    @staticmethod
+    def _reader(params: FilePathBaseParam) -> TiffStackReader:
+        directory = Path(params.path)
+        if not directory.is_dir():
+            raise FileNotFoundError(f"Directory {directory} does not exist.")
+        files = sorted(directory.glob("*.tiff"))
+        if not files:
+            raise FileNotFoundError(f"No TIFF files found in {directory}.")
+        return TiffStackReader(files=files)
 
 
-def canonical_name(session: SessionInput | CalibrationInput, first_start: datetime) -> str:
-    if first_start.tzinfo is None:
-        raise ValueError("Cannot name an acquisition from a naive timestamp")
-    local = first_start.astimezone(ZoneInfo(session.site_timezone))
-    prefix = "calibration" if isinstance(session, CalibrationInput) else session.subject_id
-    return f"{prefix}_{local:%Y-%m-%d_%H-%M-%S}"
+def _channel_stream(root: Path, channel: int) -> DataStream:
+    return TiffStack(
+        f"channel_{channel}",
+        reader_params=TiffStack.make_params(path=root / f"channel_{channel}"),
+        description=f"Raw frames of channel {channel}, the frames acquired while laser {channel} is on.",
+    )
 
 
-def finalization_target(root: Path, session: SessionInput | CalibrationInput) -> Path:
-    starts = [e.timestamp for e in read_events(root) if e.event == "recording_start"]
-    if not starts:
-        raise ValueError("No recording start; acquisition root cannot be finalized")
-    return root.parent / canonical_name(session, min(starts))
+def dataset(root: os.PathLike, channel_count: int = 5) -> Dataset:
+    """Data contract of one HSFP acquisition epoch.
+
+    Args:
+        root: Path to the epoch directory (``<session>/fib/hsfp_<datetime>``).
+        channel_count: Number of acquired channels, i.e. the number of lasers in the rig.
+    """
+    root = Path(root)
+    return Dataset(
+        version=__semver__,
+        name="hsfp",
+        data_streams=[
+            *[_channel_stream(root, channel) for channel in range(channel_count)],
+            csv.Csv(
+                "frame_metadata",
+                reader_params=csv.CsvParams(path=root / "frame_metadata.csv", delimiter=","),
+                description="One row per frame, for all channels: camera frame counter (FrameCounter), camera "
+                "timestamp (Timestamp), harp time of the laser trigger (Seconds) and acquisition channel (Channel).",
+            ),
+            PydanticModel(
+                "regions",
+                reader_params=PydanticModel.make_params(path=root / "regions.json", model=RoiSettings),
+                description="Regions of interest of each fiber at the start of the acquisition.",
+            ),
+            PydanticModel(
+                "session_input",
+                reader_params=PydanticModel.make_params(path=root / "Logs/session_input.json", model=Session),
+                description="Session input parameters for the HSFP experiment.",
+            ),
+            PydanticModel(
+                "rig_input",
+                reader_params=PydanticModel.make_params(path=root / "Logs/rig_input.json", model=AindPhysioHsfpRig),
+                description="Rig input parameters for the HSFP experiment.",
+            ),
+            PydanticModel(
+                "task_input",
+                reader_params=PydanticModel.make_params(
+                    path=root / "Logs/task_input.json", model=AindPhysioHsfpTaskLogic
+                ),
+                description="Task input parameters for the HSFP experiment.",
+            ),
+            HarpDevice(
+                "Cuttlefish",
+                reader_params=HarpDevice.make_params(path=root / "Cuttlefish.harp", device_yml_hint=DeviceYmlByFile()),
+                description="Events of the cuTTLefish board that triggers the camera and the lasers.",
+            ),
+            DataStreamCollection(
+                name="SoftwareEvents",
+                description="Software events generated by the workflow. The timestamps of these events are low "
+                "precision and should not be used to align to physiology data.",
+                data_streams=[
+                    SoftwareEvents(
+                        name="StartSessionTime",
+                        description="An event emitted at the start of the session. Data contains a UTC timestamp "
+                        "of the session start time.",
+                        reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/StartSessionTime.jsonl"),
+                    ),
+                    SoftwareEvents(
+                        name="EndSessionTime",
+                        description="An event emitted at the end of the session. Data contains a UTC timestamp "
+                        "of the session end time.",
+                        reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/EndSessionTime.jsonl"),
+                    ),
+                    SoftwareEvents(
+                        name="RepositoryStatus",
+                        description="An event emitted at the start of the session. Data is true if the repository "
+                        "had no uncommitted changes.",
+                        reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/RepositoryStatus.jsonl"),
+                    ),
+                    SoftwareEvents(
+                        name="Regions",
+                        description="An event emitted whenever the regions of interest change.",
+                        reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/Regions.jsonl"),
+                    ),
+                    SoftwareEvents(
+                        name="Annotations",
+                        description="An event emitted whenever an annotation is made during the session.",
+                        reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/Annotations.jsonl"),
+                    ),
+                ],
+            ),
+        ],
+    )
 
 
-def finalize_root(root: Path, session: SessionInput | CalibrationInput) -> Path:
-    """Call only after Bonsai and all writers exit. No overwrite or nonstandard suffixes."""
-    target = finalization_target(root, session)
-    if root == target:
-        return root
-    if not root.name.startswith(".hsfp-pending-"):
-        raise ValueError("Existing acquisition name disagrees with its first start; do not silently rename")
-    if target.exists():
-        raise FileExistsError(f"Acquisition already exists: {target}")
-    atomic_json(root / "fib/Logs/root_finalization.json", {"target": target.name, "first_start_source": "journal"})
-    # Never overwrite an existing empty directory, including on POSIX.
-    # The single-acquisition launcher owns this parent; exclusive reservation prevents races.
-    lock = target.with_name(f".{target.name}.reservation")
-    with lock.open("x", encoding="utf-8") as stream:
-        stream.write(root.name)
-    try:
-        for attempt in range(6):
-            if target.exists():
-                raise FileExistsError(target)
-            try:
-                root.rename(target)
-                break
-            except PermissionError as exc:
-                # Only retry Windows access/share locks, after all writers have exited.
-                # ACL restrictions and persistent open handles still need operator action.
-                if getattr(exc, "winerror", None) not in {5, 32, 33}:
-                    raise
-                if attempt == 5:
-                    raise PermissionError(
-                        f"Windows could not rename the completed recording folder. "
-                        f"Recording retained at: {root}. Intended final folder: {target}. "
-                        "Close Bonsai and any programs using files in this recording, then run "
-                        "recover-metadata and select the retained folder. Do not start a new recording."
-                    ) from exc
-                logger.warning("Windows denied recording-folder rename; retrying in 1 second: %s", root)
-                time.sleep(1)
-    finally:
-        lock.unlink(missing_ok=True)
-    return target
+def render_dataset() -> str:
+    """Renders the dataset as a tree-like structure for visualization."""
+    from contraqctor.contract.utils import print_data_stream_tree_html
 
-
-def validate_segment_layout(root: Path) -> None:
-    """Do not mix the previous nested layout with direct fib/segment_NNNN folders."""
-    previous = root / "fib/segments"
-    if previous.is_dir() and any(p.is_dir() and p.name.startswith("segment_") for p in previous.iterdir()):
-        raise ValueError(
-            "Move existing fib/segments/segment_* folders directly into fib/ before using this acquisition. "
-            "Then run recover-metadata to refresh acquisition references."
-        )
-
-
-def allocate_segment(root: Path) -> tuple[str, Path]:
-    validate_segment_layout(root)
-    parent = root / "fib"
-    parent.mkdir(parents=True, exist_ok=True)
-    for number in range(1, 1000000):
-        sid = f"segment_{number:04d}"
-        path = parent / sid
-        try:
-            path.mkdir()
-            return sid, path
-        except FileExistsError:
-            continue
-    raise RuntimeError("Segment namespace exhausted")
-
-
-def utcnow() -> datetime:
-    return datetime.now(UTC)
+    return print_data_stream_tree_html(dataset(Path("<RootPath>")), show_missing_indicator=False, show_type=True)

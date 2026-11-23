@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WorkflowBuilder Version="2.9.0"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xmlns:p1="clr-namespace:AindPhysiologyHsfp;assembly=Extensions"
+                 xmlns:io="clr-namespace:Bonsai.IO;assembly=Bonsai.System"
+                 xmlns="https://bonsai-rx.org/2018/workflow">
+  <Workflow>
+    <Nodes>
+      <Expression xsi:type="ExternalizedMapping">
+        <Property Name="RigPath" />
+        <Property Name="SessionPath" />
+        <Property Name="TaskPath" />
+      </Expression>
+      <Expression xsi:type="IncludeWorkflow" Path="Extensions\ReadSchemas.bonsai">
+        <RigPath>../local/AindPhysioHsfpRig.json</RigPath>
+        <SessionPath>../local/Session.json</SessionPath>
+        <TaskPath>../local/AindPhysioHsfpTaskLogic.json</TaskPath>
+      </Expression>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>RawRigSchema</Name>
+      </Expression>
+      <Expression xsi:type="p1:DeserializeFromJson">
+        <p1:Type xsi:type="TypeMapping" TypeArguments="p1:AindPhysioHsfpRig" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="p1:SerializeToJson" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="io:WriteLine" />
+      </Expression>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>RawSessionSchema</Name>
+      </Expression>
+      <Expression xsi:type="p1:DeserializeFromJson">
+        <p1:Type xsi:type="TypeMapping" TypeArguments="p1:Session" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="p1:SerializeToJson" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="io:WriteLine" />
+      </Expression>
+      <Expression xsi:type="SubscribeSubject">
+        <Name>RawTaskSchema</Name>
+      </Expression>
+      <Expression xsi:type="p1:DeserializeFromJson">
+        <p1:Type xsi:type="TypeMapping" TypeArguments="p1:AindPhysioHsfpTaskLogic" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="p1:SerializeToJson" />
+      </Expression>
+      <Expression xsi:type="Combinator">
+        <Combinator xsi:type="io:WriteLine" />
+      </Expression>
+    </Nodes>
+    <Edges>
+      <Edge From="0" To="1" Label="Source1" />
+      <Edge From="2" To="3" Label="Source1" />
+      <Edge From="3" To="4" Label="Source1" />
+      <Edge From="4" To="5" Label="Source1" />
+      <Edge From="6" To="7" Label="Source1" />
+      <Edge From="7" To="8" Label="Source1" />
+      <Edge From="8" To="9" Label="Source1" />
+      <Edge From="10" To="11" Label="Source1" />
+      <Edge From="11" To="12" Label="Source1" />
+      <Edge From="12" To="13" Label="Source1" />
+    </Edges>
+  </Workflow>
+</WorkflowBuilder>

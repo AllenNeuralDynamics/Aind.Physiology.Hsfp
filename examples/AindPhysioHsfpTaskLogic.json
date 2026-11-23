@@ -1,0 +1,38 @@
+{
+  "name": "AindPhysioHsfp",
+  "description": "",
+  "task_parameters": {
+    "rng_seed": null,
+    "aind_behavior_services_pkg_version": "0.13.9",
+    "measurements": [
+      {
+        "fiber_number": 0,
+        "patch_cord": 0,
+        "intended_measurements": {
+          "blue": null,
+          "green": "dopamine",
+          "yellow": null,
+          "orange": null,
+          "red": "glutamate",
+          "iso": null
+        },
+        "enabled": true
+      },
+      {
+        "fiber_number": 1,
+        "patch_cord": 1,
+        "intended_measurements": {
+          "blue": null,
+          "green": "dopamine",
+          "yellow": null,
+          "orange": null,
+          "red": "glutamate",
+          "iso": null
+        },
+        "enabled": true
+      }
+    ]
+  },
+  "version": "0.1.0",
+  "stage_name": null
+}

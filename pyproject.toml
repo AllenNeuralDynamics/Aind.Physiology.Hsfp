@@ -1,25 +1,30 @@
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[project]
-name = "aind-physiology-hsfp"
-version = "0.1.0"
-description = "HSFP acquisition inputs, recording contract and acquisition metadata mapper"
-requires-python = ">=3.12"
-dependencies = ["aind-data-schema==2.9.1", "aind-data-schema-models==6.3.1", "aind-behavior-services==0.13.9", "tzdata>=2025.1"]
-
-[project.scripts]
-hsfp-map-acquisition = "aind_physiology_hsfp.data_mappers:main"
-
-[project.optional-dependencies]
-dev = ["pytest>=8", "ruff"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/packages/aind_physiology_hsfp/src/aind_physiology_hsfp"]
-
 [tool.pytest.ini_options]
+addopts = "--import-mode=importlib"
 testpaths = ["tests"]
+
+[tool.uv.workspace]
+members = ["src/packages/aind_physiology_hsfp", "src/packages/aind_physiology_hsfp_data_mappers"]
+
+[tool.uv.sources]
+aind-physiology-hsfp = { workspace = true }
+aind-physiology-hsfp-data-mappers = { workspace = true }
+
+[dependency-groups]
+dev = ["pytest", "ruff", "codespell", "aind-physiology-hsfp[data]", "aind-physiology-hsfp-data-mappers"]
+
+[tool.uv]
+default-groups = ["dev"]
+required-version = ">=0.8.4"
 
 [tool.ruff]
 line-length = 120
+target-version = "py311"
+
+[tool.ruff.lint]
+extend-select = ["Q", "RUF100", "C90", "I"]
+mccabe = { max-complexity = 14 }
+pydocstyle = { convention = "google" }
+
+[tool.codespell]
+skip = ".git,*.pdf,*.svg,./.bonsai,*.bonsai,*.Generated.cs,./site,uv.lock,*.xml"
+ignore-words-list = "nd"
