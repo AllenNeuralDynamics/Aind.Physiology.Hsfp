@@ -16,8 +16,12 @@ def test_calibration_generates_valid_subject_empty_procedures_and_acquisition(re
     from aind_physiology_hsfp.data_contract import atomic_json
     from aind_physiology_hsfp.data_mappers._acquisition import write_calibration_metadata
 
-    root, _, _ = recording
-    session = CalibrationInput(experimenters=['Operator'], configuration_confirmed=True)
+    root, recorded_session, _ = recording
+    session = CalibrationInput(
+        experimenters=['Operator'],
+        buffer_lasers=recorded_session.buffer_lasers,
+        configuration_confirmed=True,
+    )
     assert canonical_name(session, datetime(2026, 10, 20, 19, 30, tzinfo=UTC)) == 'calibration_2026-10-20_12-30-00'
     atomic_json(root / 'fib/Logs/session_input.json', session.model_dump(mode='json'))
     segment_path = root / 'fib/segment_0001/segment_input.json'

@@ -37,6 +37,11 @@ def recording(tmp_path):
         },
         fiber_names={"Fiber_0": "Implant 0", "Fiber_1": "Implant 1"},
         connections={"Mono Fiber-optic Patch Cord 0": "Implant 1", "Mono Fiber-optic Patch Cord 1": "Implant 0"},
+        # Preserve the prior passive-buffer layout as a recovery fixture.
+        buffer_lasers={
+            "IO0": "OBIS 405 LX", "IO1": "OBIS 445 LX", "IO2": "OBIS 488 LX",
+            "IO3": "OBIS 514 LX", "IO4": "OBIS 561 LS",
+        },
         configuration_confirmed=True,
     )
     atomic_json(root / "fib/Logs/session_input.json", session.model_dump(mode="json"))

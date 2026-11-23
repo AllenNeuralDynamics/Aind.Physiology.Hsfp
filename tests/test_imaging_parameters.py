@@ -58,3 +58,28 @@ def test_imaging_wavelengths_follow_confirmed_laser_connections(recording):
     assert [image["wavelength_nm"] for image in images] == [561, 445, 488, 514, 405]
     assert [image["buffer_port"] for image in images] == ["IO0", "IO1", "IO2", "IO3", "IO4"]
     assert path.read_bytes() == original
+
+
+def test_camera_buffered_layout_maps_lasers_on_io1_through_io5(recording):
+    root, _, _ = recording
+    session_path = root / "fib/Logs/session_input.json"
+    segment_path = root / "fib/segment_0001/segment_input.json"
+    for path in (session_path, segment_path):
+        data = json.loads(path.read_text())
+        session = data["session"] if path == segment_path else data
+        old = session["buffer_lasers"]
+        session["buffer_lasers"] = {f"IO{index + 1}": old[f"IO{index}"] for index in range(5)}
+        if path == segment_path:
+            data["channel_order"] = [
+                {"buffer_port": f"IO{index + 1}", "metadata_csv": f"fib/metadata_ch{index}.csv"}
+                for index in range(5)
+            ]
+            data["first_frame_buffer_port"] = "IO1"
+        path.write_text(json.dumps(data))
+
+    output = json.loads(map_acquisition(root).read_text())
+    Acquisition.model_validate(output)
+    images = output["data_streams"][0]["code"][0]["parameters"]["hsfp"]["imaging"]["images"]
+    assert [image["buffer_port"] for image in images] == ["IO1", "IO2", "IO3", "IO4", "IO5"]
+    assert [image["wavelength_nm"] for image in images] == [405, 445, 488, 514, 561]
+    assert [image["metadata_csv"] for image in images] == [f"fib/metadata_ch{i}.csv" for i in range(5)]

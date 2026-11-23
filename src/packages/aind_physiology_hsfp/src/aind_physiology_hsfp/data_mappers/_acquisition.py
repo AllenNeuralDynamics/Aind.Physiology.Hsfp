@@ -211,9 +211,11 @@ def build_acquisition(root: Path) -> Acquisition:
         order = config["channel_order"]
         if len(order) != len(saved.buffer_lasers):
             raise ValueError("Channel count does not match confirmed laser map")
-        if [v["buffer_port"] for v in order] != [f"IO{i}" for i in range(5)]:
-            raise ValueError("Unsupported firing order; current mode c requires verified IO0..IO4 order")
-        if config.get("first_frame_buffer_port") != "IO0":
+        ports = [v["buffer_port"] for v in order]
+        supported_orders = ([f"IO{i}" for i in range(5)], [f"IO{i}" for i in range(1, 6)])
+        if ports not in supported_orders or set(ports) != set(saved.buffer_lasers):
+            raise ValueError("Unsupported firing order; mode c requires IO0-IO4 or IO1-IO5 in laser order")
+        if config.get("first_frame_buffer_port") != ports[0]:
             raise ValueError("Unknown first-frame phase")
         lasers = []
         images = []

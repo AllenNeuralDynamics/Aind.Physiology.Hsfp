@@ -11,12 +11,13 @@ ACQUISITION_TYPES = ("HSFP", "HSFP_Pavlovian", "HSFP_DynamicForaging", "HSFP_VrF
 PLATFORM_NAMES = ("mouse_tube_foraging",)
 INDICATOR_COLORS = ("blue", "green", "yellow", "orange", "red", "iso")
 DEFAULT_LASERS = {
-    "IO0": "OBIS 405 LX",
-    "IO1": "OBIS 445 LX",
-    "IO2": "OBIS 488 LX",
-    "IO3": "OBIS 514 LX",
-    "IO4": "OBIS 561 LS",
+    "IO1": "OBIS 405 LX",
+    "IO2": "OBIS 445 LX",
+    "IO3": "OBIS 488 LX",
+    "IO4": "OBIS 514 LX",
+    "IO5": "OBIS 561 LS",
 }
+SUPPORTED_LASER_PORT_SETS = ({f"IO{i}" for i in range(5)}, {f"IO{i}" for i in range(1, 6)})
 
 
 class StrictModel(BaseModel):
@@ -87,9 +88,9 @@ class SessionInput(StrictModel):
             raise ValueError("Used cords must connect to distinct implanted fibers")
         if not set(self.connections.values()) <= set(self.fiber_names.values()):
             raise ValueError("Every connection must resolve an implanted fiber")
-        # Current supported firmware c cycles exactly these five physical outputs.
-        if set(self.buffer_lasers) != {f"IO{i}" for i in range(5)}:
-            raise ValueError("Current mode c requires IO0 through IO4")
+        # The old and camera-buffered layouts share the same five-laser Teensy sequence.
+        if set(self.buffer_lasers) not in SUPPORTED_LASER_PORT_SETS:
+            raise ValueError("Current mode c requires five consecutive laser ports: IO0-IO4 or IO1-IO5")
         if len(set(self.buffer_lasers.values())) != 5:
             raise ValueError("Each current buffer output must identify a distinct laser")
         return self
@@ -116,8 +117,8 @@ class CalibrationInput(StrictModel):
 
     @model_validator(mode="after")
     def supported_outputs(self) -> Self:
-        if set(self.buffer_lasers) != {f"IO{i}" for i in range(5)} or len(set(self.buffer_lasers.values())) != 5:
-            raise ValueError("Current mode c requires five distinct lasers on IO0 through IO4")
+        if set(self.buffer_lasers) not in SUPPORTED_LASER_PORT_SETS or len(set(self.buffer_lasers.values())) != 5:
+            raise ValueError("Current mode c requires five distinct lasers on IO0-IO4 or IO1-IO5")
         return self
 
 
