@@ -84,6 +84,24 @@ def test_wavelength_is_optional():
     assert LightSource(name="L").wavelength is None
 
 
+def test_serial_number_is_optional():
+    assert LightSource(name="L").serial_number is None
+    assert LightSource(name="L", wavelength=405, serial_number="123456").serial_number == "123456"
+
+
+def test_a_laser_with_a_serial_number_needs_a_wavelength():
+    with pytest.raises(ValidationError, match="wavelength must be set"):
+        LightSource(name="L", serial_number="123456")
+
+
+def test_laser_serial_numbers_must_be_unique():
+    with pytest.raises(ValidationError, match="serial numbers must be unique: 123456"):
+        CuttlefishChannels(
+            channel_1=LightSource(name="A", wavelength=405, serial_number="123456"),
+            channel_2=LightSource(name="B", wavelength=445, serial_number="123456"),
+        )
+
+
 def test_measurements_must_use_distinct_fibers_and_patch_cords():
     with pytest.raises(ValidationError, match="patch_cord"):
         AindPhysioHsfpTaskParameters(

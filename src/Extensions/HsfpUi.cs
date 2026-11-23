@@ -76,6 +76,12 @@ static class HsfpStyle
         colors[(int)ImGuiCol.Header] = Rgb(0x30, 0x33, 0x39);
         colors[(int)ImGuiCol.HeaderHovered] = Rgb(0x3a, 0x3d, 0x44);
         colors[(int)ImGuiCol.HeaderActive] = Rgb(0x2f, 0x6f, 0xde);
+        colors[(int)ImGuiCol.Tab] = Rgb(0x2a, 0x2c, 0x31);
+        colors[(int)ImGuiCol.TabHovered] = Rgb(0x3a, 0x3d, 0x44);
+        colors[(int)ImGuiCol.TabSelected] = Rgb(0x3a, 0x3d, 0x44);
+        colors[(int)ImGuiCol.TabSelectedOverline] = Rgb(0x6c, 0xa0, 0xff);
+        colors[(int)ImGuiCol.TabDimmed] = Rgb(0x2a, 0x2c, 0x31);
+        colors[(int)ImGuiCol.TabDimmedSelected] = Rgb(0x30, 0x33, 0x39);
         colors[(int)ImGuiCol.TableHeaderBg] = Rgb(0x1c, 0x1d, 0x21);
         colors[(int)ImGuiCol.TableRowBg] = new Vector4(0f, 0f, 0f, 0f);
         colors[(int)ImGuiCol.TableRowBgAlt] = new Vector4(1f, 1f, 1f, 0.025f);

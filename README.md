@@ -63,10 +63,6 @@ Timing is shared by all light sources, in integer microseconds, so the schedule 
 > [!Note]
 > The cuTTLefish cannot remove a configured PWM output. If a channel used in a previous session is now unused, power-cycle the board.
 
-## 🖥️ Acquisition UI
-
-Composed of independent panels (`src/Extensions/Visualization.bonsai`): acquisition controls and notes, health (rates, dropped frames, Harp clock), cuTTLefish channels, channel selector, ROI editor, activity and spectrum. ROIs are saved to `../local/hsfp_roi.json` and recorded in `regions.json` and `Regions` events. `./src/test_visualization.bonsai` runs the UI with simulated hardware.
-
 ## 📁 Data
 
 Each acquisition is saved to `<data_directory>/<session_name>/fib/hsfp_<datetime>/`:

@@ -208,6 +208,13 @@ def dataset(root: os.PathLike, channels: Sequence[int] | None = None) -> Dataset
                         reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/HardwareQA.jsonl"),
                     ),
                     SoftwareEvents(
+                        name="Lasers",
+                        description="An event emitted once, with the OBIS laser found for each light source with a "
+                        "serial number: its serial number, model, port, channel on that port and reported wavelength. "
+                        "This file is optional.",
+                        reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/Lasers.jsonl"),
+                    ),
+                    SoftwareEvents(
                         name="Annotations",
                         description="An event emitted whenever an annotation is made during the session.",
                         reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/Annotations.jsonl"),

@@ -47,26 +47,31 @@
             "channel_1": {
               "name": "OBIS 405 LX",
               "power": null,
+              "serial_number": null,
               "wavelength": 405
             },
             "channel_2": {
               "name": "OBIS 445 LX",
               "power": null,
+              "serial_number": null,
               "wavelength": 445
             },
             "channel_3": {
               "name": "OBIS 488 LX",
               "power": null,
+              "serial_number": null,
               "wavelength": 488
             },
             "channel_4": {
               "name": "OBIS 514 LX",
               "power": null,
+              "serial_number": null,
               "wavelength": 514
             },
             "channel_5": {
               "name": "OBIS 561 LS",
               "power": null,
+              "serial_number": null,
               "wavelength": 561
             },
             "channel_6": null,
@@ -229,7 +234,8 @@
           "default": {
             "name": "OBIS 405 LX",
             "wavelength": 405,
-            "power": null
+            "power": null,
+            "serial_number": null
           },
           "description": "Light source on channel 1.",
           "oneOf": [
@@ -245,7 +251,8 @@
           "default": {
             "name": "OBIS 445 LX",
             "wavelength": 445,
-            "power": null
+            "power": null,
+            "serial_number": null
           },
           "description": "Light source on channel 2.",
           "oneOf": [
@@ -261,7 +268,8 @@
           "default": {
             "name": "OBIS 488 LX",
             "wavelength": 488,
-            "power": null
+            "power": null,
+            "serial_number": null
           },
           "description": "Light source on channel 3.",
           "oneOf": [
@@ -277,7 +285,8 @@
           "default": {
             "name": "OBIS 514 LX",
             "wavelength": 514,
-            "power": null
+            "power": null,
+            "serial_number": null
           },
           "description": "Light source on channel 4.",
           "oneOf": [
@@ -293,7 +302,8 @@
           "default": {
             "name": "OBIS 561 LS",
             "wavelength": 561,
-            "power": null
+            "power": null,
+            "serial_number": null
           },
           "description": "Light source on channel 5.",
           "oneOf": [
@@ -598,6 +608,20 @@
             }
           ],
           "title": "Power"
+        },
+        "serial_number": {
+          "default": null,
+          "description": "Serial number of the OBIS laser, which is found among the OBIS lasers connected over USB when the workflow starts, and controlled from its tab of the acquisition UI. The wavelength it reports must match wavelength. If not set, the light source is not controlled.",
+          "oneOf": [
+            {
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Serial Number"
         }
       },
       "required": [

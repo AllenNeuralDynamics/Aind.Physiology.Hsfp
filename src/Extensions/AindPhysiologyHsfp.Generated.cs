@@ -1549,6 +1549,8 @@ namespace AindPhysiologyHsfp
     
         private double? _power;
     
+        private string _serialNumber;
+    
         public LightSource()
         {
         }
@@ -1558,6 +1560,7 @@ namespace AindPhysiologyHsfp
             _name = other._name;
             _wavelength = other._wavelength;
             _power = other._power;
+            _serialNumber = other._serialNumber;
         }
     
         /// <summary>
@@ -1611,6 +1614,23 @@ namespace AindPhysiologyHsfp
             }
         }
     
+        /// <summary>
+        /// Serial number of the OBIS laser, which is found among the OBIS lasers connected over USB when the workflow starts, and controlled from its tab of the acquisition UI. The wavelength it reports must match wavelength. If not set, the light source is not controlled.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("serial_number")]
+        [System.ComponentModel.DescriptionAttribute(@"Serial number of the OBIS laser, which is found among the OBIS lasers connected over USB when the workflow starts, and controlled from its tab of the acquisition UI. The wavelength it reports must match wavelength. If not set, the light source is not controlled.")]
+        public string SerialNumber
+        {
+            get
+            {
+                return _serialNumber;
+            }
+            set
+            {
+                _serialNumber = value;
+            }
+        }
+    
         public System.IObservable<LightSource> Generate()
         {
             return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new LightSource(this)));
@@ -1625,7 +1645,8 @@ namespace AindPhysiologyHsfp
         {
             stringBuilder.Append("Name = " + _name + ", ");
             stringBuilder.Append("Wavelength = " + _wavelength + ", ");
-            stringBuilder.Append("Power = " + _power);
+            stringBuilder.Append("Power = " + _power + ", ");
+            stringBuilder.Append("SerialNumber = " + _serialNumber);
             return true;
         }
     

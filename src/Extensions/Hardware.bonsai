@@ -370,6 +370,47 @@
           </Edges>
         </Workflow>
       </Expression>
+      <Expression xsi:type="GroupWorkflow">
+        <Name>Lasers</Name>
+        <Description>Finds the OBIS laser of each light source with a serial number, then sends the commands of each light source to its laser, with one Device per laser port. Emission is turned off when the workflow stops.</Description>
+        <Workflow>
+          <Nodes>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>RigSchema</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p1:FindHsfpLasers">
+                <p1:WavelengthTolerance>2</p1:WavelengthTolerance>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject">
+              <Name>Lasers</Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p1:HsfpLaserCommand">
+              <rx:Name>LaserCommands</rx:Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>LaserCommands</Name>
+            </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>Lasers</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="p1:HsfpLaserRouter" />
+            </Expression>
+            <Expression xsi:type="rx:PublishSubject">
+              <Name>LaserReplies</Name>
+            </Expression>
+          </Nodes>
+          <Edges>
+            <Edge From="0" To="1" Label="Source1" />
+            <Edge From="1" To="2" Label="Source1" />
+            <Edge From="4" To="6" Label="Source1" />
+            <Edge From="5" To="6" Label="Source2" />
+            <Edge From="6" To="7" Label="Source1" />
+          </Edges>
+        </Workflow>
+      </Expression>
     </Nodes>
     <Edges />
   </Workflow>

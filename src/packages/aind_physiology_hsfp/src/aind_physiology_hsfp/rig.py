@@ -106,6 +106,22 @@ class LightSource(BaseModel):
     power: float | None = Field(
         default=None, ge=0, description="Power (uW) at the fiber tip. If not set, it is taken from the instrument."
     )
+    serial_number: str | None = Field(
+        default=None,
+        min_length=1,
+        description="Serial number of the OBIS laser, which is found among the OBIS lasers connected over USB when "
+        "the workflow starts, and controlled from its tab of the acquisition UI. The wavelength it reports must match "
+        "wavelength. If not set, the light source is not controlled.",
+    )
+
+    @model_validator(mode="after")
+    def _validate_laser(self) -> Self:
+        if self.serial_number is not None and self.wavelength is None:
+            raise ValueError(
+                f"Light source '{self.name}' has a serial number, so its wavelength must be set, to be checked against "
+                "the laser."
+            )
+        return self
 
 
 class CuttlefishChannels(BaseModel):
@@ -146,6 +162,10 @@ class CuttlefishChannels(BaseModel):
         duplicates = sorted({name for name in names if names.count(name) > 1})
         if duplicates:
             raise ValueError(f"Light source names must be unique: {', '.join(duplicates)}.")
+        serials = [source.serial_number for source in sources.values() if source.serial_number is not None]
+        duplicates = sorted({serial for serial in serials if serials.count(serial) > 1})
+        if duplicates:
+            raise ValueError(f"Laser serial numbers must be unique: {', '.join(duplicates)}.")
         return self
 
 
