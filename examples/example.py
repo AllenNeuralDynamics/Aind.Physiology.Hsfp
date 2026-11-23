@@ -4,7 +4,7 @@ import os
 
 from aind_behavior_services.rig.harp import HarpCuttlefish
 from aind_behavior_services.session import Session
-from aind_physiology_hsfp.rig import AindPhysioHsfpRig, HsfpCamera
+from aind_physiology_hsfp.rig import AindPhysioHsfpRig, CuttlefishChannels, HsfpCamera, LightSource
 from aind_physiology_hsfp.task_logic import (
     AindPhysioHsfpTaskLogic,
     AindPhysioHsfpTaskParameters,
@@ -26,14 +26,32 @@ def mock_session() -> Session:
     )
 
 
+def mock_channels() -> CuttlefishChannels:
+    """Light source on each cuTTLefish channel (channel 0 is the camera trigger).
+
+    Set serial_number to the serial number of each OBIS laser to control it from the Lasers tab; the workflow finds
+    each laser at start and checks that it reports the light source's wavelength.
+    """
+    return CuttlefishChannels(
+        channel_1=LightSource(name="OBIS 405 LX", wavelength=405, serial_number=None),
+        channel_2=LightSource(name="OBIS 445 LX", wavelength=445, serial_number=None),
+        channel_3=LightSource(name="OBIS 488 LX", wavelength=488, serial_number=None),
+        channel_4=LightSource(name="OBIS 514 LX", wavelength=514, serial_number=None),
+        channel_5=LightSource(name="OBIS 561 LS", wavelength=561, serial_number=None),
+        channel_6=None,
+        channel_7=None,
+    )
+
+
 def mock_rig() -> AindPhysioHsfpRig:
-    """Generates a mock rig model, with the default laser sequence"""
+    """Generates a mock rig model, with five lasers"""
     return AindPhysioHsfpRig(
         data_directory=r"C:/data",
         rig_name="HSFP-1",
         computer_name="test_computer",
         camera=HsfpCamera(settings_path="../examples/HSFP-default-camera-config.xml"),
         cuttlefish=HarpCuttlefish(port_name="COM1"),
+        channels=mock_channels(),
     )
 
 
