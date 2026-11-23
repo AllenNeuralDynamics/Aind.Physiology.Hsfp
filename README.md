@@ -139,9 +139,11 @@ The layout is formalized as a [contraqctor](https://github.com/AllenNeuralDynami
 ```python
 from aind_physiology_hsfp.data_contract import dataset
 
-hsfp = dataset("path/to/session/fib/hsfp_<datetime>", channels=[1, 2, 3, 4, 5])
+hsfp = dataset("path/to/session/fib/hsfp_<datetime>")
 frames = hsfp["channel_1"].read().get_frames([0, 1, 2])
 ```
+
+The `channel_<N>` streams are those of the cuTTLefish channels with a light source in the epoch's `Logs/rig_input.json`.
 
 ## 🔄 Regenerating schemas
 

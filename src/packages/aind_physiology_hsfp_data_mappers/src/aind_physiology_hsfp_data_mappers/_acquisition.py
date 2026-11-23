@@ -26,7 +26,7 @@ from aind_data_schema.core import acquisition
 from aind_data_schema_models.modalities import Modality
 from aind_data_schema_models.units import PowerUnit, SizeUnit, TimeUnit
 from aind_physiology_hsfp import __semver__
-from aind_physiology_hsfp.data_contract import CAMERA_APPLIED_SETTINGS, dataset
+from aind_physiology_hsfp.data_contract import dataset
 from aind_physiology_hsfp.rig import AindPhysioHsfpRig, LightSource
 from aind_physiology_hsfp.task_logic import AindPhysioHsfpTaskLogic, Measurement
 from clabe.data_mapper.helpers import snapshot_bonsai_environment
@@ -131,7 +131,6 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
         contract = dataset(path)
         rig = cast(AindPhysioHsfpRig, contract["rig_input"].read())
         channels = list(rig.light_sources())
-        contract = dataset(path, channels=channels)
         start_time, end_time = AindAcquisitionDataMapper._read_session_times(contract)
         return _HsfpEpoch(
             path=path,
@@ -140,7 +139,7 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
             session=cast(Session, contract["session_input"].read()),
             rig=rig,
             task_logic=cast(AindPhysioHsfpTaskLogic, contract["task_input"].read()),
-            detector=detector_config(json.loads((path / CAMERA_APPLIED_SETTINGS).read_text(encoding="utf-8-sig"))),
+            detector=detector_config(contract["camera_applied"].read()),
             frame_rate=AindAcquisitionDataMapper._camera_frame_rate(contract, channels),
         )
 
