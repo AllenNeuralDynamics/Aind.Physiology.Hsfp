@@ -123,8 +123,8 @@
               <Name>RigSchema</Name>
             </Expression>
             <Expression xsi:type="scr:ExpressionTransform">
-              <scr:Name>LaserCount</scr:Name>
-              <scr:Expression>it.Lasers.Count</scr:Expression>
+              <scr:Name>LightSourceCount</scr:Name>
+              <scr:Expression>it.LightSourceCount</scr:Expression>
             </Expression>
             <Expression xsi:type="rx:AsyncSubject">
               <Name>ChannelCount</Name>

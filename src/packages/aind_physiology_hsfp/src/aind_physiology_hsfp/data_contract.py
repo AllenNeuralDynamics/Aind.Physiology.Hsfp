@@ -2,6 +2,7 @@
 
 import dataclasses
 import os
+from collections.abc import Sequence
 from pathlib import Path
 
 import numpy as np
@@ -75,28 +76,31 @@ def _channel_stream(root: Path, channel: int) -> DataStream:
     return TiffStack(
         f"channel_{channel}",
         reader_params=TiffStack.make_params(path=root / f"channel_{channel}"),
-        description=f"Raw frames of channel {channel}, the frames acquired while laser {channel} is on.",
+        description=f"Raw frames of channel {channel}, the frames acquired while the light source on cuTTLefish "
+        f"channel {channel} is on.",
     )
 
 
-def dataset(root: os.PathLike, channel_count: int = 5) -> Dataset:
+def dataset(root: os.PathLike, channels: Sequence[int] = (1, 2, 3, 4, 5)) -> Dataset:
     """Data contract of one HSFP acquisition epoch.
 
     Args:
         root: Path to the epoch directory (``<session>/fib/hsfp_<datetime>``).
-        channel_count: Number of acquired channels, i.e. the number of lasers in the rig.
+        channels: Acquired channels, i.e. the cuTTLefish channels with a light source in the rig
+            (``list(rig.light_sources())``).
     """
     root = Path(root)
     return Dataset(
         version=__semver__,
         name="hsfp",
         data_streams=[
-            *[_channel_stream(root, channel) for channel in range(channel_count)],
+            *[_channel_stream(root, channel) for channel in channels],
             csv.Csv(
                 "frame_metadata",
                 reader_params=csv.CsvParams(path=root / "frame_metadata.csv", delimiter=","),
                 description="One row per frame, for all channels: camera frame counter (FrameCounter), camera "
-                "timestamp (Timestamp), harp time of the laser trigger (Seconds) and acquisition channel (Channel).",
+                "timestamp (Timestamp), harp time of the light source trigger (Seconds) and acquisition channel, i.e. cuTTLefish channel "
+                "(Channel).",
             ),
             PydanticModel(
                 "regions",
@@ -123,7 +127,7 @@ def dataset(root: os.PathLike, channel_count: int = 5) -> Dataset:
             HarpDevice(
                 "Cuttlefish",
                 reader_params=HarpDevice.make_params(path=root / "Cuttlefish.harp", device_yml_hint=DeviceYmlByFile()),
-                description="Events of the cuTTLefish board that triggers the camera and the lasers.",
+                description="Events of the cuTTLefish board that triggers the camera and the light sources.",
             ),
             DataStreamCollection(
                 name="SoftwareEvents",

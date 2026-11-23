@@ -33,7 +33,9 @@ namespace AindPhysiologyHsfp
     
         private HarpCuttlefish _cuttlefish;
     
-        private System.Collections.Generic.List<LaserChannel> _lasers;
+        private CuttlefishChannels _channels;
+    
+        private TriggerTiming _timing;
     
         private int _tiffChunkSize;
     
@@ -43,7 +45,8 @@ namespace AindPhysiologyHsfp
             _version = "0.1.0";
             _camera = new HsfpCamera();
             _cuttlefish = new HarpCuttlefish();
-            _lasers = new System.Collections.Generic.List<LaserChannel>();
+            _channels = new CuttlefishChannels();
+            _timing = new TriggerTiming();
             _tiffChunkSize = 1000;
         }
     
@@ -56,7 +59,8 @@ namespace AindPhysiologyHsfp
             _dataDirectory = other._dataDirectory;
             _camera = other._camera;
             _cuttlefish = other._cuttlefish;
-            _lasers = other._lasers;
+            _channels = other._channels;
+            _timing = other._timing;
             _tiffChunkSize = other._tiffChunkSize;
         }
     
@@ -156,11 +160,11 @@ namespace AindPhysiologyHsfp
         }
     
         /// <summary>
-        /// cuTTLefish board that triggers the camera and the lasers.
+        /// cuTTLefish board that triggers the camera and the light sources.
         /// </summary>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
         [Newtonsoft.Json.JsonPropertyAttribute("cuttlefish", Required=Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DescriptionAttribute("cuTTLefish board that triggers the camera and the lasers.")]
+        [System.ComponentModel.DescriptionAttribute("cuTTLefish board that triggers the camera and the light sources.")]
         public HarpCuttlefish Cuttlefish
         {
             get
@@ -174,21 +178,39 @@ namespace AindPhysiologyHsfp
         }
     
         /// <summary>
-        /// Lasers, in the order in which they fire. Laser N is triggered by cuTTLefish pin N + 1 and defines acquisition channel N.
+        /// Light source on each cuTTLefish channel. Channel 0 triggers the camera. Each light source defines the acquisition channel with the same number.
         /// </summary>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        [Newtonsoft.Json.JsonPropertyAttribute("lasers")]
-        [System.ComponentModel.DescriptionAttribute("Lasers, in the order in which they fire. Laser N is triggered by cuTTLefish pin N" +
-            " + 1 and defines acquisition channel N.")]
-        public System.Collections.Generic.List<LaserChannel> Lasers
+        [Newtonsoft.Json.JsonPropertyAttribute("channels")]
+        [System.ComponentModel.DescriptionAttribute("Light source on each cuTTLefish channel. Channel 0 triggers the camera. Each ligh" +
+            "t source defines the acquisition channel with the same number.")]
+        public CuttlefishChannels Channels
         {
             get
             {
-                return _lasers;
+                return _channels;
             }
             set
             {
-                _lasers = value;
+                _channels = value;
+            }
+        }
+    
+        /// <summary>
+        /// Timing of the camera and light source triggers, shared by all light sources.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("timing")]
+        [System.ComponentModel.DescriptionAttribute("Timing of the camera and light source triggers, shared by all light sources.")]
+        public TriggerTiming Timing
+        {
+            get
+            {
+                return _timing;
+            }
+            set
+            {
+                _timing = value;
             }
         }
     
@@ -228,7 +250,8 @@ namespace AindPhysiologyHsfp
             stringBuilder.Append("DataDirectory = " + _dataDirectory + ", ");
             stringBuilder.Append("Camera = " + _camera + ", ");
             stringBuilder.Append("Cuttlefish = " + _cuttlefish + ", ");
-            stringBuilder.Append("Lasers = " + _lasers + ", ");
+            stringBuilder.Append("Channels = " + _channels + ", ");
+            stringBuilder.Append("Timing = " + _timing + ", ");
             stringBuilder.Append("TiffChunkSize = " + _tiffChunkSize);
             return true;
         }
@@ -689,6 +712,217 @@ namespace AindPhysiologyHsfp
 
 
     /// <summary>
+    /// Light source triggered by each cuTTLefish channel, or None if the channel is unused.
+    ///
+    ///Channel 0 is reserved for the camera trigger. Light sources fire in channel order, skipping unused channels.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.9.0.0 (Newtonsoft.Json v13.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute("Light source triggered by each cuTTLefish channel, or None if the channel is unus" +
+        "ed.\n\nChannel 0 is reserved for the camera trigger. Light sources fire in channel" +
+        " order, skipping unused channels.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class CuttlefishChannels
+    {
+    
+        private LightSource _channel1;
+    
+        private LightSource _channel2;
+    
+        private LightSource _channel3;
+    
+        private LightSource _channel4;
+    
+        private LightSource _channel5;
+    
+        private LightSource _channel6;
+    
+        private LightSource _channel7;
+    
+        public CuttlefishChannels()
+        {
+            _channel1 = new LightSource();
+            _channel2 = new LightSource();
+            _channel3 = new LightSource();
+            _channel4 = new LightSource();
+            _channel5 = new LightSource();
+        }
+    
+        protected CuttlefishChannels(CuttlefishChannels other)
+        {
+            _channel1 = other._channel1;
+            _channel2 = other._channel2;
+            _channel3 = other._channel3;
+            _channel4 = other._channel4;
+            _channel5 = other._channel5;
+            _channel6 = other._channel6;
+            _channel7 = other._channel7;
+        }
+    
+        /// <summary>
+        /// Light source on channel 1.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("channel_1")]
+        [System.ComponentModel.DescriptionAttribute("Light source on channel 1.")]
+        public LightSource Channel1
+        {
+            get
+            {
+                return _channel1;
+            }
+            set
+            {
+                _channel1 = value;
+            }
+        }
+    
+        /// <summary>
+        /// Light source on channel 2.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("channel_2")]
+        [System.ComponentModel.DescriptionAttribute("Light source on channel 2.")]
+        public LightSource Channel2
+        {
+            get
+            {
+                return _channel2;
+            }
+            set
+            {
+                _channel2 = value;
+            }
+        }
+    
+        /// <summary>
+        /// Light source on channel 3.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("channel_3")]
+        [System.ComponentModel.DescriptionAttribute("Light source on channel 3.")]
+        public LightSource Channel3
+        {
+            get
+            {
+                return _channel3;
+            }
+            set
+            {
+                _channel3 = value;
+            }
+        }
+    
+        /// <summary>
+        /// Light source on channel 4.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("channel_4")]
+        [System.ComponentModel.DescriptionAttribute("Light source on channel 4.")]
+        public LightSource Channel4
+        {
+            get
+            {
+                return _channel4;
+            }
+            set
+            {
+                _channel4 = value;
+            }
+        }
+    
+        /// <summary>
+        /// Light source on channel 5.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("channel_5")]
+        [System.ComponentModel.DescriptionAttribute("Light source on channel 5.")]
+        public LightSource Channel5
+        {
+            get
+            {
+                return _channel5;
+            }
+            set
+            {
+                _channel5 = value;
+            }
+        }
+    
+        /// <summary>
+        /// Light source on channel 6.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("channel_6")]
+        [System.ComponentModel.DescriptionAttribute("Light source on channel 6.")]
+        public LightSource Channel6
+        {
+            get
+            {
+                return _channel6;
+            }
+            set
+            {
+                _channel6 = value;
+            }
+        }
+    
+        /// <summary>
+        /// Light source on channel 7.
+        /// </summary>
+        [System.Xml.Serialization.XmlIgnoreAttribute()]
+        [Newtonsoft.Json.JsonPropertyAttribute("channel_7")]
+        [System.ComponentModel.DescriptionAttribute("Light source on channel 7.")]
+        public LightSource Channel7
+        {
+            get
+            {
+                return _channel7;
+            }
+            set
+            {
+                _channel7 = value;
+            }
+        }
+    
+        public System.IObservable<CuttlefishChannels> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new CuttlefishChannels(this)));
+        }
+    
+        public System.IObservable<CuttlefishChannels> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new CuttlefishChannels(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("Channel1 = " + _channel1 + ", ");
+            stringBuilder.Append("Channel2 = " + _channel2 + ", ");
+            stringBuilder.Append("Channel3 = " + _channel3 + ", ");
+            stringBuilder.Append("Channel4 = " + _channel4 + ", ");
+            stringBuilder.Append("Channel5 = " + _channel5 + ", ");
+            stringBuilder.Append("Channel6 = " + _channel6 + ", ");
+            stringBuilder.Append("Channel7 = " + _channel7);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    /// <summary>
     /// Regions of interest of one fiber: one rectangle of the camera image per acquisition channel.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.9.0.0 (Newtonsoft.Json v13.0.0.0)")]
@@ -970,14 +1204,11 @@ namespace AindPhysiologyHsfp
     
         private CameraRegion _region;
     
-        private PwmSettings _trigger;
-    
         public HsfpCamera()
         {
             _deviceType = "HsfpCamera";
             _deviceName = "Hamamatsu Orca Flash 4 v3";
             _region = new CameraRegion();
-            _trigger = new PwmSettings();
         }
     
         protected HsfpCamera(HsfpCamera other)
@@ -988,7 +1219,6 @@ namespace AindPhysiologyHsfp
             _settingsPath = other._settingsPath;
             _lookupTablePath = other._lookupTablePath;
             _region = other._region;
-            _trigger = other._trigger;
         }
     
         [Newtonsoft.Json.JsonPropertyAttribute("device_type")]
@@ -1091,24 +1321,6 @@ namespace AindPhysiologyHsfp
             }
         }
     
-        /// <summary>
-        /// PWM settings of the camera trigger, on cuTTLefish pin 0.
-        /// </summary>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        [Newtonsoft.Json.JsonPropertyAttribute("trigger")]
-        [System.ComponentModel.DescriptionAttribute("PWM settings of the camera trigger, on cuTTLefish pin 0.")]
-        public PwmSettings Trigger
-        {
-            get
-            {
-                return _trigger;
-            }
-            set
-            {
-                _trigger = value;
-            }
-        }
-    
         public System.IObservable<HsfpCamera> Generate()
         {
             return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new HsfpCamera(this)));
@@ -1126,8 +1338,7 @@ namespace AindPhysiologyHsfp
             stringBuilder.Append("DeviceName = " + _deviceName + ", ");
             stringBuilder.Append("SettingsPath = " + _settingsPath + ", ");
             stringBuilder.Append("LookupTablePath = " + _lookupTablePath + ", ");
-            stringBuilder.Append("Region = " + _region + ", ");
-            stringBuilder.Append("Trigger = " + _trigger);
+            stringBuilder.Append("Region = " + _region);
             return true;
         }
     
@@ -1322,63 +1533,56 @@ namespace AindPhysiologyHsfp
 
 
     /// <summary>
-    /// A laser triggered by one cuTTLefish PWM output. Each laser defines one acquired channel.
-    ///
-    ///The N-th laser of the rig (channel N) is triggered by cuTTLefish pin N + 1. Pin 0 triggers the camera.
+    /// A light source triggered by one cuTTLefish channel. Each light source defines one acquisition channel.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.9.0.0 (Newtonsoft.Json v13.0.0.0)")]
-    [System.ComponentModel.DescriptionAttribute("A laser triggered by one cuTTLefish PWM output. Each laser defines one acquired c" +
-        "hannel.\n\nThe N-th laser of the rig (channel N) is triggered by cuTTLefish pin N " +
-        "+ 1. Pin 0 triggers the camera.")]
+    [System.ComponentModel.DescriptionAttribute("A light source triggered by one cuTTLefish channel. Each light source defines one" +
+        " acquisition channel.")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
     [Bonsai.CombinatorAttribute(MethodName="Generate")]
-    public partial class LaserChannel
+    public partial class LightSource
     {
     
-        private string _laserName;
+        private string _name;
     
-        private int _wavelength;
-    
-        private PwmSettings _pwm;
+        private int? _wavelength;
     
         private double? _power;
     
-        public LaserChannel()
+        public LightSource()
         {
-            _pwm = new PwmSettings();
         }
     
-        protected LaserChannel(LaserChannel other)
+        protected LightSource(LightSource other)
         {
-            _laserName = other._laserName;
+            _name = other._name;
             _wavelength = other._wavelength;
-            _pwm = other._pwm;
             _power = other._power;
         }
     
         /// <summary>
-        /// Name of the laser, as it appears in the instrument metadata.
+        /// Name of the light source, as it appears in the instrument metadata.
         /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("laser_name", Required=Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DescriptionAttribute("Name of the laser, as it appears in the instrument metadata.")]
-        public string LaserName
+        [Newtonsoft.Json.JsonPropertyAttribute("name", Required=Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DescriptionAttribute("Name of the light source, as it appears in the instrument metadata.")]
+        public string Name
         {
             get
             {
-                return _laserName;
+                return _name;
             }
             set
             {
-                _laserName = value;
+                _name = value;
             }
         }
     
         /// <summary>
-        /// Excitation wavelength (nm).
+        /// Excitation wavelength (nm), if known.
         /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("wavelength", Required=Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DescriptionAttribute("Excitation wavelength (nm).")]
-        public int Wavelength
+        [Newtonsoft.Json.JsonPropertyAttribute("wavelength")]
+        [System.ComponentModel.DescriptionAttribute("Excitation wavelength (nm), if known.")]
+        public int? Wavelength
         {
             get
             {
@@ -1387,24 +1591,6 @@ namespace AindPhysiologyHsfp
             set
             {
                 _wavelength = value;
-            }
-        }
-    
-        /// <summary>
-        /// PWM settings of the laser trigger.
-        /// </summary>
-        [System.Xml.Serialization.XmlIgnoreAttribute()]
-        [Newtonsoft.Json.JsonPropertyAttribute("pwm", Required=Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DescriptionAttribute("PWM settings of the laser trigger.")]
-        public PwmSettings Pwm
-        {
-            get
-            {
-                return _pwm;
-            }
-            set
-            {
-                _pwm = value;
             }
         }
     
@@ -1425,21 +1611,20 @@ namespace AindPhysiologyHsfp
             }
         }
     
-        public System.IObservable<LaserChannel> Generate()
+        public System.IObservable<LightSource> Generate()
         {
-            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new LaserChannel(this)));
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new LightSource(this)));
         }
     
-        public System.IObservable<LaserChannel> Generate<TSource>(System.IObservable<TSource> source)
+        public System.IObservable<LightSource> Generate<TSource>(System.IObservable<TSource> source)
         {
-            return System.Reactive.Linq.Observable.Select(source, _ => new LaserChannel(this));
+            return System.Reactive.Linq.Observable.Select(source, _ => new LightSource(this));
         }
     
         protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
         {
-            stringBuilder.Append("LaserName = " + _laserName + ", ");
+            stringBuilder.Append("Name = " + _name + ", ");
             stringBuilder.Append("Wavelength = " + _wavelength + ", ");
-            stringBuilder.Append("Pwm = " + _pwm + ", ");
             stringBuilder.Append("Power = " + _power);
             return true;
         }
@@ -1575,163 +1760,6 @@ namespace AindPhysiologyHsfp
             stringBuilder.Append("PatchCord = " + _patchCord + ", ");
             stringBuilder.Append("IntendedMeasurements = " + _intendedMeasurements + ", ");
             stringBuilder.Append("Enabled = " + _enabled);
-            return true;
-        }
-    
-        public override string ToString()
-        {
-            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
-            stringBuilder.Append(GetType().Name);
-            stringBuilder.Append(" { ");
-            if (PrintMembers(stringBuilder))
-            {
-                stringBuilder.Append(" ");
-            }
-            stringBuilder.Append("}");
-            return stringBuilder.ToString();
-        }
-    }
-
-
-    /// <summary>
-    /// Settings of one PWM output of the cuTTLefish board (mirrors the firmware PwmSettings register).
-    /// </summary>
-    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.9.0.0 (Newtonsoft.Json v13.0.0.0)")]
-    [System.ComponentModel.DescriptionAttribute("Settings of one PWM output of the cuTTLefish board (mirrors the firmware PwmSetti" +
-        "ngs register).")]
-    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
-    [Bonsai.CombinatorAttribute(MethodName="Generate")]
-    public partial class PwmSettings
-    {
-    
-        private int _offsetUs;
-    
-        private int _onDurationUs;
-    
-        private int _offDurationUs;
-    
-        private int _cycles;
-    
-        private bool _invert;
-    
-        public PwmSettings()
-        {
-            _offsetUs = 0;
-            _cycles = 0;
-            _invert = false;
-        }
-    
-        protected PwmSettings(PwmSettings other)
-        {
-            _offsetUs = other._offsetUs;
-            _onDurationUs = other._onDurationUs;
-            _offDurationUs = other._offDurationUs;
-            _cycles = other._cycles;
-            _invert = other._invert;
-        }
-    
-        /// <summary>
-        /// Time (us) the output stays LOW before going HIGH in each period.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("offset_us")]
-        [System.ComponentModel.DescriptionAttribute("Time (us) the output stays LOW before going HIGH in each period.")]
-        public int OffsetUs
-        {
-            get
-            {
-                return _offsetUs;
-            }
-            set
-            {
-                _offsetUs = value;
-            }
-        }
-    
-        /// <summary>
-        /// Time (us) the output stays HIGH in each period.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("on_duration_us", Required=Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DescriptionAttribute("Time (us) the output stays HIGH in each period.")]
-        public int OnDurationUs
-        {
-            get
-            {
-                return _onDurationUs;
-            }
-            set
-            {
-                _onDurationUs = value;
-            }
-        }
-    
-        /// <summary>
-        /// Time (us) the output stays LOW in each period.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("off_duration_us", Required=Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DescriptionAttribute("Time (us) the output stays LOW in each period.")]
-        public int OffDurationUs
-        {
-            get
-            {
-                return _offDurationUs;
-            }
-            set
-            {
-                _offDurationUs = value;
-            }
-        }
-    
-        /// <summary>
-        /// Number of pulses to produce. 0 pulses until disabled.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("cycles")]
-        [System.ComponentModel.DescriptionAttribute("Number of pulses to produce. 0 pulses until disabled.")]
-        public int Cycles
-        {
-            get
-            {
-                return _cycles;
-            }
-            set
-            {
-                _cycles = value;
-            }
-        }
-    
-        /// <summary>
-        /// Whether the output is inverted (HIGH refers to the output being LOW).
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("invert")]
-        [System.ComponentModel.DescriptionAttribute("Whether the output is inverted (HIGH refers to the output being LOW).")]
-        public bool Invert
-        {
-            get
-            {
-                return _invert;
-            }
-            set
-            {
-                _invert = value;
-            }
-        }
-    
-        public System.IObservable<PwmSettings> Generate()
-        {
-            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new PwmSettings(this)));
-        }
-    
-        public System.IObservable<PwmSettings> Generate<TSource>(System.IObservable<TSource> source)
-        {
-            return System.Reactive.Linq.Observable.Select(source, _ => new PwmSettings(this));
-        }
-    
-        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
-        {
-            stringBuilder.Append("OffsetUs = " + _offsetUs + ", ");
-            stringBuilder.Append("OnDurationUs = " + _onDurationUs + ", ");
-            stringBuilder.Append("OffDurationUs = " + _offDurationUs + ", ");
-            stringBuilder.Append("Cycles = " + _cycles + ", ");
-            stringBuilder.Append("Invert = " + _invert);
             return true;
         }
     
@@ -2114,6 +2142,155 @@ namespace AindPhysiologyHsfp
 
 
     /// <summary>
+    /// Timing shared by the camera and every light source. All values are integer microseconds, so the PWM outputs
+    ///of the cuTTLefish board are derived exactly, without rounding.
+    ///
+    ///The camera is triggered once per frame on channel 0. The light sources fire in turn, one per frame, in channel
+    ///order: with L light sources, the k-th one fires in frames k, k + L, k + 2L... so its period is exactly L frame
+    ///periods.
+    /// </summary>
+    [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.9.0.0 (Newtonsoft.Json v13.0.0.0)")]
+    [System.ComponentModel.DescriptionAttribute(@"Timing shared by the camera and every light source. All values are integer microseconds, so the PWM outputs
+    of the cuTTLefish board are derived exactly, without rounding.
+
+    The camera is triggered once per frame on channel 0. The light sources fire in turn, one per frame, in channel
+    order: with L light sources, the k-th one fires in frames k, k + L, k + 2L... so its period is exactly L frame
+    periods.")]
+    [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
+    [Bonsai.CombinatorAttribute(MethodName="Generate")]
+    public partial class TriggerTiming
+    {
+    
+        private int _framePeriodUs;
+    
+        private int _cameraTriggerDurationUs;
+    
+        private int _lightSourceOnDurationUs;
+    
+        private int _lightSourceDelayUs;
+    
+        public TriggerTiming()
+        {
+            _framePeriodUs = 6667;
+            _cameraTriggerDurationUs = 100;
+            _lightSourceOnDurationUs = 1000;
+            _lightSourceDelayUs = 0;
+        }
+    
+        protected TriggerTiming(TriggerTiming other)
+        {
+            _framePeriodUs = other._framePeriodUs;
+            _cameraTriggerDurationUs = other._cameraTriggerDurationUs;
+            _lightSourceOnDurationUs = other._lightSourceOnDurationUs;
+            _lightSourceDelayUs = other._lightSourceDelayUs;
+        }
+    
+        /// <summary>
+        /// Time (us) between consecutive camera triggers. The frame rate is 1e6 / frame_period_us, and each light source is sampled at 1e6 / (frame_period_us * number of light sources).
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("frame_period_us")]
+        [System.ComponentModel.DescriptionAttribute("Time (us) between consecutive camera triggers. The frame rate is 1e6 / frame_peri" +
+            "od_us, and each light source is sampled at 1e6 / (frame_period_us * number of li" +
+            "ght sources).")]
+        public int FramePeriodUs
+        {
+            get
+            {
+                return _framePeriodUs;
+            }
+            set
+            {
+                _framePeriodUs = value;
+            }
+        }
+    
+        /// <summary>
+        /// Time (us) the camera trigger stays HIGH in each frame.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("camera_trigger_duration_us")]
+        [System.ComponentModel.DescriptionAttribute("Time (us) the camera trigger stays HIGH in each frame.")]
+        public int CameraTriggerDurationUs
+        {
+            get
+            {
+                return _cameraTriggerDurationUs;
+            }
+            set
+            {
+                _cameraTriggerDurationUs = value;
+            }
+        }
+    
+        /// <summary>
+        /// Time (us) each light source stays on in its frame.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("light_source_on_duration_us")]
+        [System.ComponentModel.DescriptionAttribute("Time (us) each light source stays on in its frame.")]
+        public int LightSourceOnDurationUs
+        {
+            get
+            {
+                return _lightSourceOnDurationUs;
+            }
+            set
+            {
+                _lightSourceOnDurationUs = value;
+            }
+        }
+    
+        /// <summary>
+        /// Time (us) from the rising edge of the camera trigger to the light source turning on, in the light source's frame.
+        /// </summary>
+        [Newtonsoft.Json.JsonPropertyAttribute("light_source_delay_us")]
+        [System.ComponentModel.DescriptionAttribute("Time (us) from the rising edge of the camera trigger to the light source turning " +
+            "on, in the light source\'s frame.")]
+        public int LightSourceDelayUs
+        {
+            get
+            {
+                return _lightSourceDelayUs;
+            }
+            set
+            {
+                _lightSourceDelayUs = value;
+            }
+        }
+    
+        public System.IObservable<TriggerTiming> Generate()
+        {
+            return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new TriggerTiming(this)));
+        }
+    
+        public System.IObservable<TriggerTiming> Generate<TSource>(System.IObservable<TSource> source)
+        {
+            return System.Reactive.Linq.Observable.Select(source, _ => new TriggerTiming(this));
+        }
+    
+        protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
+        {
+            stringBuilder.Append("FramePeriodUs = " + _framePeriodUs + ", ");
+            stringBuilder.Append("CameraTriggerDurationUs = " + _cameraTriggerDurationUs + ", ");
+            stringBuilder.Append("LightSourceOnDurationUs = " + _lightSourceOnDurationUs + ", ");
+            stringBuilder.Append("LightSourceDelayUs = " + _lightSourceDelayUs);
+            return true;
+        }
+    
+        public override string ToString()
+        {
+            System.Text.StringBuilder stringBuilder = new System.Text.StringBuilder();
+            stringBuilder.Append(GetType().Name);
+            stringBuilder.Append(" { ");
+            if (PrintMembers(stringBuilder))
+            {
+                stringBuilder.Append(" ");
+            }
+            stringBuilder.Append("}");
+            return stringBuilder.ToString();
+        }
+    }
+
+
+    /// <summary>
     /// Serializes a sequence of data model objects into JSON strings.
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.9.0.0 (Newtonsoft.Json v13.0.0.0)")]
@@ -2156,6 +2333,11 @@ namespace AindPhysiologyHsfp
             return Process<CameraRegion>(source);
         }
 
+        public System.IObservable<string> Process(System.IObservable<CuttlefishChannels> source)
+        {
+            return Process<CuttlefishChannels>(source);
+        }
+
         public System.IObservable<string> Process(System.IObservable<FiberRoi> source)
         {
             return Process<FiberRoi>(source);
@@ -2176,19 +2358,14 @@ namespace AindPhysiologyHsfp
             return Process<IntendedMeasurements>(source);
         }
 
-        public System.IObservable<string> Process(System.IObservable<LaserChannel> source)
+        public System.IObservable<string> Process(System.IObservable<LightSource> source)
         {
-            return Process<LaserChannel>(source);
+            return Process<LightSource>(source);
         }
 
         public System.IObservable<string> Process(System.IObservable<Measurement> source)
         {
             return Process<Measurement>(source);
-        }
-
-        public System.IObservable<string> Process(System.IObservable<PwmSettings> source)
-        {
-            return Process<PwmSettings>(source);
         }
 
         public System.IObservable<string> Process(System.IObservable<RoiSettings> source)
@@ -2199,6 +2376,11 @@ namespace AindPhysiologyHsfp
         public System.IObservable<string> Process(System.IObservable<Session> source)
         {
             return Process<Session>(source);
+        }
+
+        public System.IObservable<string> Process(System.IObservable<TriggerTiming> source)
+        {
+            return Process<TriggerTiming>(source);
         }
     }
 
@@ -2215,15 +2397,16 @@ namespace AindPhysiologyHsfp
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<AindPhysioHsfpTaskParameters>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<BaseModel>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CameraRegion>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<CuttlefishChannels>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<FiberRoi>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<HarpCuttlefish>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<HsfpCamera>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<IntendedMeasurements>))]
-    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<LaserChannel>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<LightSource>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<Measurement>))]
-    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<PwmSettings>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<RoiSettings>))]
     [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<Session>))]
+    [System.Xml.Serialization.XmlIncludeAttribute(typeof(Bonsai.Expressions.TypeMapping<TriggerTiming>))]
     public partial class DeserializeFromJson : Bonsai.Expressions.SingleArgumentExpressionBuilder
     {
     

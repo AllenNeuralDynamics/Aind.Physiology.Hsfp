@@ -49,3 +49,37 @@ def test_without_instrument_power_is_unset(session_root):
 def test_no_epoch_raises(tmp_path):
     with pytest.raises(ValueError, match="No HSFP epoch"):
         _map(tmp_path)
+
+
+def _rig_with_gaps():
+    from aind_physiology_hsfp.rig import CuttlefishChannels, LightSource
+
+    from examples import example
+
+    rig = example.mock_rig()
+    rig.channels = CuttlefishChannels(
+        channel_1=None,
+        channel_2=LightSource(name="OBIS 445 LX"),
+        channel_3=None,
+        channel_4=None,
+        channel_5=LightSource(name="OBIS 561 LS", wavelength=561),
+    )
+    return rig
+
+
+def test_unused_channels_are_skipped(tmp_path, instrument_path, make_epoch, session_start):
+    make_epoch(tmp_path, session_start, rig=_rig_with_gaps())
+    stream = _map(tmp_path, instrument_path).data_streams[0]
+    lasers = [c for c in stream.configurations if isinstance(c, LaserConfig)]
+    # The wavelength of a light source without one in the rig comes from the instrument.
+    assert [(laser.device_name, laser.wavelength) for laser in lasers] == [("OBIS 445 LX", 445), ("OBIS 561 LS", 561)]
+    ports = {c.target_device: c.source_port for c in stream.connections if c.source_port}
+    assert ports["OBIS 445 LX"] == "IO2" and ports["OBIS 561 LS"] == "IO5"
+    channels = stream.code[0].parameters["hsfp"]["imaging"]["channels"]
+    assert [c["channel"] for c in channels] == [2, 5]
+
+
+def test_missing_wavelength_without_instrument_raises(tmp_path, make_epoch, session_start):
+    make_epoch(tmp_path, session_start, rig=_rig_with_gaps())
+    with pytest.raises(ValueError, match="no wavelength"):
+        _map(tmp_path)

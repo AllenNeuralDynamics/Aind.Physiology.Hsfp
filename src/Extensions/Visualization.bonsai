@@ -187,7 +187,7 @@
             </Expression>
             <Expression xsi:type="VisualizerMapping" />
             <Expression xsi:type="rx:Defer">
-              <Name>Lasers</Name>
+              <Name>Outputs</Name>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="imvizui:ImGuiVisualizerBuilder" />
@@ -272,7 +272,7 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:HsfpChannelSelectorVisualizer">
                       <p1:Visible>true</p1:Visible>
-                      <p1:InitialChannel>0</p1:InitialChannel>
+                      <p1:InitialChannel>1</p1:InitialChannel>
                     </Combinator>
                   </Expression>
                   <Expression xsi:type="MulticastSubject">

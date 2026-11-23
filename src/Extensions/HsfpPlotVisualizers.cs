@@ -26,18 +26,12 @@ static class HsfpPlot
 
     public static string ChannelLabel(AindPhysiologyHsfp.AindPhysioHsfpRig rig, int channel)
     {
-        if (rig != null && rig.Lasers != null && channel < rig.Lasers.Count)
-        {
-            return string.Format("Ch {0} - {1} nm", channel, rig.Lasers[channel].Wavelength);
-        }
-        return "Ch " + channel;
+        return HsfpChannels.Label(rig, channel);
     }
 
     public static Vector4 ChannelColor(AindPhysiologyHsfp.AindPhysioHsfpRig rig, int channel)
     {
-        return rig != null && rig.Lasers != null && channel < rig.Lasers.Count
-            ? HsfpUi.WavelengthColor(rig.Lasers[channel].Wavelength)
-            : HsfpUi.Muted;
+        return HsfpUi.ChannelColor(HsfpChannels.Find(rig, channel), channel);
     }
 }
 
@@ -51,7 +45,7 @@ public class HsfpSpectrumVisualizer
     public bool Visible { get { return visible; } set { visible = value; } }
 
     private volatile int channel;
-    [Description("The channel whose spectrum is shown. Map it from the channel selector.")]
+    [Description("The cuTTLefish channel whose spectrum is shown. Map it from the channel selector.")]
     public int Channel { get { return channel; } set { channel = value; } }
 
     [XmlIgnore]
@@ -87,7 +81,7 @@ public class HsfpSpectrumVisualizer
                     foreach (var roi in settings.Rois.Where(r => r.Enabled))
                     {
                         Rect rect;
-                        if (!HsfpRoi.TryGetRect(roi, frame.Channel, frame.Image.Size, out rect)) continue;
+                        if (!HsfpRoi.TryGetRect(roi, frame.Index, frame.Image.Size, out rect)) continue;
                         var ys = HsfpRoi.ColumnMeans(frame.Image, rect);
                         var xs = new double[ys.Length];
                         for (int i = 0; i < xs.Length; i++) xs[i] = rect.X + i;
@@ -133,7 +127,7 @@ public class HsfpSpectrumVisualizer
 
 [Combinator]
 [WorkflowElementCategory(ElementCategory.Combinator)]
-[Description("Plots the recent fluorescence of each ROI, by channel (one plot per laser, one line per fiber) or by fiber (one plot per fiber, one line per laser). Source1 = Frame subject; Source2 = HsfpActivity stream.")]
+[Description("Plots the recent fluorescence of each ROI, by channel (one plot per light source, one line per fiber) or by fiber (one plot per fiber, one line per light source). Source1 = Frame subject; Source2 = HsfpActivity stream.")]
 public class HsfpActivityVisualizer
 {
     private bool visible = true;
@@ -225,7 +219,8 @@ public class HsfpActivityVisualizer
         if (HsfpUi.Pill("By fiber##HsfpActivity", new Vector4(0.75f, 0.78f, 0.82f, 1f), byFiber)) byFiber = true;
 
         var fibers = snapshot.Select(kv => kv.Key.Item1).Distinct().OrderBy(f => f).ToList();
-        var channelCount = Rig != null && Rig.Lasers != null ? Rig.Lasers.Count : snapshot.Select(kv => kv.Key.Item2 + 1).DefaultIfEmpty(0).Max();
+        var channels = HsfpChannels.Get(Rig).Select(c => c.Channel).ToList();
+        if (channels.Count == 0) channels = snapshot.Select(kv => kv.Key.Item2).Distinct().OrderBy(c => c).ToList();
         if (fibers.Count == 0)
         {
             ImGui.TextDisabled("No activity yet: waiting for frames and enabled ROIs.");
@@ -233,7 +228,7 @@ public class HsfpActivityVisualizer
         }
 
         // Grid whose cells are closest to a wide plot (3:1), among those that keep the minimum height.
-        var groups = byFiber ? fibers.Count : channelCount;
+        var groups = byFiber ? fibers.Count : channels.Count;
         var avail = ImGui.GetContentRegionAvail();
         var titleHeight = ImGui.GetTextLineHeightWithSpacing();
         var cellOverhead = titleHeight + 2f * HsfpDpi.ItemSpacing.Y + 2f * HsfpDpi.Px(3f);
@@ -256,8 +251,8 @@ public class HsfpActivityVisualizer
             for (int g = 0; g < groups; g++)
             {
                 ImGui.TableNextColumn();
-                var title = byFiber ? "Fiber " + fibers[g] : HsfpPlot.ChannelLabel(Rig, g);
-                var titleColor = byFiber ? HsfpUi.FiberColor(g) : HsfpPlot.ChannelColor(Rig, g);
+                var title = byFiber ? "Fiber " + fibers[g] : HsfpPlot.ChannelLabel(Rig, channels[g]);
+                var titleColor = byFiber ? HsfpUi.FiberColor(g) : HsfpPlot.ChannelColor(Rig, channels[g]);
                 ImGui.TextColored(titleColor, title);
                 if (ImPlot.BeginPlot("##HsfpActivity" + g, new Vector2(-1, height - ImGui.GetTextLineHeightWithSpacing()), ImPlotFlags.NoTitle | ImPlotFlags.NoMenus | ImPlotFlags.NoLegend))
                 {
@@ -268,7 +263,7 @@ public class HsfpActivityVisualizer
                     ImPlot.SetupAxisTicks(ImAxis.X1, now - Capacity, now, 2, new[] { "-" + Capacity.ToString("F0") + " s", "0" });
                     foreach (var kv in snapshot)
                     {
-                        if (byFiber ? kv.Key.Item1 != fibers[g] : kv.Key.Item2 != g) continue;
+                        if (byFiber ? kv.Key.Item1 != fibers[g] : kv.Key.Item2 != channels[g]) continue;
                         var color = byFiber ? HsfpPlot.ChannelColor(Rig, kv.Key.Item2) : HsfpUi.FiberColor(fibers.IndexOf(kv.Key.Item1));
                         var label = byFiber ? HsfpPlot.ChannelLabel(Rig, kv.Key.Item2) : "Fiber " + kv.Key.Item1;
                         HsfpPlot.Line(label, kv.Value[0], kv.Value[1], kv.Value[0].Length, color);

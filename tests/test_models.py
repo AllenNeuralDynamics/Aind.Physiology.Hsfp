@@ -1,6 +1,14 @@
 import pytest
 from aind_behavior_services.rig.harp import HarpCuttlefish
-from aind_physiology_hsfp.rig import AindPhysioHsfpRig, HsfpCamera, LaserChannel, PwmSettings
+from aind_physiology_hsfp.rig import (
+    LIGHT_SOURCE_CHANNELS,
+    AindPhysioHsfpRig,
+    CuttlefishChannels,
+    HsfpCamera,
+    LightSource,
+    PwmSchedule,
+    TriggerTiming,
+)
 from aind_physiology_hsfp.task_logic import AindPhysioHsfpTaskParameters, Measurement
 from pydantic import ValidationError
 
@@ -16,23 +24,64 @@ def _rig(**kwargs) -> AindPhysioHsfpRig:
     )
 
 
-def test_default_rig_is_five_interleaved_channels():
+def test_default_rig_matches_the_previous_hard_coded_schedule():
     rig = _rig()
-    assert [laser.wavelength for laser in rig.lasers] == [405, 445, 488, 514, 561]
-    assert {laser.pwm.period_us for laser in rig.lasers} == {5 * rig.camera.trigger.period_us}
+    assert list(rig.light_sources()) == [1, 2, 3, 4, 5]
+    assert [source.wavelength for source in rig.light_sources().values()] == [405, 445, 488, 514, 561]
+    assert rig.camera_schedule() == PwmSchedule(offset_us=0, on_duration_us=100, off_duration_us=6567)
+    assert rig.light_source_schedules() == {
+        i + 1: PwmSchedule(offset_us=6667 * i, on_duration_us=1000, off_duration_us=32335) for i in range(5)
+    }
 
 
-def test_laser_period_must_match_channel_count():
-    lasers = [
-        LaserChannel(
-            laser_name=f"L{i}",
-            wavelength=400 + i,
-            pwm=PwmSettings(offset_us=6667 * i, on_duration_us=1000, off_duration_us=32335),
-        )
-        for i in range(3)
-    ]
-    with pytest.raises(ValidationError, match="require 20001 us"):
-        _rig(lasers=lasers)
+def _channels(used: list[int]) -> CuttlefishChannels:
+    return CuttlefishChannels(
+        **{f"channel_{c}": LightSource(name=f"L{c}") if c in used else None for c in LIGHT_SOURCE_CHANNELS}
+    )
+
+
+@pytest.mark.parametrize("used", [[1], [7], [2, 5], [1, 3, 4, 7], list(LIGHT_SOURCE_CHANNELS)])
+@pytest.mark.parametrize("frame_period_us", [6667, 10000, 3331])
+@pytest.mark.parametrize("delay", [0, 17])
+def test_schedules_are_phase_locked(used, frame_period_us, delay):
+    timing = TriggerTiming(
+        frame_period_us=frame_period_us, light_source_on_duration_us=1000, light_source_delay_us=delay
+    )
+    rig = _rig(channels=_channels(used), timing=timing)
+    camera = rig.camera_schedule()
+    schedules = rig.light_source_schedules()
+    assert list(schedules) == used
+    assert camera.period_us == frame_period_us
+    for index, schedule in enumerate(schedules.values()):
+        # Exactly one camera period per light source, no remainder, so no light source drifts against the camera.
+        assert schedule.period_us == len(used) * camera.period_us
+        # The k-th used channel fires `delay` after the camera trigger of frame k and ends within that frame.
+        assert schedule.offset_us == index * camera.period_us + delay
+        assert schedule.offset_us + schedule.on_duration_us <= (index + 1) * camera.period_us
+
+
+def test_light_source_pulse_must_fit_its_frame():
+    with pytest.raises(ValidationError, match="must end within its frame"):
+        TriggerTiming(frame_period_us=5000, light_source_on_duration_us=4000, light_source_delay_us=1500)
+
+
+def test_camera_trigger_must_be_shorter_than_the_frame():
+    with pytest.raises(ValidationError, match="camera trigger"):
+        TriggerTiming(frame_period_us=100, camera_trigger_duration_us=100, light_source_on_duration_us=10)
+
+
+def test_at_least_one_light_source():
+    with pytest.raises(ValidationError, match="At least one"):
+        _channels([])
+
+
+def test_light_source_names_must_be_unique():
+    with pytest.raises(ValidationError, match="unique"):
+        CuttlefishChannels(channel_1=LightSource(name="L"), channel_2=LightSource(name="L"))
+
+
+def test_wavelength_is_optional():
+    assert LightSource(name="L").wavelength is None
 
 
 def test_measurements_must_use_distinct_fibers_and_patch_cords():

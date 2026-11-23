@@ -38,18 +38,53 @@
         },
         "cuttlefish": {
           "$ref": "#/$defs/HarpCuttlefish",
-          "description": "cuTTLefish board that triggers the camera and the lasers.",
+          "description": "cuTTLefish board that triggers the camera and the light sources.",
           "title": "cuTTLefish"
         },
-        "lasers": {
-          "description": "Lasers, in the order in which they fire. Laser N is triggered by cuTTLefish pin N + 1 and defines acquisition channel N.",
-          "items": {
-            "$ref": "#/$defs/LaserChannel"
+        "channels": {
+          "$ref": "#/$defs/CuttlefishChannels",
+          "default": {
+            "channel_1": {
+              "name": "OBIS 405 LX",
+              "power": null,
+              "wavelength": 405
+            },
+            "channel_2": {
+              "name": "OBIS 445 LX",
+              "power": null,
+              "wavelength": 445
+            },
+            "channel_3": {
+              "name": "OBIS 488 LX",
+              "power": null,
+              "wavelength": 488
+            },
+            "channel_4": {
+              "name": "OBIS 514 LX",
+              "power": null,
+              "wavelength": 514
+            },
+            "channel_5": {
+              "name": "OBIS 561 LS",
+              "power": null,
+              "wavelength": 561
+            },
+            "channel_6": null,
+            "channel_7": null
           },
-          "maxItems": 7,
-          "minItems": 1,
-          "title": "Lasers",
-          "type": "array"
+          "description": "Light source on each cuTTLefish channel. Channel 0 triggers the camera. Each light source defines the acquisition channel with the same number.",
+          "title": "cuTTLefish channels"
+        },
+        "timing": {
+          "$ref": "#/$defs/TriggerTiming",
+          "default": {
+            "frame_period_us": 6667,
+            "camera_trigger_duration_us": 100,
+            "light_source_on_duration_us": 1000,
+            "light_source_delay_us": 0
+          },
+          "description": "Timing of the camera and light source triggers, shared by all light sources.",
+          "title": "Trigger timing"
         },
         "tiff_chunk_size": {
           "default": 1000,
@@ -185,6 +220,117 @@
         }
       },
       "title": "CameraRegion",
+      "type": "object"
+    },
+    "CuttlefishChannels": {
+      "description": "Light source triggered by each cuTTLefish channel, or None if the channel is unused.\n\nChannel 0 is reserved for the camera trigger. Light sources fire in channel order, skipping unused channels.",
+      "properties": {
+        "channel_1": {
+          "default": {
+            "name": "OBIS 405 LX",
+            "wavelength": 405,
+            "power": null
+          },
+          "description": "Light source on channel 1.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/LightSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channel_2": {
+          "default": {
+            "name": "OBIS 445 LX",
+            "wavelength": 445,
+            "power": null
+          },
+          "description": "Light source on channel 2.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/LightSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channel_3": {
+          "default": {
+            "name": "OBIS 488 LX",
+            "wavelength": 488,
+            "power": null
+          },
+          "description": "Light source on channel 3.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/LightSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channel_4": {
+          "default": {
+            "name": "OBIS 514 LX",
+            "wavelength": 514,
+            "power": null
+          },
+          "description": "Light source on channel 4.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/LightSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channel_5": {
+          "default": {
+            "name": "OBIS 561 LS",
+            "wavelength": 561,
+            "power": null
+          },
+          "description": "Light source on channel 5.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/LightSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channel_6": {
+          "default": null,
+          "description": "Light source on channel 6.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/LightSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "channel_7": {
+          "default": null,
+          "description": "Light source on channel 7.",
+          "oneOf": [
+            {
+              "$ref": "#/$defs/LightSource"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "title": "CuttlefishChannels",
       "type": "object"
     },
     "FiberRoi": {
@@ -324,17 +470,6 @@
             "height": 236
           },
           "description": "Region of the sensor that is cropped and recorded (px)."
-        },
-        "trigger": {
-          "$ref": "#/$defs/PwmSettings",
-          "default": {
-            "offset_us": 0,
-            "on_duration_us": 100,
-            "off_duration_us": 6567,
-            "cycles": 0,
-            "invert": false
-          },
-          "description": "PWM settings of the camera trigger, on cuTTLefish pin 0."
         }
       },
       "required": [
@@ -428,23 +563,27 @@
       "title": "IntendedMeasurements",
       "type": "object"
     },
-    "LaserChannel": {
-      "description": "A laser triggered by one cuTTLefish PWM output. Each laser defines one acquired channel.\n\nThe N-th laser of the rig (channel N) is triggered by cuTTLefish pin N + 1. Pin 0 triggers the camera.",
+    "LightSource": {
+      "description": "A light source triggered by one cuTTLefish channel. Each light source defines one acquisition channel.",
       "properties": {
-        "laser_name": {
-          "description": "Name of the laser, as it appears in the instrument metadata.",
-          "title": "Laser Name",
+        "name": {
+          "description": "Name of the light source, as it appears in the instrument metadata.",
+          "title": "Name",
           "type": "string"
         },
         "wavelength": {
-          "description": "Excitation wavelength (nm).",
-          "exclusiveMinimum": 0,
-          "title": "Wavelength",
-          "type": "integer"
-        },
-        "pwm": {
-          "$ref": "#/$defs/PwmSettings",
-          "description": "PWM settings of the laser trigger."
+          "default": null,
+          "description": "Excitation wavelength (nm), if known.",
+          "oneOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Wavelength"
         },
         "power": {
           "default": null,
@@ -462,11 +601,9 @@
         }
       },
       "required": [
-        "laser_name",
-        "wavelength",
-        "pwm"
+        "name"
       ],
-      "title": "LaserChannel",
+      "title": "LightSource",
       "type": "object"
     },
     "Measurement": {
@@ -500,49 +637,6 @@
         "patch_cord"
       ],
       "title": "Measurement",
-      "type": "object"
-    },
-    "PwmSettings": {
-      "description": "Settings of one PWM output of the cuTTLefish board (mirrors the firmware PwmSettings register).",
-      "properties": {
-        "offset_us": {
-          "default": 0,
-          "description": "Time (us) the output stays LOW before going HIGH in each period.",
-          "minimum": 0,
-          "title": "Offset Us",
-          "type": "integer"
-        },
-        "on_duration_us": {
-          "description": "Time (us) the output stays HIGH in each period.",
-          "minimum": 1,
-          "title": "On Duration Us",
-          "type": "integer"
-        },
-        "off_duration_us": {
-          "description": "Time (us) the output stays LOW in each period.",
-          "minimum": 0,
-          "title": "Off Duration Us",
-          "type": "integer"
-        },
-        "cycles": {
-          "default": 0,
-          "description": "Number of pulses to produce. 0 pulses until disabled.",
-          "minimum": 0,
-          "title": "Cycles",
-          "type": "integer"
-        },
-        "invert": {
-          "default": false,
-          "description": "Whether the output is inverted (HIGH refers to the output being LOW).",
-          "title": "Invert",
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "on_duration_us",
-        "off_duration_us"
-      ],
-      "title": "PwmSettings",
       "type": "object"
     },
     "RoiSettings": {
@@ -663,6 +757,42 @@
         "subject"
       ],
       "title": "Session",
+      "type": "object"
+    },
+    "TriggerTiming": {
+      "description": "Timing shared by the camera and every light source. All values are integer microseconds, so the PWM outputs\nof the cuTTLefish board are derived exactly, without rounding.\n\nThe camera is triggered once per frame on channel 0. The light sources fire in turn, one per frame, in channel\norder: with L light sources, the k-th one fires in frames k, k + L, k + 2L... so its period is exactly L frame\nperiods.",
+      "properties": {
+        "frame_period_us": {
+          "default": 6667,
+          "description": "Time (us) between consecutive camera triggers. The frame rate is 1e6 / frame_period_us, and each light source is sampled at 1e6 / (frame_period_us * number of light sources).",
+          "maximum": 1000000,
+          "minimum": 10,
+          "title": "Frame Period Us",
+          "type": "integer"
+        },
+        "camera_trigger_duration_us": {
+          "default": 100,
+          "description": "Time (us) the camera trigger stays HIGH in each frame.",
+          "minimum": 1,
+          "title": "Camera Trigger Duration Us",
+          "type": "integer"
+        },
+        "light_source_on_duration_us": {
+          "default": 1000,
+          "description": "Time (us) each light source stays on in its frame.",
+          "minimum": 1,
+          "title": "Light Source On Duration Us",
+          "type": "integer"
+        },
+        "light_source_delay_us": {
+          "default": 0,
+          "description": "Time (us) from the rising edge of the camera trigger to the light source turning on, in the light source's frame.",
+          "minimum": 0,
+          "title": "Light Source Delay Us",
+          "type": "integer"
+        }
+      },
+      "title": "TriggerTiming",
       "type": "object"
     }
   }

@@ -58,11 +58,11 @@ def write_epoch(session_root: Path, start: datetime, rig=None, task_logic=None) 
         ),
         encoding="utf-8",
     )
-    # 5 channels interleaved at 150 Hz on the camera clock.
-    n_channels = len(rig.lasers)
+    # The light sources of the rig interleaved at 150 Hz on the camera clock, tagged with their cuTTLefish channel.
+    channels = list(rig.light_sources())
     rows = ["FrameCounter,Timestamp,Seconds,Channel"]
-    for frame in range(10 * n_channels):
-        rows.append(f"{frame},{frame / 150:.9f},{1 + frame / 150:.9f},{frame % n_channels}")
+    for frame in range(10 * len(channels)):
+        rows.append(f"{frame},{frame / 150:.9f},{1 + frame / 150:.9f},{channels[frame % len(channels)]}")
     (epoch / "frame_metadata.csv").write_text("\n".join(rows) + "\n", encoding="utf-8")
     return epoch
 

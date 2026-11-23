@@ -214,9 +214,30 @@ static class HsfpUi
         return FiberPalette[((index % FiberPalette.Length) + FiberPalette.Length) % FiberPalette.Length];
     }
 
+    static readonly Vector4[] ChannelPalette =
+    {
+        new Vector4(0.85f, 0.85f, 0.85f, 1f),
+        new Vector4(0.80f, 0.72f, 0.60f, 1f),
+        new Vector4(0.60f, 0.75f, 0.80f, 1f),
+        new Vector4(0.78f, 0.65f, 0.80f, 1f),
+        new Vector4(0.70f, 0.80f, 0.65f, 1f),
+        new Vector4(0.82f, 0.68f, 0.68f, 1f),
+        new Vector4(0.68f, 0.70f, 0.85f, 1f),
+    };
+
+    /// <summary>
+    /// Color of a cuTTLefish channel: the color of its light source's wavelength, or, if the wavelength is not
+    /// known, a neutral tint per channel.
+    /// </summary>
+    public static Vector4 ChannelColor(AindPhysiologyHsfp.LightSource source, int channel)
+    {
+        if (source != null && source.Wavelength.HasValue) return WavelengthColor(source.Wavelength.Value);
+        return source != null ? ChannelPalette[((channel % ChannelPalette.Length) + ChannelPalette.Length) % ChannelPalette.Length] : Muted;
+    }
+
     /// <summary>
     /// Approximate color of a wavelength (nm), brightened to read well on a dark background.
-    /// Any wavelength works, so adding a laser to the rig needs no change here.
+    /// Any wavelength works, so adding a light source to the rig needs no change here.
     /// </summary>
     public static Vector4 WavelengthColor(double wavelength)
     {

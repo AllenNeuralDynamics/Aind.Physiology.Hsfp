@@ -1,6 +1,8 @@
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Reactive.Linq;
+using System.Xml.Serialization;
 using Bonsai;
 using OpenCV.Net;
 
@@ -16,8 +18,12 @@ public class SimulatedHsfpFrames : Source<HsfpFrame>
         FrameRate = 150;
     }
 
-    [Description("Number of acquisition channels (lasers).")]
+    [Description("Number of acquisition channels, on cuTTLefish channels 1 to N. Used only if the rig is not set.")]
     public int ChannelCount { get; set; }
+
+    [XmlIgnore]
+    [Description("The rig, whose cuTTLefish channels define the simulated light sources. Set via PropertyMapping.")]
+    public AindPhysiologyHsfp.AindPhysioHsfpRig Rig { get; set; }
 
     [Description("Number of fibers imaged on the sensor.")]
     public int FiberCount { get; set; }
@@ -36,14 +42,16 @@ public class SimulatedHsfpFrames : Source<HsfpFrame>
         return Observable.Defer(() =>
         {
             var random = new Random(0);
-            var channelCount = Math.Max(1, ChannelCount);
+            var channels = HsfpChannels.Get(Rig).Select(c => c.Channel).ToArray();
+            if (channels.Length == 0) channels = Enumerable.Range(1, Math.Max(1, ChannelCount)).ToArray();
+            var channelCount = channels.Length;
             var fiberCount = Math.Max(1, FiberCount);
             var width = Math.Max(16, Width);
             var height = Math.Max(16, Height);
             var period = TimeSpan.FromSeconds(1.0 / Math.Max(1, FrameRate));
             return Observable.Interval(period).Select(counter =>
             {
-                var channel = (int)(counter % channelCount);
+                var index = (int)(counter % channelCount);
                 var seconds = counter * period.TotalSeconds;
                 var image = new IplImage(new Size(width, height), IplDepth.U16, 1);
                 image.SetZero();
@@ -52,8 +60,8 @@ public class SimulatedHsfpFrames : Source<HsfpFrame>
                 {
                     var centerY = height * (f + 0.5) / fiberCount;
                     var halfHeight = height * 0.25 / fiberCount;
-                    var peakX = width * (0.15 + 0.7 * (channel + 0.5) / channelCount);
-                    var gain = 1 + 0.3 * Math.Sin(seconds * (0.8 + 0.3 * f) + channel) + 0.05 * random.NextDouble();
+                    var peakX = width * (0.15 + 0.7 * (index + 0.5) / channelCount);
+                    var gain = 1 + 0.3 * Math.Sin(seconds * (0.8 + 0.3 * f) + index) + 0.05 * random.NextDouble();
                     for (int x = 0; x < width; x++)
                     {
                         var dx = (x - peakX) / (width * 0.06);
@@ -68,7 +76,7 @@ public class SimulatedHsfpFrames : Source<HsfpFrame>
                         System.Runtime.InteropServices.Marshal.Copy(shorts, 0, offset, width);
                     }
                 }
-                return new HsfpFrame(image, channel, counter, seconds, seconds);
+                return new HsfpFrame(image, channels[index], index, counter, seconds, seconds);
             });
         });
     }

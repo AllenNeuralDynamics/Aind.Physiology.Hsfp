@@ -15,13 +15,6 @@
       "y": 881,
       "width": 1976,
       "height": 236
-    },
-    "trigger": {
-      "offset_us": 0,
-      "on_duration_us": 100,
-      "off_duration_us": 6567,
-      "cycles": 0,
-      "invert": false
     }
   },
   "cuttlefish": {
@@ -31,67 +24,40 @@
     "serial_number": null,
     "port_name": "COM1"
   },
-  "lasers": [
-    {
-      "laser_name": "OBIS 405 LX",
+  "channels": {
+    "channel_1": {
+      "name": "OBIS 405 LX",
       "wavelength": 405,
-      "pwm": {
-        "offset_us": 0,
-        "on_duration_us": 1000,
-        "off_duration_us": 32335,
-        "cycles": 0,
-        "invert": false
-      },
       "power": null
     },
-    {
-      "laser_name": "OBIS 445 LX",
+    "channel_2": {
+      "name": "OBIS 445 LX",
       "wavelength": 445,
-      "pwm": {
-        "offset_us": 6667,
-        "on_duration_us": 1000,
-        "off_duration_us": 32335,
-        "cycles": 0,
-        "invert": false
-      },
       "power": null
     },
-    {
-      "laser_name": "OBIS 488 LX",
+    "channel_3": {
+      "name": "OBIS 488 LX",
       "wavelength": 488,
-      "pwm": {
-        "offset_us": 13334,
-        "on_duration_us": 1000,
-        "off_duration_us": 32335,
-        "cycles": 0,
-        "invert": false
-      },
       "power": null
     },
-    {
-      "laser_name": "OBIS 514 LX",
+    "channel_4": {
+      "name": "OBIS 514 LX",
       "wavelength": 514,
-      "pwm": {
-        "offset_us": 20001,
-        "on_duration_us": 1000,
-        "off_duration_us": 32335,
-        "cycles": 0,
-        "invert": false
-      },
       "power": null
     },
-    {
-      "laser_name": "OBIS 561 LS",
+    "channel_5": {
+      "name": "OBIS 561 LS",
       "wavelength": 561,
-      "pwm": {
-        "offset_us": 26668,
-        "on_duration_us": 1000,
-        "off_duration_us": 32335,
-        "cycles": 0,
-        "invert": false
-      },
       "power": null
-    }
-  ],
+    },
+    "channel_6": null,
+    "channel_7": null
+  },
+  "timing": {
+    "frame_period_us": 6667,
+    "camera_trigger_duration_us": 100,
+    "light_source_on_duration_us": 1000,
+    "light_source_delay_us": 0
+  },
   "tiff_chunk_size": 1000
 }

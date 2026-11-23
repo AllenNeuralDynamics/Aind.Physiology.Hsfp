@@ -10,7 +10,7 @@ using System.Xml;
 using System.Xml.Serialization;
 
 [Combinator]
-[Description("Creates the messages that configure the cuTTLefish PWM outputs from the rig: the camera trigger on pin 0 and laser N on pin N + 1.")]
+[Description("Creates the messages that configure the cuTTLefish PWM outputs from the rig's channels and trigger timing: the camera trigger on channel 0 and each light source on its channel, phase-locked in integer microseconds.")]
 [WorkflowElementCategory(ElementCategory.Transform)]
 public class CreateCuttlefishConfiguration
 {
@@ -40,37 +40,29 @@ public class CreateCuttlefishConfiguration
         });
     }
 
-    private static IList<HarpMessage> CreateMessages(AindPhysiologyHsfp.AindPhysioHsfpRig rig)
+    /// <summary>
+    /// Enables rising-edge events on all 8 channels, then configures channel 0 (camera) and each channel with a
+    /// light source, all derived from the rig's trigger timing by <see cref="HsfpTriggerSchedule"/>. Unused
+    /// channels get no PWM settings.
+    /// </summary>
+    public static IList<HarpMessage> CreateMessages(AindPhysiologyHsfp.AindPhysioHsfpRig rig)
     {
-        if (rig.Lasers.Count < 1 || rig.Lasers.Count > 7)
-        {
-            throw new ArgumentException("The rig must define between 1 and 7 lasers.");
-        }
-
-        var laserPins = Pins.None;
-        for (int i = 0; i < rig.Lasers.Count; i++)
-        {
-            laserPins |= (Pins)(1 << (i + 1));
-        }
+        var camera = HsfpTriggerSchedule.Camera(rig);
+        var channels = HsfpChannels.Get(rig);
+        const Pins AllPins = Pins.Pin0 | Pins.Pin1 | Pins.Pin2 | Pins.Pin3 | Pins.Pin4 | Pins.Pin5 | Pins.Pin6 | Pins.Pin7;
 
         var messages = new List<HarpMessage>();
-        messages.Add(EnableRisingEdgeEvents.FromPayload(MessageType.Write, Pins.Pin0 | laserPins));
-        messages.Add(CreatePwmSettings(0, rig.Camera.Trigger));
-        for (int i = 0; i < rig.Lasers.Count; i++)
+        messages.Add(EnableRisingEdgeEvents.FromPayload(MessageType.Write, AllPins));
+        messages.Add(CreatePwmSettings(HsfpChannels.CameraChannel, camera));
+        foreach (var channel in channels)
         {
-            messages.Add(CreatePwmSettings(i + 1, rig.Lasers[i].Pwm));
+            messages.Add(CreatePwmSettings(channel.Channel, HsfpTriggerSchedule.LightSource(rig, channel)));
         }
         return messages;
     }
 
-    private static HarpMessage CreatePwmSettings(int pin, AindPhysiologyHsfp.PwmSettings settings)
+    private static HarpMessage CreatePwmSettings(int pin, PwmSettingsPayload payload)
     {
-        var payload = new PwmSettingsPayload(
-            (uint)settings.OffsetUs,
-            (uint)settings.OnDurationUs,
-            (uint)settings.OffDurationUs,
-            (uint)settings.Cycles,
-            settings.Invert);
         switch (pin)
         {
             case 0: return PwmSettings0.FromPayload(MessageType.Write, payload);

@@ -9,13 +9,14 @@ using AllenNeuralDynamics.HamamatsuCamera.Models;
 using Bonsai;
 using OpenCV.Net;
 
-/// <summary>A camera frame, tagged with the acquisition channel (laser) it was acquired under.</summary>
+/// <summary>A camera frame, tagged with the acquisition channel (light source) it was acquired under.</summary>
 public class HsfpFrame
 {
-    public HsfpFrame(IplImage image, int channel, long frameCounter, double timestamp, double seconds)
+    public HsfpFrame(IplImage image, int channel, int index, long frameCounter, double timestamp, double seconds)
     {
         Image = image;
         Channel = channel;
+        Index = index;
         FrameCounter = frameCounter;
         Timestamp = timestamp;
         Seconds = seconds;
@@ -24,8 +25,11 @@ public class HsfpFrame
     /// <summary>Raw camera image.</summary>
     public IplImage Image { get; private set; }
 
-    /// <summary>Acquisition channel: the index of the laser in the rig.</summary>
+    /// <summary>Acquisition channel: the cuTTLefish channel (1-7) of the light source.</summary>
     public int Channel { get; private set; }
+
+    /// <summary>Position of the light source in the firing order (0 to L - 1), skipping unused channels.</summary>
+    public int Index { get; private set; }
 
     /// <summary>Frame counter of the camera.</summary>
     public long FrameCounter { get; private set; }
@@ -33,25 +37,34 @@ public class HsfpFrame
     /// <summary>Timestamp of the camera.</summary>
     public double Timestamp { get; private set; }
 
-    /// <summary>Harp time (s) of the laser trigger that the frame was acquired under.</summary>
+    /// <summary>Harp time (s) of the light source trigger that the frame was acquired under.</summary>
     public double Seconds { get; private set; }
 }
 
 [Combinator]
 [WorkflowElementCategory(ElementCategory.Transform)]
-[Description("Tags each camera frame with its acquisition channel, from the cuTTLefish rising-edge event paired with it. Laser N is on pin N + 1.")]
+[Description("Tags each camera frame with its acquisition channel: the cuTTLefish channel of the light source in the rising-edge event paired with it.")]
 public class ToHsfpFrame
 {
+    [XmlIgnore]
+    [Description("The rig, whose channels define the light sources. Set via PropertyMapping.")]
+    public AindPhysiologyHsfp.AindPhysioHsfpRig Rig { get; set; }
+
     public IObservable<HsfpFrame> Process(IObservable<Tuple<Frame, Tuple<Pins, double>>> source)
     {
         return source.Select(value =>
         {
             var frame = value.Item1;
-            var pins = (int)value.Item2.Item1 & 0xFE; // pin 0 triggers the camera
-            if (pins == 0) throw new InvalidOperationException("Camera frame paired with an event that has no laser pin.");
-            var channel = 0;
-            while ((pins & (1 << (channel + 1))) == 0) channel++;
-            return new HsfpFrame(frame.Image, channel, (long)frame.FrameCounter, frame.Timestamp, value.Item2.Item2);
+            var pins = (int)value.Item2.Item1 & ~(1 << HsfpChannels.CameraChannel);
+            if (pins == 0) throw new InvalidOperationException("Camera frame paired with an event that has no light source channel.");
+            var channel = 1;
+            while ((pins & (1 << channel)) == 0) channel++;
+            var index = HsfpChannels.IndexOf(Rig, channel);
+            if (index < 0)
+            {
+                throw new InvalidOperationException(string.Format("Camera frame paired with cuTTLefish channel {0}, which has no light source in the rig.", channel));
+            }
+            return new HsfpFrame(frame.Image, channel, index, (long)frame.FrameCounter, frame.Timestamp, value.Item2.Item2);
         });
     }
 }
@@ -81,12 +94,12 @@ public class HsfpActivity
 /// <summary>Helpers to read ROI regions from images.</summary>
 static class HsfpRoi
 {
-    /// <summary>Region of a fiber for a channel, clipped to the image. Returns false if empty.</summary>
-    public static bool TryGetRect(AindPhysiologyHsfp.FiberRoi roi, int channel, Size imageSize, out Rect rect)
+    /// <summary>Region of a fiber for the light source at <paramref name="index"/> in the firing order, clipped to the image. Returns false if empty.</summary>
+    public static bool TryGetRect(AindPhysiologyHsfp.FiberRoi roi, int index, Size imageSize, out Rect rect)
     {
         rect = default(Rect);
         if (roi == null || roi.Regions == null || roi.Regions.Count == 0) return false;
-        var region = roi.Regions[Math.Min(channel, roi.Regions.Count - 1)];
+        var region = roi.Regions[Math.Max(0, Math.Min(index, roi.Regions.Count - 1))];
         var x0 = Math.Max(0, Math.Min(region.X, imageSize.Width));
         var y0 = Math.Max(0, Math.Min(region.Y, imageSize.Height));
         var x1 = Math.Max(x0, Math.Min(region.X + region.Width, imageSize.Width));
@@ -140,7 +153,7 @@ public class ComputeRoiActivity
             {
                 Rect rect;
                 fibers[i] = rois[i].FiberNumber;
-                values[i] = HsfpRoi.TryGetRect(rois[i], frame.Channel, frame.Image.Size, out rect)
+                values[i] = HsfpRoi.TryGetRect(rois[i], frame.Index, frame.Image.Size, out rect)
                     ? HsfpRoi.Mean(frame.Image, rect)
                     : double.NaN;
             }
@@ -159,11 +172,13 @@ public class HsfpHealth
     /// <summary>Frames missing from the camera frame counter.</summary>
     public long DroppedFrames { get; set; }
 
-    /// <summary>Frames whose channel does not follow the previous one, i.e. frames assigned to the wrong laser.</summary>
+    /// <summary>Frames whose channel does not follow the previous one, i.e. frames assigned to the wrong light source.</summary>
     public long SequenceErrors { get; set; }
 
+    /// <summary>Frames of each light source, in firing order (see <see cref="HsfpFrame.Index"/>).</summary>
     public long[] FramesPerChannel { get; set; }
 
+    /// <summary>Frame rate (Hz) of each light source, in firing order (see <see cref="HsfpFrame.Index"/>).</summary>
     public double[] ChannelRates { get; set; }
 }
 
@@ -177,7 +192,7 @@ public class ComputeAcquisitionHealth
         Window = TimeSpan.FromSeconds(1);
     }
 
-    [Description("Number of acquisition channels (lasers). Set via PropertyMapping from the rig.")]
+    [Description("Number of acquisition channels (light sources). Set via PropertyMapping from the rig.")]
     public int ChannelCount { get; set; }
 
     [XmlIgnore]
@@ -203,22 +218,22 @@ public class ComputeAcquisitionHealth
             var recent = new Queue<Tuple<double, int>>();
             return source.Select(frame =>
             {
-                var channelCount = Math.Max(ChannelCount, frame.Channel + 1);
+                var channelCount = Math.Max(ChannelCount, frame.Index + 1);
                 if (perChannel.Length < channelCount) Array.Resize(ref perChannel, channelCount);
                 frames++;
-                perChannel[frame.Channel]++;
+                perChannel[frame.Index]++;
                 if (lastCounter.HasValue && frame.FrameCounter > lastCounter.Value + 1)
                 {
                     dropped += frame.FrameCounter - lastCounter.Value - 1;
                 }
-                if (lastChannel.HasValue && frame.Channel != (lastChannel.Value + 1) % channelCount)
+                if (lastChannel.HasValue && frame.Index != (lastChannel.Value + 1) % channelCount)
                 {
                     sequenceErrors++;
                 }
                 lastCounter = frame.FrameCounter;
-                lastChannel = frame.Channel;
+                lastChannel = frame.Index;
 
-                recent.Enqueue(Tuple.Create(frame.Seconds, frame.Channel));
+                recent.Enqueue(Tuple.Create(frame.Seconds, frame.Index));
                 var window = Window.TotalSeconds;
                 while (recent.Count > 0 && recent.Peek().Item1 < frame.Seconds - window) recent.Dequeue();
                 var span = recent.Count > 1 ? frame.Seconds - recent.Peek().Item1 : 0;

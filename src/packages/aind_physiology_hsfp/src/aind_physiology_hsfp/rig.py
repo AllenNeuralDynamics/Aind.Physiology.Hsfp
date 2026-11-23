@@ -6,24 +6,87 @@ from pydantic import BaseModel, Field, model_validator
 
 from . import __semver__
 
+CAMERA_CHANNEL = 0
+"""cuTTLefish channel reserved for the camera trigger."""
 
-class PwmSettings(BaseModel):
-    """Settings of one PWM output of the cuTTLefish board (mirrors the firmware PwmSettings register)."""
+LIGHT_SOURCE_CHANNELS = tuple(range(1, 8))
+"""cuTTLefish channels that can trigger a light source."""
 
-    offset_us: int = Field(
-        default=0, ge=0, description="Time (us) the output stays LOW before going HIGH in each period."
-    )
+
+class PwmSchedule(BaseModel):
+    """Settings of one cuTTLefish PWM output, in microseconds (mirrors the firmware PwmSettings register)."""
+
+    offset_us: int = Field(ge=0, description="Time (us) the output stays LOW before going HIGH in each period.")
     on_duration_us: int = Field(ge=1, description="Time (us) the output stays HIGH in each period.")
     off_duration_us: int = Field(ge=0, description="Time (us) the output stays LOW in each period.")
-    cycles: int = Field(default=0, ge=0, description="Number of pulses to produce. 0 pulses until disabled.")
-    invert: bool = Field(
-        default=False, description="Whether the output is inverted (HIGH refers to the output being LOW)."
-    )
 
     @property
     def period_us(self) -> int:
         """Duration of one period, in microseconds."""
         return self.on_duration_us + self.off_duration_us
+
+
+class TriggerTiming(BaseModel):
+    """Timing shared by the camera and every light source. All values are integer microseconds, so the PWM outputs
+    of the cuTTLefish board are derived exactly, without rounding.
+
+    The camera is triggered once per frame on channel 0. The light sources fire in turn, one per frame, in channel
+    order: with L light sources, the k-th one fires in frames k, k + L, k + 2L... so its period is exactly L frame
+    periods.
+    """
+
+    frame_period_us: int = Field(
+        default=6667,
+        ge=10,
+        le=1_000_000,
+        description="Time (us) between consecutive camera triggers. The frame rate is 1e6 / frame_period_us, and each "
+        "light source is sampled at 1e6 / (frame_period_us * number of light sources).",
+    )
+    camera_trigger_duration_us: int = Field(
+        default=100, ge=1, description="Time (us) the camera trigger stays HIGH in each frame."
+    )
+    light_source_on_duration_us: int = Field(
+        default=1000, ge=1, description="Time (us) each light source stays on in its frame."
+    )
+    light_source_delay_us: int = Field(
+        default=0,
+        ge=0,
+        description="Time (us) from the rising edge of the camera trigger to the light source turning on, in the "
+        "light source's frame.",
+    )
+
+    @model_validator(mode="after")
+    def _validate_fits_frame(self) -> Self:
+        if self.camera_trigger_duration_us >= self.frame_period_us:
+            raise ValueError(
+                f"The camera trigger ({self.camera_trigger_duration_us} us) must be shorter than the frame period "
+                f"({self.frame_period_us} us)."
+            )
+        if self.light_source_delay_us + self.light_source_on_duration_us > self.frame_period_us:
+            raise ValueError(
+                f"The light source pulse (delay {self.light_source_delay_us} us + on "
+                f"{self.light_source_on_duration_us} us) must end within its frame ({self.frame_period_us} us), or it "
+                "would overlap the next light source."
+            )
+        return self
+
+    def camera_schedule(self) -> PwmSchedule:
+        """PWM output of the camera trigger (channel 0)."""
+        return PwmSchedule(
+            offset_us=0,
+            on_duration_us=self.camera_trigger_duration_us,
+            off_duration_us=self.frame_period_us - self.camera_trigger_duration_us,
+        )
+
+    def light_source_schedule(self, index: int, count: int) -> PwmSchedule:
+        """PWM output of the ``index``-th of ``count`` light sources, in firing order."""
+        if not 0 <= index < count:
+            raise IndexError(f"Light source index {index} is out of range for {count} light sources.")
+        return PwmSchedule(
+            offset_us=index * self.frame_period_us + self.light_source_delay_us,
+            on_duration_us=self.light_source_on_duration_us,
+            off_duration_us=count * self.frame_period_us - self.light_source_on_duration_us,
+        )
 
 
 class CameraRegion(BaseModel):
@@ -35,18 +98,55 @@ class CameraRegion(BaseModel):
     height: int = Field(default=0, ge=0, description="Height of the region (px).")
 
 
-class LaserChannel(BaseModel):
-    """A laser triggered by one cuTTLefish PWM output. Each laser defines one acquired channel.
+class LightSource(BaseModel):
+    """A light source triggered by one cuTTLefish channel. Each light source defines one acquisition channel."""
 
-    The N-th laser of the rig (channel N) is triggered by cuTTLefish pin N + 1. Pin 0 triggers the camera.
-    """
-
-    laser_name: str = Field(description="Name of the laser, as it appears in the instrument metadata.")
-    wavelength: int = Field(gt=0, description="Excitation wavelength (nm).")
-    pwm: PwmSettings = Field(description="PWM settings of the laser trigger.")
+    name: str = Field(description="Name of the light source, as it appears in the instrument metadata.")
+    wavelength: int | None = Field(default=None, gt=0, description="Excitation wavelength (nm), if known.")
     power: float | None = Field(
         default=None, ge=0, description="Power (uW) at the fiber tip. If not set, it is taken from the instrument."
     )
+
+
+class CuttlefishChannels(BaseModel):
+    """Light source triggered by each cuTTLefish channel, or None if the channel is unused.
+
+    Channel 0 is reserved for the camera trigger. Light sources fire in channel order, skipping unused channels.
+    """
+
+    channel_1: LightSource | None = Field(
+        default=LightSource(name="OBIS 405 LX", wavelength=405), description="Light source on channel 1."
+    )
+    channel_2: LightSource | None = Field(
+        default=LightSource(name="OBIS 445 LX", wavelength=445), description="Light source on channel 2."
+    )
+    channel_3: LightSource | None = Field(
+        default=LightSource(name="OBIS 488 LX", wavelength=488), description="Light source on channel 3."
+    )
+    channel_4: LightSource | None = Field(
+        default=LightSource(name="OBIS 514 LX", wavelength=514), description="Light source on channel 4."
+    )
+    channel_5: LightSource | None = Field(
+        default=LightSource(name="OBIS 561 LS", wavelength=561), description="Light source on channel 5."
+    )
+    channel_6: LightSource | None = Field(default=None, description="Light source on channel 6.")
+    channel_7: LightSource | None = Field(default=None, description="Light source on channel 7.")
+
+    def light_sources(self) -> dict[int, LightSource]:
+        """Light source of each used channel, keyed by channel, in firing order."""
+        sources = {channel: getattr(self, f"channel_{channel}") for channel in LIGHT_SOURCE_CHANNELS}
+        return {channel: source for channel, source in sources.items() if source is not None}
+
+    @model_validator(mode="after")
+    def _validate_light_sources(self) -> Self:
+        sources = self.light_sources()
+        if not sources:
+            raise ValueError("At least one cuTTLefish channel must have a light source.")
+        names = [source.name for source in sources.values()]
+        duplicates = sorted({name for name in names if names.count(name) > 1})
+        if duplicates:
+            raise ValueError(f"Light source names must be unique: {', '.join(duplicates)}.")
+        return self
 
 
 class HsfpCamera(rig.Device):
@@ -63,29 +163,6 @@ class HsfpCamera(rig.Device):
         validate_default=True,
         description="Region of the sensor that is cropped and recorded (px).",
     )
-    trigger: PwmSettings = Field(
-        default=PwmSettings(offset_us=0, on_duration_us=100, off_duration_us=6567),
-        validate_default=True,
-        description="PWM settings of the camera trigger, on cuTTLefish pin 0.",
-    )
-
-
-def _default_lasers() -> list[LaserChannel]:
-    lasers = [
-        ("OBIS 405 LX", 405),
-        ("OBIS 445 LX", 445),
-        ("OBIS 488 LX", 488),
-        ("OBIS 514 LX", 514),
-        ("OBIS 561 LS", 561),
-    ]
-    return [
-        LaserChannel(
-            laser_name=name,
-            wavelength=wavelength,
-            pwm=PwmSettings(offset_us=6667 * i, on_duration_us=1000, off_duration_us=32335),
-        )
-        for i, (name, wavelength) in enumerate(lasers)
-    ]
 
 
 class AindPhysioHsfpRig(rig.Rig):
@@ -94,25 +171,34 @@ class AindPhysioHsfpRig(rig.Rig):
     version: Literal[__semver__] = __semver__
     camera: HsfpCamera = Field(title="Camera", description="Camera that records the dispersed fiber output.")
     cuttlefish: harp.HarpCuttlefish = Field(
-        title="cuTTLefish", description="cuTTLefish board that triggers the camera and the lasers."
+        title="cuTTLefish", description="cuTTLefish board that triggers the camera and the light sources."
     )
-    lasers: list[LaserChannel] = Field(
-        default_factory=_default_lasers,
-        min_length=1,
-        max_length=7,
+    channels: CuttlefishChannels = Field(
+        default=CuttlefishChannels(),
         validate_default=True,
-        description="Lasers, in the order in which they fire. Laser N is triggered by cuTTLefish pin N + 1 and "
-        "defines acquisition channel N.",
+        title="cuTTLefish channels",
+        description="Light source on each cuTTLefish channel. Channel 0 triggers the camera. Each light source "
+        "defines the acquisition channel with the same number.",
+    )
+    timing: TriggerTiming = Field(
+        default=TriggerTiming(),
+        validate_default=True,
+        title="Trigger timing",
+        description="Timing of the camera and light source triggers, shared by all light sources.",
     )
     tiff_chunk_size: int = Field(default=1000, gt=0, description="Number of frames per TIFF file.")
 
-    @model_validator(mode="after")
-    def _validate_lasers(self) -> Self:
-        expected = self.camera.trigger.period_us * len(self.lasers)
-        for laser in self.lasers:
-            if laser.pwm.period_us != expected:
-                raise ValueError(
-                    f"{laser.laser_name} period is {laser.pwm.period_us} us, but {len(self.lasers)} channels at a camera "
-                    f"period of {self.camera.trigger.period_us} us require {expected} us."
-                )
-        return self
+    def light_sources(self) -> dict[int, LightSource]:
+        """Light source of each used cuTTLefish channel, keyed by channel, in firing order."""
+        return self.channels.light_sources()
+
+    def camera_schedule(self) -> PwmSchedule:
+        """PWM output of the camera trigger (cuTTLefish channel 0)."""
+        return self.timing.camera_schedule()
+
+    def light_source_schedules(self) -> dict[int, PwmSchedule]:
+        """PWM output of each used cuTTLefish channel, keyed by channel."""
+        channels = list(self.light_sources())
+        return {
+            channel: self.timing.light_source_schedule(index, len(channels)) for index, channel in enumerate(channels)
+        }

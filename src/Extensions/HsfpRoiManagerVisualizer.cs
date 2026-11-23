@@ -17,8 +17,8 @@ using OpenCV.Net;
 /// live camera image of the selected channel, and persists the ROIs to disk.
 /// </summary>
 /// <remarks>
-/// One ROI per fiber of the task logic, with one rectangle per channel (lasers of the rig), since
-/// the emission of each laser lands on a different part of the sensor. With "Link channels" on,
+/// One ROI per fiber of the task logic, with one rectangle per light source of the rig (in firing order),
+/// since the emission under each light source lands on a different part of the sensor. With "Link channels" on,
 /// moving or resizing a ROI applies the same change to every channel. ROIs can be edited only while
 /// <see cref="Enabled"/> is true (map it from the negated experiment state). At startup the ROIs
 /// are loaded from <see cref="LocalRoiDefaultPath"/> when it exists. Emits the current
@@ -39,7 +39,7 @@ public class HsfpRoiManagerVisualizer
     public bool Enabled { get { return enabled; } set { enabled = value; } }
 
     private volatile int channel;
-    [Description("The channel whose image and regions are shown. Map it from the channel selector.")]
+    [Description("The cuTTLefish channel whose image and regions are shown. Map it from the channel selector.")]
     public int Channel { get { return channel; } set { channel = value; } }
 
     private string localRoiDefaultPath = "../local/hsfp_roi.json";
@@ -49,7 +49,7 @@ public class HsfpRoiManagerVisualizer
     public string LocalRoiDefaultPath { get { return localRoiDefaultPath; } set { localRoiDefaultPath = value; } }
 
     [XmlIgnore]
-    [Description("The rig: the lasers define the channels and the camera region the image size. Set via PropertyMapping.")]
+    [Description("The rig: its light sources define the channels and the camera region the image size. Set via PropertyMapping.")]
     public AindPhysiologyHsfp.AindPhysioHsfpRig Rig { get; set; }
 
     [XmlIgnore]
@@ -92,8 +92,8 @@ public class HsfpRoiManagerVisualizer
             {
                 lock (imageLock)
                 {
-                    latestImages[frame.Channel] = frame.Image;
-                    dirty.Add(frame.Channel);
+                    latestImages[frame.Index] = frame.Image;
+                    dirty.Add(frame.Index);
                 }
             }, observer.OnError);
 
@@ -102,13 +102,14 @@ public class HsfpRoiManagerVisualizer
                 HsfpStyle.Apply();
                 var rig = Rig;
                 if (!Visible) return;
-                if (rig == null || rig.Lasers == null || rig.Camera == null)
+                if (rig == null || rig.Channels == null || rig.Camera == null)
                 {
                     ImGui.TextDisabled("Waiting for the rig configuration.");
                     return;
                 }
-                var channelCount = Math.Max(1, rig.Lasers.Count);
-                var current = Math.Max(0, Math.Min(Channel, channelCount - 1));
+                var channelCount = Math.Max(1, HsfpChannels.Get(rig).Count);
+                // Regions and images are kept in firing order; the selector gives a cuTTLefish channel.
+                var current = Math.Max(0, HsfpChannels.IndexOf(rig, Channel));
                 var width = rig.Camera.Region != null && rig.Camera.Region.Width > 0 ? rig.Camera.Region.Width : 1;
                 var height = rig.Camera.Region != null && rig.Camera.Region.Height > 0 ? rig.Camera.Region.Height : 1;
                 var changed = false;

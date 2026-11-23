@@ -27,7 +27,7 @@ from aind_data_schema_models.modalities import Modality
 from aind_data_schema_models.units import PowerUnit, SizeUnit, TimeUnit
 from aind_physiology_hsfp import __semver__
 from aind_physiology_hsfp.data_contract import CAMERA_APPLIED_SETTINGS, dataset
-from aind_physiology_hsfp.rig import AindPhysioHsfpRig
+from aind_physiology_hsfp.rig import AindPhysioHsfpRig, LightSource
 from aind_physiology_hsfp.task_logic import AindPhysioHsfpTaskLogic, Measurement
 from clabe.data_mapper.helpers import snapshot_bonsai_environment
 
@@ -130,7 +130,8 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
     def _read_epoch(path: Path) -> _HsfpEpoch:
         contract = dataset(path)
         rig = cast(AindPhysioHsfpRig, contract["rig_input"].read())
-        contract = dataset(path, channel_count=len(rig.lasers))
+        channels = list(rig.light_sources())
+        contract = dataset(path, channels=channels)
         start_time, end_time = AindAcquisitionDataMapper._read_session_times(contract)
         return _HsfpEpoch(
             path=path,
@@ -140,7 +141,7 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
             rig=rig,
             task_logic=cast(AindPhysioHsfpTaskLogic, contract["task_input"].read()),
             detector=detector_config(json.loads((path / CAMERA_APPLIED_SETTINGS).read_text(encoding="utf-8-sig"))),
-            frame_rate=AindAcquisitionDataMapper._camera_frame_rate(contract, len(rig.lasers)),
+            frame_rate=AindAcquisitionDataMapper._camera_frame_rate(contract, channels),
         )
 
     @staticmethod
@@ -155,10 +156,10 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
         return times[0], times[1]
 
     @staticmethod
-    def _camera_frame_rate(contract, channel_count: int) -> float:
+    def _camera_frame_rate(contract, channels: list[int]) -> float:
         """Observed camera frame rate (Hz), counting the frames of all channels on the camera clock."""
         metadata = contract["frame_metadata"].read()
-        missing = sorted(set(range(channel_count)) - set(metadata["Channel"].astype(int)))
+        missing = sorted(set(channels) - set(metadata["Channel"].astype(int)))
         if missing:
             raise ValueError(f"No frames recorded for channels {missing}.")
         timestamps = metadata["Timestamp"].to_numpy(dtype=float)
@@ -199,13 +200,14 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
 
     def _get_data_stream(self, epoch: _HsfpEpoch, code: list[Code]) -> acquisition.DataStream:
         """One epoch: the patch cords acquired, and how each of their channels was excited and imaged."""
-        lasers = [self._get_laser_config(laser) for laser in epoch.rig.lasers]
+        sources = epoch.rig.light_sources()
+        lasers = [self._get_laser_config(source) for source in sources.values()]
         measurements = self._get_recorded_measurements(epoch)
 
         configurations: list = [*lasers]
         connections = [
-            Connection(source_device=TTL_BUFFER, source_port=f"IO{index + 1}", target_device=laser.device_name)
-            for index, laser in enumerate(lasers)
+            Connection(source_device=TTL_BUFFER, source_port=f"IO{channel}", target_device=laser.device_name)
+            for channel, laser in zip(sources, lasers, strict=True)
         ]
         active_devices = [epoch.detector.device_name, *(laser.device_name for laser in lasers), TTL_BUFFER]
         active_devices.extend(COMMON_OPTICS)
@@ -243,8 +245,8 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
                         frame_rate=epoch.frame_rate, image_index_sequence=list(range(len(lasers)))
                     ).model_dump(mode="json"),
                     "channels": [
-                        {"channel": index, "laser": laser.laser_name, "cuttlefish_pin": index + 1}
-                        for index, laser in enumerate(epoch.rig.lasers)
+                        {"channel": channel, "light_source": source.name, "cuttlefish_channel": channel}
+                        for channel, source in sources.items()
                     ],
                 },
                 "tiff_chunk_size": epoch.rig.tiff_chunk_size,
@@ -262,14 +264,17 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
             connections=connections,
         )
 
-    def _get_laser_config(self, laser) -> configs.LaserConfig:
-        """Laser settings. The power is taken from the rig, or else from the latest instrument calibration."""
-        power, measured_at = laser.power, None
+    def _get_laser_config(self, source: LightSource) -> configs.LaserConfig:
+        """Light source settings. The power and the wavelength are taken from the rig, or else from the instrument."""
+        power, measured_at = source.power, None
         if power is None and self._instrument is not None:
-            power, measured_at = _calibrated_power(self._instrument, laser.laser_name)
+            power, measured_at = _calibrated_power(self._instrument, source.name)
+        wavelength = source.wavelength
+        if wavelength is None:
+            wavelength = _instrument_wavelength(self._instrument, source.name)
         return configs.LaserConfig(
-            device_name=laser.laser_name,
-            wavelength=laser.wavelength,
+            device_name=source.name,
+            wavelength=wavelength,
             power=power,
             power_unit=PowerUnit.UW if power is not None else None,
             power_measured_at=measured_at,
@@ -334,6 +339,16 @@ def _named_devices(value: Any) -> set[str]:
         for child in value:
             found |= _named_devices(child)
     return found
+
+
+def _instrument_wavelength(instrument: dict | None, name: str) -> int:
+    """Wavelength (nm) of a light source in the instrument metadata."""
+    if instrument is None:
+        raise ValueError(f"Light source {name} has no wavelength in the rig, and no instrument metadata was given.")
+    for component in instrument.get("components", []):
+        if isinstance(component, dict) and component.get("name") == name and component.get("wavelength") is not None:
+            return int(component["wavelength"])
+    raise ValueError(f"Light source {name} has no wavelength in the rig nor in the instrument metadata.")
 
 
 def _calibrated_power(instrument: dict, laser_name: str) -> tuple[float, str | None]:
