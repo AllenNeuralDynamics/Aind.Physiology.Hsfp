@@ -13,6 +13,8 @@ public enum HsfpLauncherCommandKind
     StartExperiment,
     EndExperiment,
     Annotation,
+    /// <summary>A hardware check failed and the user chose to start anyway; the text describes the check.</summary>
+    HardwareQA,
 }
 
 /// <summary>A button press or a sent note from <see cref="HsfpLauncherVisualizer"/>.</summary>
@@ -26,7 +28,7 @@ public class HsfpLauncherCommand
 
     public HsfpLauncherCommandKind Kind { get; private set; }
 
-    /// <summary>The note, for <see cref="HsfpLauncherCommandKind.Annotation"/>; null otherwise.</summary>
+    /// <summary>The note, or the failed check for <see cref="HsfpLauncherCommandKind.HardwareQA"/>; null otherwise.</summary>
     public string Text { get; private set; }
 
     public override string ToString()
@@ -37,7 +39,7 @@ public class HsfpLauncherCommand
 
 [Combinator]
 [WorkflowElementCategory(ElementCategory.Combinator)]
-[Description("Renders the acquisition panel: Start / Stop button, session details and a note box. Emits a HsfpLauncherCommand per press or sent note (split with HsfpLauncherCommandOfKind). Source1 = Frame subject.")]
+[Description("Renders the acquisition panel: Start / Stop button, session details and a note box. Asks for confirmation before starting if the cuTTLefish is not synchronized with the Harp clock. Emits a HsfpLauncherCommand per press or sent note (split with HsfpLauncherCommandOfKind). Source1 = Frame subject.")]
 public class HsfpLauncherVisualizer
 {
     const int MaxNoteLength = 4096;
@@ -60,6 +62,18 @@ public class HsfpLauncherVisualizer
 
     [Description("The folder the acquisition is saved to. Set via PropertyMapping once logging starts.")]
     public string EpochPath { get; set; }
+
+    readonly HsfpSyncStatus sync = new HsfpSyncStatus();
+
+    [XmlIgnore]
+    [Description("IS_SYNCHRONIZED bit of the cuTTLefish heartbeat (R_HEARTBEAT). Starting asks for confirmation unless it is set and still arriving. Set via PropertyMapping on each heartbeat.")]
+    public bool IsSynchronized
+    {
+        get { return sync.LastValue; }
+        set { sync.Update(value); }
+    }
+
+    const string SyncPopup = "Harp clock not synchronized##HsfpSyncCheck";
 
     class SentNote
     {
@@ -89,10 +103,29 @@ public class HsfpLauncherVisualizer
                     HsfpUi.PushButtonColor(HsfpUi.StartColor);
                     if (ImGui.Button("Start experiment##HsfpStart", buttonSize))
                     {
-                        started = true;
-                        observer.OnNext(new HsfpLauncherCommand(HsfpLauncherCommandKind.StartExperiment, null));
+                        var session = Session;
+                        var skip = session != null && session.SkipHardwareValidation;
+                        if (skip || sync.IsSynchronized)
+                        {
+                            started = true;
+                            observer.OnNext(new HsfpLauncherCommand(HsfpLauncherCommandKind.StartExperiment, null));
+                        }
+                        else
+                        {
+                            ImGui.OpenPopup(SyncPopup);
+                        }
                     }
                     HsfpUi.PopButtonColor();
+                    string overridden;
+                    if (DrawSyncConfirm(out overridden))
+                    {
+                        started = true;
+                        if (overridden != null)
+                        {
+                            observer.OnNext(new HsfpLauncherCommand(HsfpLauncherCommandKind.HardwareQA, "Started without Harp clock synchronization: " + overridden));
+                        }
+                        observer.OnNext(new HsfpLauncherCommand(HsfpLauncherCommandKind.StartExperiment, null));
+                    }
                 }
                 else
                 {
@@ -152,6 +185,47 @@ public class HsfpLauncherVisualizer
             observer.OnError,
             observer.OnCompleted);
         });
+    }
+
+    /// <summary>
+    /// Modal asking whether to start without clock synchronization. Returns true if the user starts; then
+    /// <paramref name="overridden"/> describes the failed check, or is null if the clock recovered meanwhile.
+    /// </summary>
+    bool DrawSyncConfirm(out string overridden)
+    {
+        overridden = null;
+        var started = false;
+        // Centered on the panel. (ImGuiViewportPtr.Pos/Size are ref properties, which the Bonsai script compiler rejects.)
+        var center = ImGui.GetWindowPos() + ImGui.GetWindowSize() * 0.5f;
+        ImGui.SetNextWindowPos(center, ImGuiCond.Appearing, new Vector2(0.5f, 0.5f));
+        if (ImGui.BeginPopupModal(SyncPopup, ImGuiWindowFlags.AlwaysAutoResize))
+        {
+            // The status may recover while the dialog is open.
+            var synced = sync.IsSynchronized;
+            var status = sync.Describe();
+            ImGui.TextColored(synced ? HsfpUi.Good : HsfpUi.Bad, status);
+            ImGui.Spacing();
+            ImGui.TextUnformatted(synced
+                ? "The clock is now synchronized. Start the experiment?"
+                : "Timestamps may not align with other Harp devices.\nStart the experiment anyway? This is saved as a HardwareQA event.");
+            ImGui.Spacing();
+            var width = HsfpDpi.FitWidth("Start anyway", 120f);
+            HsfpUi.PushButtonColor(synced ? HsfpUi.StartColor : HsfpUi.StopColor);
+            if (ImGui.Button((synced ? "Start" : "Start anyway") + "##HsfpSyncStart", new Vector2(width, 0)))
+            {
+                started = true;
+                overridden = synced ? null : status;
+                ImGui.CloseCurrentPopup();
+            }
+            HsfpUi.PopButtonColor();
+            ImGui.SameLine();
+            if (ImGui.Button("Cancel##HsfpSyncCancel", new Vector2(width, 0)) || ImGui.IsKeyPressed(ImGuiKey.Escape))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.EndPopup();
+        }
+        return started;
     }
 
     static void Row(string label, string value)

@@ -41,6 +41,16 @@ public class HsfpHealthVisualizer
     [Description("Relative tolerance of the camera rate before it is flagged.")]
     public double RateTolerance { get; set; }
 
+    readonly HsfpSyncStatus sync = new HsfpSyncStatus();
+
+    [XmlIgnore]
+    [Description("IS_SYNCHRONIZED bit of the cuTTLefish heartbeat (R_HEARTBEAT). Set via PropertyMapping on each heartbeat.")]
+    public bool IsSynchronized
+    {
+        get { return sync.LastValue; }
+        set { sync.Update(value); }
+    }
+
     public HsfpHealthVisualizer()
     {
         RateTolerance = 0.02;
@@ -69,8 +79,11 @@ public class HsfpHealthVisualizer
         var rate = health != null ? health.FrameRate : 0;
         var rateOk = health != null && expected > 0 && Math.Abs(rate - expected) <= expected * RateTolerance;
         var spacing = HsfpDpi.ItemSpacing.X;
-        var width = (ImGui.GetContentRegionAvail().X - spacing) / 2f;
-        var size = new Vector2(width, ImGui.GetTextLineHeightWithSpacing() * 2f + HsfpDpi.Px(18f));
+        var avail = ImGui.GetContentRegionAvail();
+        var width = (avail.X - spacing) / 2f;
+        // Three rows of tiles, shrunk to fit the panel when it is short.
+        var height = Math.Min(ImGui.GetTextLineHeightWithSpacing() * 2f + HsfpDpi.Px(18f), (avail.Y - 2f * HsfpDpi.ItemSpacing.Y) / 3f);
+        var size = new Vector2(width, Math.Max(ImGui.GetTextLineHeightWithSpacing() * 2f, height));
 
         HsfpUi.Tile("##rate", "Camera rate" + (expected > 0 ? string.Format(" (expected {0:F2})", expected) : ""),
             health != null ? string.Format("{0:F1} Hz", rate) : "-", health == null ? HsfpUi.Muted : rateOk ? HsfpUi.Good : HsfpUi.Warning, size);
@@ -79,7 +92,10 @@ public class HsfpHealthVisualizer
         HsfpUi.Tile("##dropped", "Dropped frames", health != null ? health.DroppedFrames.ToString("N0") : "-", CountColor(health, health != null ? health.DroppedFrames : 0), size);
         ImGui.SameLine();
         HsfpUi.Tile("##sequence", "Channel sequence errors", health != null ? health.SequenceErrors.ToString("N0") : "-", CountColor(health, health != null ? health.SequenceErrors : 0), size);
-        ImGui.SetItemTooltip("Frames whose laser does not follow the previous frame's laser. A non-zero count means frames may be assigned to the wrong channel.");
+        ImGui.SetItemTooltip("Frames whose light source does not follow the previous frame's. A non-zero count means frames may be assigned to the wrong channel.");
+
+        HsfpUi.Tile("##sync", "Harp clock", sync.Summary, sync.IsSynchronized ? HsfpUi.Good : HsfpUi.Bad, new Vector2(width * 2f + spacing, size.Y));
+        ImGui.SetItemTooltip(sync.Describe() + " Read from the IS_SYNCHRONIZED bit of the cuTTLefish R_HEARTBEAT register, sent once per second.");
     }
 
     static Vector4 CountColor(HsfpHealth health, long count)

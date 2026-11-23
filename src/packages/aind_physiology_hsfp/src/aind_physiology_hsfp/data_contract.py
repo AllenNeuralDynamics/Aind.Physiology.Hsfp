@@ -201,6 +201,13 @@ def dataset(root: os.PathLike, channels: Sequence[int] | None = None) -> Dataset
                         reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/Regions.jsonl"),
                     ),
                     SoftwareEvents(
+                        name="HardwareQA",
+                        description="An event emitted when a hardware check fails and the experimenter chooses to "
+                        "continue, e.g. starting while the cuTTLefish is not synchronized with the Harp clock. This file "
+                        "is optional.",
+                        reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/HardwareQA.jsonl"),
+                    ),
+                    SoftwareEvents(
                         name="Annotations",
                         description="An event emitted whenever an annotation is made during the session.",
                         reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/Annotations.jsonl"),
