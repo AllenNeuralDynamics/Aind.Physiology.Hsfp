@@ -29,14 +29,6 @@
                 <Property Name="DeviceName" Selector="DeviceName" />
               </PropertyMappings>
             </Expression>
-            <Expression xsi:type="SubscribeSubject">
-              <Name>CameraSnapshotPath</Name>
-            </Expression>
-            <Expression xsi:type="PropertyMapping">
-              <PropertyMappings>
-                <Property Name="SnapshotPath" />
-              </PropertyMappings>
-            </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:HsfpCameraCapture">
                 <p1:CropMode>Auto</p1:CropMode>
@@ -48,50 +40,83 @@
             <Expression xsi:type="rx:PublishSubject">
               <Name>CameraFrames</Name>
             </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="p2:Frames" />
-            </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>CuttlefishEvents</Name>
+              <Name>StartAcquisition</Name>
             </Expression>
-            <Expression xsi:type="p3:Parse">
-              <harp:Register xsi:type="p3:TimestampedRisingEdgeEvents" />
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Value</Selector>
-            </Expression>
-            <Expression xsi:type="MemberSelector">
-              <Selector>Seconds</Selector>
-            </Expression>
-            <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:Zip" />
-            </Expression>
-            <Expression xsi:type="rx:Condition">
-              <Name>IsLaserEvent</Name>
+            <Expression xsi:type="rx:CreateObservable">
+              <Name>PairFramesWithLightSources</Name>
+              <Description>Pairs each camera frame with the light source event of its trigger. The pairing restarts each time the trigger sequence starts, after the frames of the previous sequence have arrived, so that a trigger cut short by stopping the sequence cannot shift the pairing.</Description>
               <Workflow>
                 <Nodes>
                   <Expression xsi:type="WorkflowInput">
                     <Name>Source1</Name>
                   </Expression>
-                  <Expression xsi:type="MemberSelector">
-                    <Selector>Item1</Selector>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>CameraFrames</Name>
                   </Expression>
-                  <Expression xsi:type="HasFlag">
-                    <Operand xsi:type="WorkflowProperty" TypeArguments="p3:Pins">
-                      <Value>Pin1 Pin2 Pin3 Pin4 Pin5 Pin6 Pin7</Value>
-                    </Operand>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p2:Frames" />
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>CuttlefishEvents</Name>
+                  </Expression>
+                  <Expression xsi:type="p3:Parse">
+                    <harp:Register xsi:type="p3:TimestampedRisingEdgeEvents" />
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Value</Selector>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Seconds</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Zip" />
+                  </Expression>
+                  <Expression xsi:type="rx:Condition">
+                    <Name>IsLaserEvent</Name>
+                    <Workflow>
+                      <Nodes>
+                        <Expression xsi:type="WorkflowInput">
+                          <Name>Source1</Name>
+                        </Expression>
+                        <Expression xsi:type="MemberSelector">
+                          <Selector>Item1</Selector>
+                        </Expression>
+                        <Expression xsi:type="HasFlag">
+                          <Operand xsi:type="WorkflowProperty" TypeArguments="p3:Pins">
+                            <Value>Pin1 Pin2 Pin3 Pin4 Pin5 Pin6 Pin7</Value>
+                          </Operand>
+                        </Expression>
+                        <Expression xsi:type="WorkflowOutput" />
+                      </Nodes>
+                      <Edges>
+                        <Edge From="0" To="1" Label="Source1" />
+                        <Edge From="1" To="2" Label="Source1" />
+                        <Edge From="2" To="3" Label="Source1" />
+                      </Edges>
+                    </Workflow>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Zip" />
                   </Expression>
                   <Expression xsi:type="WorkflowOutput" />
                 </Nodes>
                 <Edges>
-                  <Edge From="0" To="1" Label="Source1" />
                   <Edge From="1" To="2" Label="Source1" />
-                  <Edge From="2" To="3" Label="Source1" />
+                  <Edge From="2" To="9" Label="Source1" />
+                  <Edge From="3" To="4" Label="Source1" />
+                  <Edge From="4" To="5" Label="Source1" />
+                  <Edge From="4" To="6" Label="Source1" />
+                  <Edge From="5" To="7" Label="Source1" />
+                  <Edge From="6" To="7" Label="Source2" />
+                  <Edge From="7" To="8" Label="Source1" />
+                  <Edge From="8" To="9" Label="Source2" />
+                  <Edge From="9" To="10" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="rx:Zip" />
+              <Combinator xsi:type="rx:Switch" />
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="p1:ToHsfpFrame" />
@@ -122,31 +147,30 @@
                 <Property Name="Rig" />
               </PropertyMappings>
             </Expression>
+            <Expression xsi:type="SubscribeSubject">
+              <Name>CuttlefishReady</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:SubscribeWhen" />
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="1" Label="Source1" />
             <Edge From="1" To="2" Label="Source1" />
-            <Edge From="2" To="5" Label="Source1" />
-            <Edge From="3" To="4" Label="Source1" />
-            <Edge From="4" To="5" Label="Source2" />
+            <Edge From="2" To="3" Label="Source1" />
+            <Edge From="3" To="17" Label="Source1" />
+            <Edge From="16" To="17" Label="Source2" />
+            <Edge From="17" To="4" Label="Source1" />
             <Edge From="5" To="6" Label="Source1" />
             <Edge From="6" To="7" Label="Source1" />
-            <Edge From="7" To="14" Label="Source1" />
+            <Edge From="7" To="8" Label="Source1" />
             <Edge From="8" To="9" Label="Source1" />
             <Edge From="9" To="10" Label="Source1" />
-            <Edge From="9" To="11" Label="Source1" />
-            <Edge From="10" To="12" Label="Source1" />
-            <Edge From="11" To="12" Label="Source2" />
-            <Edge From="12" To="13" Label="Source1" />
-            <Edge From="13" To="14" Label="Source2" />
+            <Edge From="10" To="13" Label="Source1" />
+            <Edge From="11" To="12" Label="Source1" />
+            <Edge From="12" To="13" Label="Source2" />
             <Edge From="14" To="15" Label="Source1" />
-            <Edge From="15" To="16" Label="Source1" />
-            <Edge From="16" To="17" Label="Source1" />
-            <Edge From="17" To="20" Label="Source1" />
-            <Edge From="18" To="19" Label="Source1" />
-            <Edge From="19" To="20" Label="Source2" />
-            <Edge From="21" To="22" Label="Source1" />
-            <Edge From="22" To="15" Label="Source2" />
+            <Edge From="15" To="8" Label="Source2" />
           </Edges>
         </Workflow>
       </Expression>
@@ -242,7 +266,7 @@
               <Name>CuttlefishCommands</Name>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>StartExperiment</Name>
+              <Name>StartLogging</Name>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Delay">
@@ -253,11 +277,11 @@
               <Name>TriggerReadDump</Name>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>StartExperiment</Name>
+              <Name>StartAcquisition</Name>
             </Expression>
             <Expression xsi:type="Combinator">
               <Combinator xsi:type="rx:Delay">
-                <rx:DueTime>PT1S</rx:DueTime>
+                <rx:DueTime>PT0.1S</rx:DueTime>
               </Combinator>
             </Expression>
             <Expression xsi:type="p3:CreateMessage">
@@ -270,7 +294,7 @@
               <Name>CuttlefishCommands</Name>
             </Expression>
             <Expression xsi:type="SubscribeSubject">
-              <Name>EndExperiment</Name>
+              <Name>StopAcquisition</Name>
             </Expression>
             <Expression xsi:type="p3:CreateMessage">
               <harp:MessageType>Write</harp:MessageType>
@@ -335,6 +359,21 @@
             <Expression xsi:type="MulticastSubject">
               <Name>CuttlefishCommands</Name>
             </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Last" />
+            </Expression>
+            <Expression xsi:type="Unit" />
+            <Expression xsi:type="MulticastSubject">
+              <Name>CuttlefishReady</Name>
+            </Expression>
+            <Expression xsi:type="Combinator">
+              <Combinator xsi:type="rx:Delay">
+                <rx:DueTime>PT1S</rx:DueTime>
+              </Combinator>
+            </Expression>
+            <Expression xsi:type="MulticastSubject">
+              <Name>StartAcquisition</Name>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="0" To="4" Label="Source1" />
@@ -367,21 +406,24 @@
             <Edge From="35" To="36" Label="Source1" />
             <Edge From="36" To="37" Label="Source1" />
             <Edge From="37" To="38" Label="Source1" />
+            <Edge From="13" To="39" Label="Source1" />
+            <Edge From="39" To="40" Label="Source1" />
+            <Edge From="40" To="41" Label="Source1" />
+            <Edge From="41" To="42" Label="Source1" />
+            <Edge From="42" To="43" Label="Source1" />
           </Edges>
         </Workflow>
       </Expression>
       <Expression xsi:type="GroupWorkflow">
         <Name>Lasers</Name>
-        <Description>Finds the OBIS laser of each light source with a serial number, then sends the commands of each light source to its laser, with one Device per laser port. Emission is turned off when the workflow stops.</Description>
+        <Description>Finds the OBIS laser of each light source by its serial number, then sends the commands of each light source to its laser, with one Device per laser port. Emission is turned off when the workflow stops.</Description>
         <Workflow>
           <Nodes>
             <Expression xsi:type="SubscribeSubject">
               <Name>RigSchema</Name>
             </Expression>
             <Expression xsi:type="Combinator">
-              <Combinator xsi:type="p1:FindHsfpLasers">
-                <p1:WavelengthTolerance>2</p1:WavelengthTolerance>
-              </Combinator>
+              <Combinator xsi:type="p1:FindHsfpLasers" />
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject">
               <Name>Lasers</Name>

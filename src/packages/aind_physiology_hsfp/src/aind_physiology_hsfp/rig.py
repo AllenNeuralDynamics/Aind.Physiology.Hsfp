@@ -99,29 +99,20 @@ class CameraRegion(BaseModel):
 
 
 class LightSource(BaseModel):
-    """A light source triggered by one cuTTLefish channel. Each light source defines one acquisition channel."""
+    """An OBIS laser triggered by one cuTTLefish channel. Each light source defines one acquisition channel.
 
-    name: str = Field(description="Name of the light source, as it appears in the instrument metadata.")
-    wavelength: int | None = Field(default=None, gt=0, description="Excitation wavelength (nm), if known.")
+    The laser is identified by its serial number only: the workflow finds it among the OBIS lasers connected over USB
+    when it starts, and everything else about it (model, wavelength, power setpoint, ...) is read from the laser and
+    logged when the session starts (the Lasers software event).
+    """
+
+    serial_number: str = Field(
+        min_length=1,
+        description="Serial number of the OBIS laser. It is controlled from its tab of the acquisition UI.",
+    )
     power: float | None = Field(
         default=None, ge=0, description="Power (uW) at the fiber tip. If not set, it is taken from the instrument."
     )
-    serial_number: str | None = Field(
-        default=None,
-        min_length=1,
-        description="Serial number of the OBIS laser, which is found among the OBIS lasers connected over USB when "
-        "the workflow starts, and controlled from its tab of the acquisition UI. The wavelength it reports must match "
-        "wavelength. If not set, the light source is not controlled.",
-    )
-
-    @model_validator(mode="after")
-    def _validate_laser(self) -> Self:
-        if self.serial_number is not None and self.wavelength is None:
-            raise ValueError(
-                f"Light source '{self.name}' has a serial number, so its wavelength must be set, to be checked against "
-                "the laser."
-            )
-        return self
 
 
 class CuttlefishChannels(BaseModel):
@@ -130,21 +121,11 @@ class CuttlefishChannels(BaseModel):
     Channel 0 is reserved for the camera trigger. Light sources fire in channel order, skipping unused channels.
     """
 
-    channel_1: LightSource | None = Field(
-        default=LightSource(name="OBIS 405 LX", wavelength=405), description="Light source on channel 1."
-    )
-    channel_2: LightSource | None = Field(
-        default=LightSource(name="OBIS 445 LX", wavelength=445), description="Light source on channel 2."
-    )
-    channel_3: LightSource | None = Field(
-        default=LightSource(name="OBIS 488 LX", wavelength=488), description="Light source on channel 3."
-    )
-    channel_4: LightSource | None = Field(
-        default=LightSource(name="OBIS 514 LX", wavelength=514), description="Light source on channel 4."
-    )
-    channel_5: LightSource | None = Field(
-        default=LightSource(name="OBIS 561 LS", wavelength=561), description="Light source on channel 5."
-    )
+    channel_1: LightSource | None = Field(default=None, description="Light source on channel 1.")
+    channel_2: LightSource | None = Field(default=None, description="Light source on channel 2.")
+    channel_3: LightSource | None = Field(default=None, description="Light source on channel 3.")
+    channel_4: LightSource | None = Field(default=None, description="Light source on channel 4.")
+    channel_5: LightSource | None = Field(default=None, description="Light source on channel 5.")
     channel_6: LightSource | None = Field(default=None, description="Light source on channel 6.")
     channel_7: LightSource | None = Field(default=None, description="Light source on channel 7.")
 
@@ -158,11 +139,7 @@ class CuttlefishChannels(BaseModel):
         sources = self.light_sources()
         if not sources:
             raise ValueError("At least one cuTTLefish channel must have a light source.")
-        names = [source.name for source in sources.values()]
-        duplicates = sorted({name for name in names if names.count(name) > 1})
-        if duplicates:
-            raise ValueError(f"Light source names must be unique: {', '.join(duplicates)}.")
-        serials = [source.serial_number for source in sources.values() if source.serial_number is not None]
+        serials = [source.serial_number for source in sources.values()]
         duplicates = sorted({serial for serial in serials if serials.count(serial) > 1})
         if duplicates:
             raise ValueError(f"Laser serial numbers must be unique: {', '.join(duplicates)}.")
@@ -194,8 +171,6 @@ class AindPhysioHsfpRig(rig.Rig):
         title="cuTTLefish", description="cuTTLefish board that triggers the camera and the light sources."
     )
     channels: CuttlefishChannels = Field(
-        default=CuttlefishChannels(),
-        validate_default=True,
         title="cuTTLefish channels",
         description="Light source on each cuTTLefish channel. Channel 0 triggers the camera. Each light source "
         "defines the acquisition channel with the same number.",

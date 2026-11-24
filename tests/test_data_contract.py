@@ -41,7 +41,11 @@ def test_channels_come_from_the_epoch_rig(tmp_path, make_epoch, session_start):
 
     rig = example.mock_rig()
     rig.channels = CuttlefishChannels(
-        channel_1=None, channel_2=LightSource(name="A"), channel_3=None, channel_4=None, channel_5=LightSource(name="B")
+        channel_1=None,
+        channel_2=LightSource(serial_number="FS230321025"),
+        channel_3=None,
+        channel_4=None,
+        channel_5=LightSource(serial_number="466789"),
     )
     epoch = make_epoch(tmp_path, session_start, rig=rig)
     names = [stream.name for stream in dataset(epoch)]
@@ -53,6 +57,6 @@ def test_contract_without_rig_uses_default_channels(tmp_path):
     assert [name for name in names if name.startswith("channel_")] == [f"channel_{c}" for c in range(1, 6)]
 
 
-def test_camera_applied_settings(session_root):
+def test_camera_settings(session_root):
     epoch = next((session_root / "fib").glob("hsfp_*"))
-    assert dataset(epoch)["camera_applied"].read()["source"] == "dcam_applied_readback"
+    assert dataset(epoch)["camera_settings"].read()["source"] == "dcam_applied_readback"

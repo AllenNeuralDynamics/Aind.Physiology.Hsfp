@@ -14,6 +14,18 @@ from examples import example
 FIXTURES = Path(__file__).parent / "fixtures"
 START = datetime(2026, 10, 17, 0, 30, tzinfo=UTC)
 
+# The OBIS lasers of the rig, by serial number: the model and wavelength (nm) each reports.
+LASERS = {
+    "FS230411028": ("OBIS 405nm LX 100mW", 405.0),
+    "FS230321025": ("OBIS 445nm LX 75mW", 445.0),
+    "466549": ("OBIS 488nm LS 60mW", 488.0),
+    "FS230321024": ("OBIS 514nm LX 40mW", 514.0),
+    "477053": ("OBIS 532nm LS 50mW", 532.0),
+    "466789": ("OBIS 561nm LS 50mW", 561.0),
+    "478211": ("OBIS 594nm LS 60mW", 594.0),
+    "FS230226019": ("OBIS 640nm LX 75mW", 640.0),
+}
+
 # DCAM trigger source (external), exposure (s), and subarray offset/size.
 CAMERA_PROPERTIES = {
     0x00100110: 2,
@@ -47,8 +59,29 @@ def write_epoch(session_root: Path, start: datetime, rig=None, task_logic=None) 
     end = start + timedelta(minutes=1)
     (events / "StartSessionTime.jsonl").write_text(_software_event("StartSessionTime", start.isoformat(), 1.0))
     (events / "EndSessionTime.jsonl").write_text(_software_event("EndSessionTime", end.isoformat(), 61.0))
+    # One row per reply: the readout when the session starts, then the measured power.
+    rows = []
+    for index, (channel, source) in enumerate(rig.light_sources().items()):
+        laser = {
+            "channel": channel,
+            "serial_number": source.serial_number,
+            "model": LASERS[source.serial_number][0],
+            "wavelength": LASERS[source.serial_number][1],
+            "port_name": "COM5",
+            "laser_channel": index + 1,
+        }
+        state = {"Emission": True, "OperatingMode": "Digital", "PowerSetpoint": 0.01, "Power": 0.0099}
+        rows.append({**laser, "device": "laser", "command": "GetState", "value": state, "error": None})
+        rows.append({**laser, "device": "laser", "command": "GetNoise", "value": None, "error": "ERR -400: rejected"})
+        rows.append(
+            {**laser, "device": "controller", "command": "SYST:INF:SNUM?", "value": "C230823002", "error": None}
+        )
+        rows.append({**laser, "device": "laser", "command": "GetPower", "value": 0.0099, "error": None})
+    (events / "Lasers.jsonl").write_text(
+        "".join(_software_event("Lasers", row, 1.5 + i * 0.01) for i, row in enumerate(rows))
+    )
 
-    (epoch / "camera_applied.json").write_text(
+    (epoch / "camera_settings.json").write_text(
         json.dumps(
             {
                 "source": "dcam_applied_readback",
@@ -60,9 +93,10 @@ def write_epoch(session_root: Path, start: datetime, rig=None, task_logic=None) 
     )
     # The light sources of the rig interleaved at 150 Hz on the camera clock, tagged with their cuTTLefish channel.
     channels = list(rig.light_sources())
-    rows = ["FrameCounter,Timestamp,Seconds,Channel"]
+    rows = ["FrameCounter,Timestamp,Seconds,Channel,ChannelFrameCounter"]
     for frame in range(10 * len(channels)):
-        rows.append(f"{frame},{frame / 150:.9f},{1 + frame / 150:.9f},{channels[frame % len(channels)]}")
+        channel, index = channels[frame % len(channels)], frame // len(channels)
+        rows.append(f"{frame},{frame / 150:.9f},{1 + frame / 150:.9f},{channel},{index}")
     (epoch / "frame_metadata.csv").write_text("\n".join(rows) + "\n", encoding="utf-8")
     return epoch
 

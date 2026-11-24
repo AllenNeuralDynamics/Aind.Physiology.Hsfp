@@ -3,8 +3,8 @@ using System.IO;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using Hexa.NET.ImGui;
-using OpenCV.Net;
-using OpenTK.Graphics.OpenGL4;
+
+
 
 /// <summary>
 /// One-time look of an ImGui context hosting HSFP visualizers (Segoe UI, compact rounded style),
@@ -220,6 +220,27 @@ static class HsfpUi
         return FiberPalette[((index % FiberPalette.Length) + FiberPalette.Length) % FiberPalette.Length];
     }
 
+    static readonly Vector4[] SpectrumPalette =
+    {
+        new Vector4(0.35f, 0.85f, 1.00f, 1f),
+        new Vector4(1.00f, 0.88f, 0.30f, 1f),
+        new Vector4(1.00f, 0.55f, 0.45f, 1f),
+        new Vector4(0.72f, 0.58f, 1.00f, 1f),
+        new Vector4(0.50f, 1.00f, 0.70f, 1f),
+        new Vector4(1.00f, 0.70f, 0.90f, 1f),
+    };
+
+    /// <summary>Color of the n-th spectrum ROI; distinct from the fiber colors.</summary>
+    public static Vector4 SpectrumColor(int index)
+    {
+        return SpectrumPalette[((index % SpectrumPalette.Length) + SpectrumPalette.Length) % SpectrumPalette.Length];
+    }
+
+    public static uint WithAlpha(Vector4 color, float alpha)
+    {
+        return ImGui.ColorConvertFloat4ToU32(new Vector4(color.X, color.Y, color.Z, alpha));
+    }
+
     static readonly Vector4[] ChannelPalette =
     {
         new Vector4(0.85f, 0.85f, 0.85f, 1f),
@@ -232,12 +253,13 @@ static class HsfpUi
     };
 
     /// <summary>
-    /// Color of a cuTTLefish channel: the color of its light source's wavelength, or, if the wavelength is not
-    /// known, a neutral tint per channel.
+    /// Color of a cuTTLefish channel: the color of the wavelength of its laser, or, until the laser is found, a
+    /// neutral tint per channel.
     /// </summary>
     public static Vector4 ChannelColor(AindPhysiologyHsfp.LightSource source, int channel)
     {
-        if (source != null && source.Wavelength.HasValue) return WavelengthColor(source.Wavelength.Value);
+        var laser = source != null ? HsfpChannels.FindLaser(channel) : null;
+        if (laser != null && laser.Wavelength > 0) return WavelengthColor(laser.Wavelength);
         return source != null ? ChannelPalette[((channel % ChannelPalette.Length) + ChannelPalette.Length) % ChannelPalette.Length] : Muted;
     }
 
@@ -311,82 +333,3 @@ static class HsfpUi
     }
 }
 
-/// <summary>
-/// An OpenGL texture holding a preview of an image, normalized to 8 bits for display only.
-/// Create and update it from the ImGui render thread.
-/// </summary>
-class HsfpTexture
-{
-    int textureId;
-
-    public int Width { get; private set; }
-
-    public int Height { get; private set; }
-
-    public bool IsValid { get { return textureId != 0; } }
-
-    public ImTextureRef TexRef { get; private set; }
-
-    public unsafe void Update(IplImage image)
-    {
-        if (image == null) return;
-        var display = image.Depth == IplDepth.U8 && image.Channels == 1 ? image : Normalize(image);
-        try
-        {
-            var allocate = display.Width != Width || display.Height != Height;
-            if (textureId == 0)
-            {
-                GL.GenTextures(1, out textureId);
-                TexRef = new ImTextureRef(texId: new ImTextureID(unchecked((ulong)(uint)textureId)));
-                GL.BindTexture(TextureTarget.Texture2D, textureId);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Linear);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-                // GL_RED + swizzle replaces GL_LUMINANCE, removed in core-profile OpenGL.
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleR, (int)All.Red);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleG, (int)All.Red);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleB, (int)All.Red);
-                GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureSwizzleA, (int)All.One);
-                allocate = true;
-            }
-            else
-            {
-                GL.BindTexture(TextureTarget.Texture2D, textureId);
-            }
-
-            GL.PixelStore(PixelStoreParameter.UnpackAlignment, display.WidthStep % 4 == 0 ? 4 : 1);
-            GL.PixelStore(PixelStoreParameter.UnpackRowLength, display.WidthStep);
-            if (allocate)
-            {
-                GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba, display.Width, display.Height, 0, PixelFormat.Red, PixelType.UnsignedByte, display.ImageData);
-            }
-            else
-            {
-                GL.TexSubImage2D(TextureTarget.Texture2D, 0, 0, 0, display.Width, display.Height, PixelFormat.Red, PixelType.UnsignedByte, display.ImageData);
-            }
-            GL.PixelStore(PixelStoreParameter.UnpackRowLength, 0);
-            Width = display.Width;
-            Height = display.Height;
-            GC.KeepAlive(display);
-        }
-        finally
-        {
-            if (display != image) display.Dispose();
-        }
-    }
-
-    static IplImage Normalize(IplImage source)
-    {
-        var gray = source;
-        if (source.Channels != 1)
-        {
-            gray = new IplImage(source.Size, source.Depth, 1);
-            CV.CvtColor(source, gray, ColorConversion.Bgr2Gray);
-        }
-        var display = new IplImage(source.Size, IplDepth.U8, 1);
-        CV.Normalize(gray, display, 0, 255, NormTypes.MinMax, null);
-        if (gray != source) gray.Dispose();
-        return display;
-    }
-}

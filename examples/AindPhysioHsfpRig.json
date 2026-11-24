@@ -26,28 +26,23 @@
   },
   "channels": {
     "channel_1": {
-      "name": "OBIS 405 LX",
-      "wavelength": 405,
+      "serial_number": "FS230411028",
       "power": null
     },
     "channel_2": {
-      "name": "OBIS 445 LX",
-      "wavelength": 445,
+      "serial_number": "FS230321025",
       "power": null
     },
     "channel_3": {
-      "name": "OBIS 488 LX",
-      "wavelength": 488,
+      "serial_number": "466549",
       "power": null
     },
     "channel_4": {
-      "name": "OBIS 514 LX",
-      "wavelength": 514,
+      "serial_number": "FS230321024",
       "power": null
     },
     "channel_5": {
-      "name": "OBIS 561 LS",
-      "wavelength": 561,
+      "serial_number": "466789",
       "power": null
     },
     "channel_6": null,

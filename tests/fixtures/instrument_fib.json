@@ -434,7 +434,7 @@
       {
          "object_type": "Laser",
          "name": "OBIS 405 LX",
-         "serial_number": null,
+         "serial_number": "FS230411028",
          "manufacturer": {
             "name": "Coherent Scientific",
             "abbreviation": null,
@@ -453,7 +453,7 @@
       {
          "object_type": "Laser",
          "name": "OBIS 445 LX",
-         "serial_number": null,
+         "serial_number": "FS230321025",
          "manufacturer": {
             "name": "Coherent Scientific",
             "abbreviation": null,
@@ -472,7 +472,7 @@
       {
          "object_type": "Laser",
          "name": "OBIS 488 LX",
-         "serial_number": null,
+         "serial_number": "466549",
          "manufacturer": {
             "name": "Coherent Scientific",
             "abbreviation": null,
@@ -491,7 +491,7 @@
       {
          "object_type": "Laser",
          "name": "OBIS 514 LX",
-         "serial_number": null,
+         "serial_number": "FS230321024",
          "manufacturer": {
             "name": "Coherent Scientific",
             "abbreviation": null,
@@ -510,7 +510,7 @@
       {
          "object_type": "Laser",
          "name": "OBIS 532 LS",
-         "serial_number": null,
+         "serial_number": "477053",
          "manufacturer": {
             "name": "Coherent Scientific",
             "abbreviation": null,
@@ -529,7 +529,7 @@
       {
          "object_type": "Laser",
          "name": "OBIS 561 LS",
-         "serial_number": null,
+         "serial_number": "466789",
          "manufacturer": {
             "name": "Coherent Scientific",
             "abbreviation": null,
@@ -548,7 +548,7 @@
       {
          "object_type": "Laser",
          "name": "OBIS 594 LS",
-         "serial_number": null,
+         "serial_number": "478211",
          "manufacturer": {
             "name": "Coherent Scientific",
             "abbreviation": null,
@@ -567,7 +567,7 @@
       {
          "object_type": "Laser",
          "name": "OBIS 640 LX",
-         "serial_number": null,
+         "serial_number": "FS230226019",
          "manufacturer": {
             "name": "Coherent Scientific",
             "abbreviation": null,

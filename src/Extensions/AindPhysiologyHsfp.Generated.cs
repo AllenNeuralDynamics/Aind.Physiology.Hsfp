@@ -181,7 +181,7 @@ namespace AindPhysiologyHsfp
         /// Light source on each cuTTLefish channel. Channel 0 triggers the camera. Each light source defines the acquisition channel with the same number.
         /// </summary>
         [System.Xml.Serialization.XmlIgnoreAttribute()]
-        [Newtonsoft.Json.JsonPropertyAttribute("channels")]
+        [Newtonsoft.Json.JsonPropertyAttribute("channels", Required=Newtonsoft.Json.Required.Always)]
         [System.ComponentModel.DescriptionAttribute("Light source on each cuTTLefish channel. Channel 0 triggers the camera. Each ligh" +
             "t source defines the acquisition channel with the same number.")]
         public CuttlefishChannels Channels
@@ -741,11 +741,6 @@ namespace AindPhysiologyHsfp
     
         public CuttlefishChannels()
         {
-            _channel1 = new LightSource();
-            _channel2 = new LightSource();
-            _channel3 = new LightSource();
-            _channel4 = new LightSource();
-            _channel5 = new LightSource();
         }
     
         protected CuttlefishChannels(CuttlefishChannels other)
@@ -1533,23 +1528,26 @@ namespace AindPhysiologyHsfp
 
 
     /// <summary>
-    /// A light source triggered by one cuTTLefish channel. Each light source defines one acquisition channel.
+    /// An OBIS laser triggered by one cuTTLefish channel. Each light source defines one acquisition channel.
+    ///
+    ///The laser is identified by its serial number only: the workflow finds it among the OBIS lasers connected over USB
+    ///when it starts, and everything else about it (model, wavelength, power setpoint, ...) is read from the laser and
+    ///logged when the session starts (the Lasers software event).
     /// </summary>
     [System.CodeDom.Compiler.GeneratedCodeAttribute("Bonsai.Sgen", "0.9.0.0 (Newtonsoft.Json v13.0.0.0)")]
-    [System.ComponentModel.DescriptionAttribute("A light source triggered by one cuTTLefish channel. Each light source defines one" +
-        " acquisition channel.")]
+    [System.ComponentModel.DescriptionAttribute(@"An OBIS laser triggered by one cuTTLefish channel. Each light source defines one acquisition channel.
+
+    The laser is identified by its serial number only: the workflow finds it among the OBIS lasers connected over USB
+    when it starts, and everything else about it (model, wavelength, power setpoint, ...) is read from the laser and
+    logged when the session starts (the Lasers software event).")]
     [Bonsai.WorkflowElementCategoryAttribute(Bonsai.ElementCategory.Source)]
     [Bonsai.CombinatorAttribute(MethodName="Generate")]
     public partial class LightSource
     {
     
-        private string _name;
-    
-        private int? _wavelength;
+        private string _serialNumber;
     
         private double? _power;
-    
-        private string _serialNumber;
     
         public LightSource()
         {
@@ -1557,43 +1555,25 @@ namespace AindPhysiologyHsfp
     
         protected LightSource(LightSource other)
         {
-            _name = other._name;
-            _wavelength = other._wavelength;
-            _power = other._power;
             _serialNumber = other._serialNumber;
+            _power = other._power;
         }
     
         /// <summary>
-        /// Name of the light source, as it appears in the instrument metadata.
+        /// Serial number of the OBIS laser. It is controlled from its tab of the acquisition UI.
         /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("name", Required=Newtonsoft.Json.Required.Always)]
-        [System.ComponentModel.DescriptionAttribute("Name of the light source, as it appears in the instrument metadata.")]
-        public string Name
+        [Newtonsoft.Json.JsonPropertyAttribute("serial_number", Required=Newtonsoft.Json.Required.Always)]
+        [System.ComponentModel.DescriptionAttribute("Serial number of the OBIS laser. It is controlled from its tab of the acquisition" +
+            " UI.")]
+        public string SerialNumber
         {
             get
             {
-                return _name;
+                return _serialNumber;
             }
             set
             {
-                _name = value;
-            }
-        }
-    
-        /// <summary>
-        /// Excitation wavelength (nm), if known.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("wavelength")]
-        [System.ComponentModel.DescriptionAttribute("Excitation wavelength (nm), if known.")]
-        public int? Wavelength
-        {
-            get
-            {
-                return _wavelength;
-            }
-            set
-            {
-                _wavelength = value;
+                _serialNumber = value;
             }
         }
     
@@ -1614,23 +1594,6 @@ namespace AindPhysiologyHsfp
             }
         }
     
-        /// <summary>
-        /// Serial number of the OBIS laser, which is found among the OBIS lasers connected over USB when the workflow starts, and controlled from its tab of the acquisition UI. The wavelength it reports must match wavelength. If not set, the light source is not controlled.
-        /// </summary>
-        [Newtonsoft.Json.JsonPropertyAttribute("serial_number")]
-        [System.ComponentModel.DescriptionAttribute(@"Serial number of the OBIS laser, which is found among the OBIS lasers connected over USB when the workflow starts, and controlled from its tab of the acquisition UI. The wavelength it reports must match wavelength. If not set, the light source is not controlled.")]
-        public string SerialNumber
-        {
-            get
-            {
-                return _serialNumber;
-            }
-            set
-            {
-                _serialNumber = value;
-            }
-        }
-    
         public System.IObservable<LightSource> Generate()
         {
             return System.Reactive.Linq.Observable.Defer(() => System.Reactive.Linq.Observable.Return(new LightSource(this)));
@@ -1643,10 +1606,8 @@ namespace AindPhysiologyHsfp
     
         protected virtual bool PrintMembers(System.Text.StringBuilder stringBuilder)
         {
-            stringBuilder.Append("Name = " + _name + ", ");
-            stringBuilder.Append("Wavelength = " + _wavelength + ", ");
-            stringBuilder.Append("Power = " + _power + ", ");
-            stringBuilder.Append("SerialNumber = " + _serialNumber);
+            stringBuilder.Append("SerialNumber = " + _serialNumber + ", ");
+            stringBuilder.Append("Power = " + _power);
             return true;
         }
     

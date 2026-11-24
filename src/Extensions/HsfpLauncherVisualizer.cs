@@ -15,6 +15,10 @@ public enum HsfpLauncherCommandKind
     Annotation,
     /// <summary>A hardware check failed and the user chose to start anyway; the text describes the check.</summary>
     HardwareQA,
+    /// <summary>Stop the cuTTLefish trigger sequence (camera and light sources), outside a session.</summary>
+    PauseAcquisition,
+    /// <summary>Restart the cuTTLefish trigger sequence, outside a session.</summary>
+    ResumeAcquisition,
 }
 
 /// <summary>A button press or a sent note from <see cref="HsfpLauncherVisualizer"/>.</summary>

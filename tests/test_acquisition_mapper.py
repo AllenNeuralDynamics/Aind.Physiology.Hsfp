@@ -43,7 +43,39 @@ def test_stream_configuration(session_root, instrument_path):
 
 def test_without_instrument_power_is_unset(session_root):
     stream = _map(session_root).data_streams[0]
-    assert all(c.power is None for c in stream.configurations if isinstance(c, LaserConfig))
+    lasers = [c for c in stream.configurations if isinstance(c, LaserConfig)]
+    assert all(laser.power is None for laser in lasers)
+    # Without the instrument, a laser is named after the model and serial number it reports.
+    assert lasers[0].device_name == "OBIS 405nm LX 100mW S/N FS230411028"
+
+
+def test_laser_settings_are_recorded(session_root, instrument_path):
+    channels = _map(session_root, instrument_path).data_streams[0].code[0].parameters["hsfp"]["imaging"]["channels"]
+    assert channels[0]["light_source"] == "OBIS 405 LX"
+    assert channels[0]["serial_number"] == "FS230411028"
+    assert channels[0]["power_setpoint_w"] == pytest.approx(0.01)
+    assert channels[0]["emission"] is True
+    assert channels[0]["operating_mode"] == "Digital"
+
+
+def test_a_laser_missing_from_the_instrument_raises(session_root, instrument_path, tmp_path):
+    import json
+
+    instrument = json.loads(instrument_path.read_text(encoding="utf-8-sig"))
+    for component in instrument["components"]:
+        if component.get("serial_number") == "FS230411028":
+            component["serial_number"] = None
+    path = tmp_path / "instrument.json"
+    path.write_text(json.dumps(instrument), encoding="utf-8")
+    with pytest.raises(ValueError, match="No component with serial number FS230411028"):
+        _map(session_root, path)
+
+
+def test_the_lasers_must_match_the_rig(session_root):
+    events = next(session_root.glob("fib/hsfp_*")) / "SoftwareEvents" / "Lasers.jsonl"
+    events.write_text(events.read_text(encoding="utf-8").replace("FS230411028", "OTHER"), encoding="utf-8")
+    with pytest.raises(ValueError, match="reports S/N OTHER"):
+        _map(session_root)
 
 
 def test_no_epoch_raises(tmp_path):
@@ -59,10 +91,10 @@ def _rig_with_gaps():
     rig = example.mock_rig()
     rig.channels = CuttlefishChannels(
         channel_1=None,
-        channel_2=LightSource(name="OBIS 445 LX"),
+        channel_2=LightSource(serial_number="FS230321025"),
         channel_3=None,
         channel_4=None,
-        channel_5=LightSource(name="OBIS 561 LS", wavelength=561),
+        channel_5=LightSource(serial_number="466789"),
     )
     return rig
 
@@ -71,15 +103,9 @@ def test_unused_channels_are_skipped(tmp_path, instrument_path, make_epoch, sess
     make_epoch(tmp_path, session_start, rig=_rig_with_gaps())
     stream = _map(tmp_path, instrument_path).data_streams[0]
     lasers = [c for c in stream.configurations if isinstance(c, LaserConfig)]
-    # The wavelength of a light source without one in the rig comes from the instrument.
+    # Each laser is named after the instrument component with its serial number; its wavelength is the one it reports.
     assert [(laser.device_name, laser.wavelength) for laser in lasers] == [("OBIS 445 LX", 445), ("OBIS 561 LS", 561)]
     ports = {c.target_device: c.source_port for c in stream.connections if c.source_port}
     assert ports["OBIS 445 LX"] == "IO2" and ports["OBIS 561 LS"] == "IO5"
     channels = stream.code[0].parameters["hsfp"]["imaging"]["channels"]
     assert [c["channel"] for c in channels] == [2, 5]
-
-
-def test_missing_wavelength_without_instrument_raises(tmp_path, make_epoch, session_start):
-    make_epoch(tmp_path, session_start, rig=_rig_with_gaps())
-    with pytest.raises(ValueError, match="no wavelength"):
-        _map(tmp_path)
