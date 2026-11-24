@@ -1,6 +1,7 @@
 using Bonsai;
 using Bonsai.Design;
 using AllenNeuralDynamics.HamamatsuCamera;
+using AllenNeuralDynamics.HamamatsuCamera.API;
 using AllenNeuralDynamics.HamamatsuCamera.Models;
 using Newtonsoft.Json;
 using System;
@@ -8,6 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Reactive.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 [Editor(typeof(HsfpCameraCaptureEditor), typeof(ComponentEditor))]
@@ -38,6 +40,11 @@ public class HsfpCameraCapture : C13440
         // Property mappings are applied on subscription, so all properties are read lazily.
         return Observable.Defer(() =>
         {
+            // The camera package logs a failed start and keeps running without a camera, then crashes on stop.
+            // Check first, so the workflow stops with a clear error instead.
+            var problem = HsfpDcam.FindCameraProblem();
+            if (problem != null) return Observable.Throw<IFrameContainer>(new InvalidOperationException(problem));
+
             if (Region != null)
             {
                 Regions = new List<RegionOfInterest>
@@ -116,5 +123,52 @@ public class HsfpCameraCaptureEditor : WorkflowComponentEditor
         camera.EditingSettings = true;
         try { return editor.EditComponent(context, camera, provider, owner); }
         finally { camera.EditingSettings = false; }
+    }
+}
+
+/// <summary>Checks that DCAM-API finds a camera, before the camera package opens it.</summary>
+static class HsfpDcam
+{
+    [DllImport("dcamapi")]
+    static extern DCAMERR dcamapi_init(ref DCAMAPI_INIT param);
+
+    [DllImport("dcamapi")]
+    static extern DCAMERR dcamapi_uninit();
+
+    /// <summary>
+    /// Initializes DCAM-API, reads the number of cameras and releases it again. Returns why the camera cannot be used,
+    /// or null if a camera was found. Call it only while no camera is open in this process: uninitializing DCAM-API
+    /// closes every camera the process holds.
+    /// </summary>
+    public static string FindCameraProblem()
+    {
+        DCAMAPI_INIT param = new DCAMAPI_INIT(0);
+        DCAMERR error;
+        try
+        {
+            error = dcamapi_init(ref param);
+        }
+        catch (DllNotFoundException)
+        {
+            return "Hamamatsu camera: DCAM-API (dcamapi.dll) is not installed.";
+        }
+        if (error.failed())
+        {
+            return string.Format(
+                "Hamamatsu camera: DCAM-API found no usable camera ({0}). Check that the camera is on and connected, " +
+                "and that no other program (HCImage, another Bonsai) is using it.", error.text());
+        }
+        try
+        {
+            if (param.iDeviceCount < 1)
+            {
+                return "Hamamatsu camera: no camera found. Check that the camera is on and connected.";
+            }
+            return null;
+        }
+        finally
+        {
+            dcamapi_uninit();
+        }
     }
 }
