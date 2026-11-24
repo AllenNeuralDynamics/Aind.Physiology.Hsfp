@@ -10,7 +10,6 @@ using System.Reactive.Linq;
 using System.Xml.Serialization;
 using Bonsai;
 using Hexa.NET.ImGui;
-using Hexa.NET.ImPlot;
 using Newtonsoft.Json;
 using OpenCV.Net;
 
@@ -70,11 +69,13 @@ public class HsfpRoiState
 /// <para>Regions tab: one ROI per fiber of the task logic and per light source of the rig. Every ROI is
 /// independent: moving one never moves another. The edge has the fiber's color and the fill the light source's
 /// color. Selecting a channel shows its image and ROIs; the "All" channel (0) shows the maximum intensity
-/// projection of the last frame of every channel, with every ROI. Fiber ROIs can be edited only while
-/// <see cref="Enabled"/> is true (map it from the negated experiment state).</para>
+/// projection of the last frame of every channel, with every ROI.</para>
 /// <para>Spectrum tab: any number of spectrum ROIs, each reading the image of one channel, plotted by
-/// <see cref="HsfpSpectrumVisualizer"/>. They can always be edited, are saved to
+/// <see cref="HsfpSpectrumVisualizer"/>. They are saved to
 /// <see cref="LocalSpectrumRoiPath"/> on every change, and are cleared if that file cannot be read.</para>
+/// <para>The ROIs are not saved with the data, so they can be edited during a session. The Lock toggle locks every
+/// ROI against accidental edits; it is switched on when <see cref="Recording"/> becomes true, and can be
+/// switched off at any time.</para>
 /// <para>The image is drawn through a colormap, between automatic or fixed limits, set per channel.</para>
 /// Source1 = Frame subject; Source2 = HsfpFrame stream (live preview images).
 /// </remarks>
@@ -87,9 +88,9 @@ public class HsfpRoiManagerVisualizer
     [Description("Specifies whether the control is displayed.")]
     public bool Visible { get { return visible; } set { visible = value; } }
 
-    private volatile bool enabled = true;
-    [Description("Specifies whether the fiber ROIs can be edited. Map it from the negated experiment state.")]
-    public bool Enabled { get { return enabled; } set { enabled = value; } }
+    private volatile bool recording;
+    [Description("Whether a session is running. Map it from the experiment state: the ROIs are locked when it starts, and can be unlocked.")]
+    public bool Recording { get { return recording; } set { recording = value; } }
 
     private volatile int channel;
     [Description("The cuTTLefish channel whose image and ROIs are shown, or 0 for all channels. Map it from the channel selector.")]
@@ -181,6 +182,8 @@ public class HsfpRoiManagerVisualizer
             var limits = new Dictionary<int, HsfpLimits>();
             var colormapIndex = 0;
             var showRois = true;
+            var locked = false;
+            var wasRecording = false;
             string message = null;
             string pendingConfirm = null;
             Drag drag = null;
@@ -276,12 +279,15 @@ public class HsfpRoiManagerVisualizer
                 }
                 if (imageSize.X <= 0) imageSize = new Vector2(width, height);
 
-                var fibersEditable = Enabled;
+                var recordingNow = Recording;
+                if (recordingNow && !wasRecording) locked = true;
+                wasRecording = recordingNow;
+                var editable = !locked;
 
                 // Tabs.
                 if (ImGui.BeginTabBar("##HsfpRoiTabs"))
                 {
-                    if (ImGui.BeginTabItem(fibersEditable ? "Regions##HsfpRoiTab" : "Regions (locked)##HsfpRoiTab"))
+                    if (ImGui.BeginTabItem("Regions##HsfpRoiTab"))
                     {
                         tab = Tab.Regions;
                         ImGui.EndTabItem();
@@ -299,10 +305,10 @@ public class HsfpRoiManagerVisualizer
                 // Toolbar: tab actions on the left, colormap and limits on the right.
                 if (tab == Tab.Regions)
                 {
-                    ImGui.BeginDisabled(!fibersEditable);
                     if (ImGui.Button("Save##HsfpRoi")) pendingConfirm = "Save";
                     ImGui.SetItemTooltip("Save the fiber ROIs to " + LocalRoiDefaultPath);
                     ImGui.SameLine();
+                    ImGui.BeginDisabled(!editable);
                     ImGui.BeginDisabled(!File.Exists(LocalRoiDefaultPath));
                     if (ImGui.Button("Load##HsfpRoi")) pendingConfirm = "Load";
                     ImGui.EndDisabled();
@@ -312,6 +318,7 @@ public class HsfpRoiManagerVisualizer
                 }
                 else
                 {
+                    ImGui.BeginDisabled(!editable);
                     if (ImGui.Button("+ Add##HsfpSpectrum"))
                     {
                         var roiChannel = all ? (channels.Count > 0 ? channels[0].Channel : 1) : viewChannel;
@@ -329,13 +336,20 @@ public class HsfpRoiManagerVisualizer
                     if (ImGui.Button("Reset##HsfpSpectrum")) pendingConfirm = "Clear";
                     ImGui.EndDisabled();
                     ImGui.SetItemTooltip("Remove every spectrum ROI.");
+                    ImGui.EndDisabled();
                 }
                 var comboWidth = HsfpDpi.FitWidth("Twilight", 90f) + ImGui.GetFrameHeight();
                 var toggleLabel = showRois ? "Hide ROIs" : "Show ROIs";
-                var rightWidth = HsfpDpi.FitWidth(toggleLabel, 0) + comboWidth + viewLimits.ButtonWidth("Range") + 2f * HsfpDpi.ItemSpacing.X;
+                var lockLabel = locked ? "Locked" : "Lock";
+                var rightWidth = HsfpDpi.FitWidth(lockLabel, 0) + HsfpDpi.FitWidth(toggleLabel, 0) + comboWidth + viewLimits.ButtonWidth("Range") + 3f * HsfpDpi.ItemSpacing.X;
                 ImGui.SameLine();
                 var right = ImGui.GetCursorPosX() + ImGui.GetContentRegionAvail().X - rightWidth;
                 if (right > ImGui.GetCursorPosX()) ImGui.SetCursorPosX(right);
+                if (HsfpUi.Pill(lockLabel + "##HsfpRoiLock", locked ? HsfpUi.Warning : HsfpUi.Muted, locked)) locked = !locked;
+                ImGui.SetItemTooltip(locked
+                    ? "The ROIs are locked. Click to unlock them (they are locked automatically when a session starts)."
+                    : "Lock every ROI against accidental edits. They are locked automatically when a session starts.");
+                ImGui.SameLine();
                 if (HsfpUi.Pill(toggleLabel + "##HsfpRoiToggle", HsfpUi.Muted, !showRois)) showRois = !showRois;
                 ImGui.SetItemTooltip(showRois ? "Hide the ROIs to see the whole image." : "Show the ROIs again.");
                 ImGui.SameLine();
@@ -345,7 +359,7 @@ public class HsfpRoiManagerVisualizer
                 viewLimits.DrawButton("HsfpImage" + key, "Range");
 
                 // Image, colorbar on its right, ROI table below.
-                var visibleItems = showRois ? BuildItems(tab, all, current, channels, fibers, spectrum, viewChannel, fibersEditable) : new List<Item>();
+                var visibleItems = showRois ? BuildItems(tab, all, current, channels, fibers, spectrum, viewChannel, editable) : new List<Item>();
                 var tableRows = tab == Tab.Regions ? (all ? fibers.Count * channelCount : fibers.Count) : Math.Max(1, spectrum.Count);
                 var avail = ImGui.GetContentRegionAvail();
                 var colorbarWidth = HsfpDpi.Px(56f);
@@ -356,11 +370,10 @@ public class HsfpRoiManagerVisualizer
                 var displaySize = new Vector2(imageSize.X * scale, imageSize.Y * scale);
                 var origin = ImGui.GetCursorScreenPos();
                 var drawList = ImGui.GetWindowDrawList();
-                var colormap = HsfpColormaps.Get(colormapIndex);
                 var hasImage = image.IsValid && imageKey == key;
                 if (hasImage)
                 {
-                    image.Draw(displaySize, viewLimits.Lo, viewLimits.Hi, colormap);
+                    image.Draw(displaySize, viewLimits.Lo, viewLimits.Hi, colormapIndex);
                 }
                 else
                 {
@@ -374,7 +387,7 @@ public class HsfpRoiManagerVisualizer
                     drawList.AddText(origin + (displaySize - ImGui.CalcTextSize(text)) * 0.5f, ImGui.GetColorU32(ImGuiCol.TextDisabled), text);
                 }
                 ImGui.SameLine();
-                DrawColorbar(viewLimits, colormap, new Vector2(colorbarWidth, displaySize.Y));
+                HsfpColormaps.Colorbar(colormapIndex, viewLimits.Lo, viewLimits.Hi, new Vector2(colorbarWidth, displaySize.Y));
 
                 // Hit-test: the topmost interactive item under the mouse.
                 var mouse = ImGui.GetMousePos();
@@ -408,7 +421,7 @@ public class HsfpRoiManagerVisualizer
                             drag = new Drag { Mode = hoverMode, IsSpectrum = hover.IsSpectrum, Index = hover.Index, ChannelIndex = hover.ChannelIndex, Start = mouse, Origin = (int[])hover.Rect.Clone() };
                         }
                     }
-                    else if (tab == Tab.Spectrum && showRois)
+                    else if (tab == Tab.Spectrum && showRois && editable)
                     {
                         // Drag on an empty part of the image to draw a new spectrum ROI.
                         var p = (mouse - origin) / scale;
@@ -426,7 +439,6 @@ public class HsfpRoiManagerVisualizer
                 }
                 if (drag != null)
                 {
-                    var editable = drag.IsSpectrum || fibersEditable;
                     var target = drag.IsSpectrum
                         ? (drag.Index < spectrum.Count ? spectrum[drag.Index].Rect : null)
                         : (drag.Index < fibers.Count ? fibers[drag.Index].Regions[drag.ChannelIndex] : null);
@@ -465,9 +477,9 @@ public class HsfpRoiManagerVisualizer
                 if (hover != null && hover.Editable && (hoverMode == DragMode.Resize || (drag != null && drag.Mode == DragMode.Resize))) ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNwse);
                 else if (drag != null && drag.Mode == DragMode.Resize) ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNwse);
                 else if ((hover != null && hover.Editable) || drag != null) ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeAll);
-                else if (tab == Tab.Spectrum && showRois && imageHovered) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                else if (tab == Tab.Spectrum && showRois && editable && imageHovered) ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
 
-                if (tab == Tab.Spectrum && selectedSpectrum >= 0 && selectedSpectrum < spectrum.Count && drag == null
+                if (tab == Tab.Spectrum && editable && selectedSpectrum >= 0 && selectedSpectrum < spectrum.Count && drag == null
                     && ImGui.IsWindowFocused() && ImGui.IsKeyPressed(ImGuiKey.Delete))
                 {
                     spectrum.RemoveAt(selectedSpectrum);
@@ -510,11 +522,11 @@ public class HsfpRoiManagerVisualizer
 
                 if (tab == Tab.Regions)
                 {
-                    fibersChanged |= DrawFiberTable(rig, fibers, channels, all, current, fibersEditable, (int)imageSize.X, (int)imageSize.Y, ref selectedFiber, ref selectedFiberChannel);
+                    fibersChanged |= DrawFiberTable(rig, fibers, channels, all, current, editable, (int)imageSize.X, (int)imageSize.Y, ref selectedFiber, ref selectedFiberChannel);
                 }
                 else
                 {
-                    var tableChanged = DrawSpectrumTable(rig, spectrum, channels, (int)imageSize.X, (int)imageSize.Y, ref selectedSpectrum);
+                    var tableChanged = DrawSpectrumTable(rig, spectrum, channels, editable, (int)imageSize.X, (int)imageSize.Y, ref selectedSpectrum);
                     spectrumChanged |= tableChanged;
                     saveSpectrum |= tableChanged;
                 }
@@ -567,7 +579,7 @@ public class HsfpRoiManagerVisualizer
         });
     }
 
-    static List<Item> BuildItems(Tab tab, bool all, int current, IList<HsfpChannel> channels, List<FiberState> fibers, List<SpectrumState> spectrum, int viewChannel, bool fibersEditable)
+    static List<Item> BuildItems(Tab tab, bool all, int current, IList<HsfpChannel> channels, List<FiberState> fibers, List<SpectrumState> spectrum, int viewChannel, bool editable)
     {
         var items = new List<Item>();
         var channelCount = Math.Max(1, channels.Count);
@@ -589,7 +601,7 @@ public class HsfpRoiManagerVisualizer
                     Edge = fiber.Enabled ? HsfpUi.FiberColor(i) : HsfpUi.Muted,
                     Fill = fill,
                     Label = label,
-                    Editable = fibersEditable,
+                    Editable = editable,
                 });
             }
         }
@@ -608,21 +620,11 @@ public class HsfpRoiManagerVisualizer
                     Edge = HsfpUi.SpectrumColor(roi.Id - 1),
                     Fill = source != null ? HsfpUi.ChannelColor(source.LightSource, source.Channel) : HsfpUi.Muted,
                     Label = all ? "S" + roi.Id + " - Ch " + roi.Channel : "S" + roi.Id,
-                    Editable = true,
+                    Editable = editable,
                 });
             }
         }
         return items;
-    }
-
-    static readonly byte[] ColorbarFormat = System.Text.Encoding.ASCII.GetBytes("%.4g\0");
-
-    static unsafe void DrawColorbar(HsfpLimits limits, ImPlotColormap colormap, Vector2 size)
-    {
-        fixed (byte* format = ColorbarFormat)
-        {
-            ImPlot.ColormapScale("##HsfpColorbar", limits.Lo, limits.Hi, size, format, ImPlotColormapScaleFlags.NoLabel, colormap);
-        }
     }
 
     /// <summary>Pixel-wise maximum of the images of the same size and depth as the first one.</summary>
@@ -719,7 +721,7 @@ public class HsfpRoiManagerVisualizer
         return changed;
     }
 
-    static bool DrawSpectrumTable(AindPhysiologyHsfp.AindPhysioHsfpRig rig, List<SpectrumState> spectrum, IList<HsfpChannel> channels, int imageWidth, int imageHeight, ref int selected)
+    static bool DrawSpectrumTable(AindPhysiologyHsfp.AindPhysioHsfpRig rig, List<SpectrumState> spectrum, IList<HsfpChannel> channels, bool editable, int imageWidth, int imageHeight, ref int selected)
     {
         if (spectrum.Count == 0)
         {
@@ -749,6 +751,7 @@ public class HsfpRoiManagerVisualizer
             ImGui.PushStyleColor(ImGuiCol.Text, HsfpUi.SpectrumColor(roi.Id - 1));
             if (ImGui.Selectable("S" + roi.Id + "##sel", i == selected, ImGuiSelectableFlags.SpanAllColumns | ImGuiSelectableFlags.AllowOverlap)) selected = i;
             ImGui.PopStyleColor();
+            ImGui.BeginDisabled(!editable);
             ImGui.TableSetColumnIndex(1);
             ImGui.SetNextItemWidth(-1);
             var source = channels.FirstOrDefault(c => c.Channel == roi.Channel);
@@ -773,6 +776,7 @@ public class HsfpRoiManagerVisualizer
             ImGui.TableSetColumnIndex(6);
             if (ImGui.Button("x##remove", new Vector2(ImGui.GetFrameHeight(), 0))) remove = i;
             ImGui.SetItemTooltip("Remove this spectrum ROI (or select it and press Delete).");
+            ImGui.EndDisabled();
             ImGui.PopID();
         }
         ImGui.EndTable();

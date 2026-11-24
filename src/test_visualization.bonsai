@@ -377,7 +377,10 @@
         <ui:Text>HsfpVisualizer</ui:Text>
         <ui:Visible>true</ui:Visible>
         <ui:Location xsi:nil="true" />
-        <ui:Size xsi:nil="true" />
+        <ui:Size>
+          <ui:Width>1600</ui:Width>
+          <ui:Height>1000</ui:Height>
+        </ui:Size>
         <ui:WindowState xsi:nil="true" />
       </Expression>
       <Expression xsi:type="Combinator">

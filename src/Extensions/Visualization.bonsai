@@ -209,6 +209,78 @@
                       <p1:RateTolerance>0.02</p1:RateTolerance>
                     </Combinator>
                   </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>ExperimentState</Name>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="Recording" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>StartExperimentRequest</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="BooleanProperty">
+                      <Value>true</Value>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="StartRequested" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>StartAcquisition</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="BooleanProperty">
+                      <Value>true</Value>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>StopAcquisition</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="BooleanProperty">
+                      <Value>false</Value>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:Merge" />
+                  </Expression>
+                  <Expression xsi:type="PropertyMapping">
+                    <PropertyMappings>
+                      <Property Name="AcquisitionRunning" />
+                    </PropertyMappings>
+                  </Expression>
+                  <Expression xsi:type="rx:PublishSubject">
+                    <Name>_OperationCommands</Name>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>_OperationCommands</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p1:HsfpLauncherCommandOfKind">
+                      <p1:Kind>PauseAcquisition</p1:Kind>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Unit" />
+                  <Expression xsi:type="MulticastSubject">
+                    <Name>StopAcquisition</Name>
+                  </Expression>
+                  <Expression xsi:type="SubscribeSubject">
+                    <Name>_OperationCommands</Name>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="p1:HsfpLauncherCommandOfKind">
+                      <p1:Kind>ResumeAcquisition</p1:Kind>
+                    </Combinator>
+                  </Expression>
+                  <Expression xsi:type="Unit" />
+                  <Expression xsi:type="MulticastSubject">
+                    <Name>StartAcquisition</Name>
+                  </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
@@ -219,6 +291,24 @@
                   <Edge From="6" To="9" Label="Source3" />
                   <Edge From="7" To="8" Label="Source1" />
                   <Edge From="8" To="9" Label="Source4" />
+                  <Edge From="10" To="11" Label="Source1" />
+                  <Edge From="11" To="9" Label="Source5" />
+                  <Edge From="12" To="13" Label="Source1" />
+                  <Edge From="13" To="14" Label="Source1" />
+                  <Edge From="14" To="9" Label="Source6" />
+                  <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="16" To="19" Label="Source1" />
+                  <Edge From="17" To="18" Label="Source1" />
+                  <Edge From="18" To="19" Label="Source2" />
+                  <Edge From="19" To="20" Label="Source1" />
+                  <Edge From="20" To="9" Label="Source7" />
+                  <Edge From="9" To="21" Label="Source1" />
+                  <Edge From="22" To="23" Label="Source1" />
+                  <Edge From="23" To="24" Label="Source1" />
+                  <Edge From="24" To="25" Label="Source1" />
+                  <Edge From="26" To="27" Label="Source1" />
+                  <Edge From="27" To="28" Label="Source1" />
+                  <Edge From="28" To="29" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -273,15 +363,15 @@
               <gui:RowStyles>
                 <gui:RowStyle>
                   <gui:SizeType>Percent</gui:SizeType>
+                  <gui:Height>32</gui:Height>
+                </gui:RowStyle>
+                <gui:RowStyle>
+                  <gui:SizeType>Percent</gui:SizeType>
                   <gui:Height>36</gui:Height>
                 </gui:RowStyle>
                 <gui:RowStyle>
                   <gui:SizeType>Percent</gui:SizeType>
-                  <gui:Height>26</gui:Height>
-                </gui:RowStyle>
-                <gui:RowStyle>
-                  <gui:SizeType>Percent</gui:SizeType>
-                  <gui:Height>38</gui:Height>
+                  <gui:Height>32</gui:Height>
                 </gui:RowStyle>
               </gui:RowStyles>
               <gui:CellSpans />
@@ -331,7 +421,7 @@
               <Name>Rois</Name>
               <Workflow>
                 <Nodes>
-                  <Expression xsi:type="imvizui:ImPlotVisualizerBuilder" />
+                  <Expression xsi:type="imvizui:ImGuiVisualizerBuilder" />
                   <Expression xsi:type="rx:PublishSubject">
                     <Name>frame</Name>
                   </Expression>
@@ -353,10 +443,12 @@
                   <Expression xsi:type="SubscribeSubject">
                     <Name>ExperimentState</Name>
                   </Expression>
-                  <Expression xsi:type="BitwiseNot" />
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:DistinctUntilChanged" />
+                  </Expression>
                   <Expression xsi:type="PropertyMapping">
                     <PropertyMappings>
-                      <Property Name="Enabled" />
+                      <Property Name="Recording" />
                     </PropertyMappings>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
@@ -378,7 +470,7 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:HsfpRoiManagerVisualizer">
                       <p1:Visible>true</p1:Visible>
-                      <p1:Enabled>true</p1:Enabled>
+                      <p1:Recording>false</p1:Recording>
                       <p1:Channel>0</p1:Channel>
                       <p1:LocalRoiDefaultPath>../local/hsfp_roi.json</p1:LocalRoiDefaultPath>
                       <p1:LocalSpectrumRoiPath>../local/hsfp_spectrum_roi.json</p1:LocalSpectrumRoiPath>

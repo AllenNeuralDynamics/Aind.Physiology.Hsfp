@@ -2,36 +2,74 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using Hexa.NET.ImGui;
-using Hexa.NET.ImPlot;
 using OpenCV.Net;
 using OpenTK.Graphics.OpenGL4;
 
 /// <summary>
-/// The colormaps offered for the camera image. Gray is registered in ImPlot (its own Greys runs from white to
-/// black); the others are ImPlot's continuous colormaps.
+/// The colormaps offered for the camera image, as key colors evenly spaced from the lowest to the highest value
+/// (the same keys as ImPlot's colormaps). They need no ImPlot context.
 /// </summary>
 static class HsfpColormaps
 {
-    const string GrayName = "HSFP Gray";
-
     public static readonly string[] Names = { "Gray", "Viridis", "Plasma", "Hot", "Cool", "Jet", "Twilight" };
 
-    static readonly ImPlotColormap[] Builtin =
+    static readonly int[][] Keys =
     {
-        ImPlotColormap.Greys, ImPlotColormap.Viridis, ImPlotColormap.Plasma, ImPlotColormap.Hot,
-        ImPlotColormap.Cool, ImPlotColormap.Jet, ImPlotColormap.Twilight,
+        new[] { 0x000000, 0xffffff },
+        new[] { 0x440154, 0x472c7a, 0x3b518b, 0x2c718e, 0x21908d, 0x27ad81, 0x5cc863, 0xaadc32, 0xfde725 },
+        new[] { 0x0d0887, 0x4b03a1, 0x7d03a8, 0xa82296, 0xcb4679, 0xe56b5d, 0xf89441, 0xfdc328, 0xf0f921 },
+        new[] { 0x000000, 0x9a0000, 0xff2800, 0xffa000, 0xffff3c, 0xffffff },
+        new[] { 0x00ffff, 0xff00ff },
+        new[] { 0x00007f, 0x0000ff, 0x007fff, 0x00ffff, 0x7fff7f, 0xffff00, 0xff7f00, 0xff0000, 0x7f0000 },
+        new[] { 0xe2d9e2, 0xa6bfca, 0x6d90c0, 0x5f58b0, 0x531e7c, 0x2f1436, 0x64194b, 0x9f3c50, 0xc0755e, 0xd0b39e, 0xe2d9e2 },
     };
 
-    /// <summary>The ImPlot colormap of an entry of <see cref="Names"/>. Requires an ImPlot context.</summary>
-    public static unsafe ImPlotColormap Get(int index)
+    /// <summary>Color of the colormap at <paramref name="t"/> (0 to 1), interpolated between its keys.</summary>
+    public static Vector4 Sample(int index, float t)
     {
-        if (index != 0) return Builtin[Math.Max(0, Math.Min(index, Builtin.Length - 1))];
-        var gray = ImPlot.GetColormapIndex(GrayName);
-        if ((int)gray >= 0) return gray;
-        var colors = stackalloc Vector4[2];
-        colors[0] = new Vector4(0f, 0f, 0f, 1f);
-        colors[1] = new Vector4(1f, 1f, 1f, 1f);
-        return ImPlot.AddColormap(GrayName, colors, 2, false);
+        var keys = Keys[Math.Max(0, Math.Min(index, Keys.Length - 1))];
+        var x = Math.Max(0f, Math.Min(1f, t)) * (keys.Length - 1);
+        var i = Math.Min(keys.Length - 2, (int)Math.Floor(x));
+        var f = x - i;
+        var a = ToColor(keys[i]);
+        var b = ToColor(keys[i + 1]);
+        return a + (b - a) * f;
+    }
+
+    static Vector4 ToColor(int rgb)
+    {
+        return new Vector4(((rgb >> 16) & 0xff) / 255f, ((rgb >> 8) & 0xff) / 255f, (rgb & 0xff) / 255f, 1f);
+    }
+
+    /// <summary>Draws a vertical colorbar at the cursor, with the high value at the top and five labelled ticks.</summary>
+    public static void Colorbar(int index, double lo, double hi, Vector2 size)
+    {
+        var drawList = ImGui.GetWindowDrawList();
+        var origin = ImGui.GetCursorScreenPos();
+        var barWidth = Math.Min(HsfpDpi.Px(12f), size.X * 0.3f);
+        var top = origin.Y + ImGui.GetTextLineHeight() * 0.5f;
+        var bottom = origin.Y + size.Y - ImGui.GetTextLineHeight() * 0.5f;
+        const int Segments = 32;
+        for (int k = 0; k < Segments; k++)
+        {
+            var y0 = bottom - (bottom - top) * k / Segments;
+            var y1 = bottom - (bottom - top) * (k + 1) / Segments;
+            var c0 = ImGui.ColorConvertFloat4ToU32(Sample(index, k / (float)Segments));
+            var c1 = ImGui.ColorConvertFloat4ToU32(Sample(index, (k + 1) / (float)Segments));
+            drawList.AddRectFilledMultiColor(new Vector2(origin.X, y1), new Vector2(origin.X + barWidth, y0), c1, c1, c0, c0);
+        }
+        drawList.AddRect(new Vector2(origin.X, top), new Vector2(origin.X + barWidth, bottom), ImGui.GetColorU32(ImGuiCol.Border));
+        var ticks = (bottom - top) > ImGui.GetTextLineHeight() * 6f ? 5 : 2;
+        for (int k = 0; k < ticks; k++)
+        {
+            var t = k / (float)(ticks - 1);
+            var y = bottom - (bottom - top) * t;
+            var value = lo + (hi - lo) * t;
+            var text = value.ToString("G4", System.Globalization.CultureInfo.InvariantCulture);
+            drawList.AddLine(new Vector2(origin.X + barWidth, y), new Vector2(origin.X + barWidth + HsfpDpi.Px(3f), y), ImGui.GetColorU32(ImGuiCol.Border));
+            drawList.AddText(new Vector2(origin.X + barWidth + HsfpDpi.Px(5f), y - ImGui.GetTextLineHeight() * 0.5f), ImGui.GetColorU32(ImGuiCol.TextDisabled), text);
+        }
+        ImGui.Dummy(size);
     }
 
     /// <summary>A combo box selecting an entry of <see cref="Names"/>. Returns true when it changes.</summary>
@@ -187,9 +225,9 @@ class HsfpColormapImage
 
     /// <summary>
     /// Draws the image at the cursor, mapping <paramref name="lo"/> to the first color of the colormap and
-    /// <paramref name="hi"/> to the last. Requires an ImPlot context, for the colormap.
+    /// <paramref name="hi"/> to the last.
     /// </summary>
-    public unsafe void Draw(Vector2 size, double lo, double hi, ImPlotColormap colormap)
+    public unsafe void Draw(Vector2 size, double lo, double hi, int colormap)
     {
         if (textureId == 0)
         {
@@ -205,13 +243,13 @@ class HsfpColormapImage
         drawList.AddCallback(EndCallback, (void*)(IntPtr)id);
     }
 
-    void UpdateLut(ImPlotColormap colormap)
+    void UpdateLut(int colormap)
     {
-        if (lutId != 0 && lutColormap == (int)colormap) return;
+        if (lutId != 0 && lutColormap == colormap) return;
         var data = new byte[LutSize * 4];
         for (int i = 0; i < LutSize; i++)
         {
-            var color = ImPlot.SampleColormap(i / (float)(LutSize - 1), colormap);
+            var color = HsfpColormaps.Sample(colormap, i / (float)(LutSize - 1));
             data[i * 4 + 0] = (byte)Math.Round(Clamp01(color.X) * 255);
             data[i * 4 + 1] = (byte)Math.Round(Clamp01(color.Y) * 255);
             data[i * 4 + 2] = (byte)Math.Round(Clamp01(color.Z) * 255);
@@ -232,7 +270,7 @@ class HsfpColormapImage
         }
         GL.PixelStore(PixelStoreParameter.UnpackAlignment, 4);
         GL.TexImage2D(TextureTarget.Texture2D, 0, PixelInternalFormat.Rgba8, LutSize, 1, 0, PixelFormat.Rgba, PixelType.UnsignedByte, data);
-        lutColormap = (int)colormap;
+        lutColormap = colormap;
     }
 
     static float Clamp01(float value)
