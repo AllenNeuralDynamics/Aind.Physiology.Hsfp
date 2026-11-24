@@ -249,97 +249,16 @@
                           <Name>LoggingRootPath</Name>
                         </Expression>
                         <Expression xsi:type="Format">
-                          <Format>{0}/camera_applied.json</Format>
+                          <Format>{0}/camera_settings.json</Format>
                           <Selector>it</Selector>
                         </Expression>
-                        <Expression xsi:type="MulticastSubject">
-                          <Name>CameraSnapshotPath</Name>
-                        </Expression>
                         <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="IntProperty">
-                            <Value>0</Value>
-                          </Combinator>
-                        </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>RigSchema</Name>
-                        </Expression>
-                        <Expression xsi:type="MemberSelector">
-                          <Selector>Camera.SettingsPath</Selector>
-                        </Expression>
-                        <Expression xsi:type="PropertyMapping">
-                          <PropertyMappings>
-                            <Property Name="SourcePath" />
-                          </PropertyMappings>
-                        </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>LoggingRootPath</Name>
-                        </Expression>
-                        <Expression xsi:type="Format">
-                          <Format>{0}/camera_settings.xml</Format>
-                          <Selector>it</Selector>
-                        </Expression>
-                        <Expression xsi:type="PropertyMapping">
-                          <PropertyMappings>
-                            <Property Name="DestinationPath" />
-                          </PropertyMappings>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p1:FileCopy">
-                            <p1:Overwrite>false</p1:Overwrite>
-                          </Combinator>
-                        </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>CameraFrames</Name>
-                        </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>ChannelCount</Name>
-                        </Expression>
-                        <Expression xsi:type="PropertyMapping">
-                          <PropertyMappings>
-                            <Property Name="DeinterleaveCount" />
-                          </PropertyMappings>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p3:Processing">
-                            <p3:DeinterleaveCount>5</p3:DeinterleaveCount>
-                          </Combinator>
-                        </Expression>
-                        <Expression xsi:type="SubscribeSubject">
-                          <Name>LoggingRootPath</Name>
-                        </Expression>
-                        <Expression xsi:type="Format">
-                          <Format>{0}/camera_parameters.csv</Format>
-                          <Selector>it</Selector>
-                        </Expression>
-                        <Expression xsi:type="PropertyMapping">
-                          <PropertyMappings>
-                            <Property Name="FileName" />
-                          </PropertyMappings>
-                        </Expression>
-                        <Expression xsi:type="Combinator">
-                          <Combinator xsi:type="p3:CsvWriter">
-                            <p3:Suffix>None</p3:Suffix>
-                            <p3:Overwrite>false</p3:Overwrite>
-                          </Combinator>
+                          <Combinator xsi:type="p6:WriteHsfpCameraSettings" />
                         </Expression>
                       </Nodes>
                       <Edges>
                         <Edge From="0" To="1" Label="Source1" />
                         <Edge From="1" To="2" Label="Source1" />
-                        <Edge From="3" To="10" Label="Source1" />
-                        <Edge From="4" To="5" Label="Source1" />
-                        <Edge From="5" To="6" Label="Source1" />
-                        <Edge From="6" To="10" Label="Source2" />
-                        <Edge From="7" To="8" Label="Source1" />
-                        <Edge From="8" To="9" Label="Source1" />
-                        <Edge From="9" To="10" Label="Source3" />
-                        <Edge From="11" To="14" Label="Source1" />
-                        <Edge From="12" To="13" Label="Source1" />
-                        <Edge From="13" To="14" Label="Source2" />
-                        <Edge From="14" To="18" Label="Source1" />
-                        <Edge From="15" To="16" Label="Source1" />
-                        <Edge From="16" To="17" Label="Source1" />
-                        <Edge From="17" To="18" Label="Source2" />
                       </Edges>
                     </Workflow>
                   </Expression>

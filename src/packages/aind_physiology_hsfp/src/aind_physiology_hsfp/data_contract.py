@@ -11,13 +11,12 @@ from aind_behavior_services.session import Session
 from contraqctor.contract import Dataset, DataStream, DataStreamCollection, FilePathBaseParam, csv
 from contraqctor.contract.harp import DeviceYmlByFile, HarpDevice
 from contraqctor.contract.json import Json, JsonParams, PydanticModel, SoftwareEvents
-from contraqctor.contract.text import Text, TextParams
 
 from aind_physiology_hsfp import __semver__
 from aind_physiology_hsfp.rig import AindPhysioHsfpRig
 from aind_physiology_hsfp.task_logic import AindPhysioHsfpTaskLogic
 
-CAMERA_APPLIED_SETTINGS = "camera_applied.json"
+CAMERA_SETTINGS = "camera_settings.json"
 """Camera properties applied by the DCAM driver, relative to the epoch directory."""
 
 RIG_INPUT = "Logs/rig_input.json"
@@ -123,19 +122,12 @@ def dataset(root: os.PathLike, channels: Sequence[int] | None = None) -> Dataset
                 "light source (Channel).",
             ),
             Json(
-                "camera_applied",
-                reader_params=JsonParams(path=root / CAMERA_APPLIED_SETTINGS, encoding="utf-8-sig"),
-                description="Camera properties applied by the DCAM driver, read back at the start of the acquisition.",
-            ),
-            Text(
                 "camera_settings",
-                reader_params=TextParams(path=root / "camera_settings.xml"),
-                description="Copy of the Hamamatsu camera settings file given in the rig.",
-            ),
-            csv.Csv(
-                "camera_parameters",
-                reader_params=csv.CsvParams(path=root / "camera_parameters.csv", delimiter=","),
-                description="Camera parameters reported by the camera node.",
+                reader_params=JsonParams(path=root / CAMERA_SETTINGS, encoding="utf-8-sig"),
+                description="Everything the camera applied, read from the camera when the session starts: its device "
+                "strings (vendor, model, camera id, firmware, driver and DCAM-API versions, bus), every DCAM property "
+                "with its value, value text, unit, range, step, default and access, and the software settings "
+                "(settings path, lookup table, regions and crop mode).",
             ),
             PydanticModel(
                 "session_input",

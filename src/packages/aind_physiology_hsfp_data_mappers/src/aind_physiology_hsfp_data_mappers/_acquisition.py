@@ -144,7 +144,7 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
             session=cast(Session, contract["session_input"].read()),
             rig=rig,
             task_logic=cast(AindPhysioHsfpTaskLogic, contract["task_input"].read()),
-            detector=detector_config(contract["camera_applied"].read()),
+            detector=detector_config(contract["camera_settings"].read()),
             frame_rate=AindAcquisitionDataMapper._camera_frame_rate(contract, channels),
             lasers=AindAcquisitionDataMapper._read_lasers(contract, rig),
         )
@@ -347,9 +347,9 @@ class AindAcquisitionDataMapper(DataMapper[acquisition.Acquisition]):
 
 
 def detector_config(snapshot: dict) -> configs.DetectorConfig:
-    """Camera settings, decoded from the DCAM properties the camera applied (``camera_applied.json``)."""
+    """Camera settings, decoded from the DCAM properties the camera applied (``camera_settings.json``)."""
     if snapshot.get("source") != "dcam_applied_readback":
-        raise ValueError("Camera settings require the DCAM applied readback (camera_applied.json).")
+        raise ValueError("Camera settings require the DCAM applied readback (camera_settings.json).")
     props = {int(p["id"]): p["value"] for p in snapshot["properties"]}
 
     def value(pid: int) -> float:

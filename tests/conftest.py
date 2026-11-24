@@ -81,7 +81,7 @@ def write_epoch(session_root: Path, start: datetime, rig=None, task_logic=None) 
         "".join(_software_event("Lasers", row, 1.5 + i * 0.01) for i, row in enumerate(rows))
     )
 
-    (epoch / "camera_applied.json").write_text(
+    (epoch / "camera_settings.json").write_text(
         json.dumps(
             {
                 "source": "dcam_applied_readback",

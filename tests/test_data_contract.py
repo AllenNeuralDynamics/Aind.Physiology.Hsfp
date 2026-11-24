@@ -57,6 +57,6 @@ def test_contract_without_rig_uses_default_channels(tmp_path):
     assert [name for name in names if name.startswith("channel_")] == [f"channel_{c}" for c in range(1, 6)]
 
 
-def test_camera_applied_settings(session_root):
+def test_camera_settings(session_root):
     epoch = next((session_root / "fib").glob("hsfp_*"))
-    assert dataset(epoch)["camera_applied"].read()["source"] == "dcam_applied_readback"
+    assert dataset(epoch)["camera_settings"].read()["source"] == "dcam_applied_readback"
