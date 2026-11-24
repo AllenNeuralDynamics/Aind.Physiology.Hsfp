@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 
 def _rig(**kwargs) -> AindPhysioHsfpRig:
+    kwargs.setdefault("channels", _channels([1, 2, 3, 4, 5]))
     return AindPhysioHsfpRig(
         data_directory="C:/data",
         rig_name="HSFP-1",
@@ -24,10 +25,9 @@ def _rig(**kwargs) -> AindPhysioHsfpRig:
     )
 
 
-def test_default_rig_matches_the_previous_hard_coded_schedule():
+def test_five_light_sources_match_the_previous_hard_coded_schedule():
     rig = _rig()
     assert list(rig.light_sources()) == [1, 2, 3, 4, 5]
-    assert [source.wavelength for source in rig.light_sources().values()] == [405, 445, 488, 514, 561]
     assert rig.camera_schedule() == PwmSchedule(offset_us=0, on_duration_us=100, off_duration_us=6567)
     assert rig.light_source_schedules() == {
         i + 1: PwmSchedule(offset_us=6667 * i, on_duration_us=1000, off_duration_us=32335) for i in range(5)
@@ -36,7 +36,7 @@ def test_default_rig_matches_the_previous_hard_coded_schedule():
 
 def _channels(used: list[int]) -> CuttlefishChannels:
     return CuttlefishChannels(
-        **{f"channel_{c}": LightSource(name=f"L{c}") if c in used else None for c in LIGHT_SOURCE_CHANNELS}
+        **{f"channel_{c}": LightSource(serial_number=f"SN{c}") if c in used else None for c in LIGHT_SOURCE_CHANNELS}
     )
 
 
@@ -75,30 +75,31 @@ def test_at_least_one_light_source():
         _channels([])
 
 
-def test_light_source_names_must_be_unique():
-    with pytest.raises(ValidationError, match="unique"):
-        CuttlefishChannels(channel_1=LightSource(name="L"), channel_2=LightSource(name="L"))
+def test_the_rig_needs_its_channels():
+    with pytest.raises(ValidationError, match="channels"):
+        AindPhysioHsfpRig(
+            data_directory="C:/data",
+            rig_name="HSFP-1",
+            computer_name="test",
+            camera=HsfpCamera(settings_path="camera.xml"),
+            cuttlefish=HarpCuttlefish(port_name="COM1"),
+        )
 
 
-def test_wavelength_is_optional():
-    assert LightSource(name="L").wavelength is None
-
-
-def test_serial_number_is_optional():
-    assert LightSource(name="L").serial_number is None
-    assert LightSource(name="L", wavelength=405, serial_number="123456").serial_number == "123456"
-
-
-def test_a_laser_with_a_serial_number_needs_a_wavelength():
-    with pytest.raises(ValidationError, match="wavelength must be set"):
-        LightSource(name="L", serial_number="123456")
+def test_a_light_source_is_identified_by_its_serial_number_only():
+    with pytest.raises(ValidationError, match="serial_number"):
+        LightSource()
+    with pytest.raises(ValidationError, match="serial_number"):
+        LightSource(serial_number="")
+    assert LightSource(serial_number="123456").power is None
+    assert set(LightSource.model_fields) == {"serial_number", "power"}
 
 
 def test_laser_serial_numbers_must_be_unique():
     with pytest.raises(ValidationError, match="serial numbers must be unique: 123456"):
         CuttlefishChannels(
-            channel_1=LightSource(name="A", wavelength=405, serial_number="123456"),
-            channel_2=LightSource(name="B", wavelength=445, serial_number="123456"),
+            channel_1=LightSource(serial_number="123456"),
+            channel_2=LightSource(serial_number="123456"),
         )
 
 

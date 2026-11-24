@@ -41,7 +41,11 @@ def test_channels_come_from_the_epoch_rig(tmp_path, make_epoch, session_start):
 
     rig = example.mock_rig()
     rig.channels = CuttlefishChannels(
-        channel_1=None, channel_2=LightSource(name="A"), channel_3=None, channel_4=None, channel_5=LightSource(name="B")
+        channel_1=None,
+        channel_2=LightSource(serial_number="FS230321025"),
+        channel_3=None,
+        channel_4=None,
+        channel_5=LightSource(serial_number="466789"),
     )
     epoch = make_epoch(tmp_path, session_start, rig=rig)
     names = [stream.name for stream in dataset(epoch)]

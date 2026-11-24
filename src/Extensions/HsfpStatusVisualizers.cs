@@ -259,7 +259,9 @@ public class HsfpLaserTableVisualizer
             }
             ImGui.TextColored(HsfpPlot.ChannelColor(rig, c), HsfpChannels.Label(rig, c));
             ImGui.TableSetColumnIndex(1);
-            ImGui.TextUnformatted(item.LightSource.Name);
+            var laser = HsfpChannels.FindLaser(c);
+            ImGui.TextUnformatted(laser != null ? laser.Model : "S/N " + item.LightSource.SerialNumber);
+            ImGui.SetItemTooltip("S/N " + item.LightSource.SerialNumber);
             AllenNeuralDynamics.Cuttlefish.PwmSettingsPayload schedule;
             valid = TrySchedule(() => HsfpTriggerSchedule.LightSource(rig, item), out schedule);
             ImGui.TableSetColumnIndex(2);

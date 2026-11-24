@@ -27,17 +27,17 @@ def mock_session() -> Session:
 
 
 def mock_channels() -> CuttlefishChannels:
-    """Light source on each cuTTLefish channel (channel 0 is the camera trigger).
+    """OBIS laser on each cuTTLefish channel (channel 0 is the camera trigger), by serial number.
 
-    Set serial_number to the serial number of each OBIS laser to control it from the Lasers tab; the workflow finds
-    each laser at start and checks that it reports the light source's wavelength.
+    The workflow finds each laser at start; its model, wavelength and settings are read from the laser and logged when
+    the session starts.
     """
     return CuttlefishChannels(
-        channel_1=LightSource(name="OBIS 405 LX", wavelength=405, serial_number=None),
-        channel_2=LightSource(name="OBIS 445 LX", wavelength=445, serial_number=None),
-        channel_3=LightSource(name="OBIS 488 LX", wavelength=488, serial_number=None),
-        channel_4=LightSource(name="OBIS 514 LX", wavelength=514, serial_number=None),
-        channel_5=LightSource(name="OBIS 561 LS", wavelength=561, serial_number=None),
+        channel_1=LightSource(serial_number="FS230411028"),  # 405 nm
+        channel_2=LightSource(serial_number="FS230321025"),  # 445 nm
+        channel_3=LightSource(serial_number="466549"),  # 488 nm
+        channel_4=LightSource(serial_number="FS230321024"),  # 514 nm
+        channel_5=LightSource(serial_number="466789"),  # 561 nm
         channel_6=None,
         channel_7=None,
     )

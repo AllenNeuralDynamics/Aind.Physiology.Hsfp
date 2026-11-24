@@ -24,8 +24,8 @@
     <PackageReference Include="Bonsai.ImPlot" Version="0.2.0" />
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
     <PackageReference Include="Hexa.NET.ImPlot" Version="2.2.9" />
-    <PackageReference Include="BFC.ObisLaser" Version="0.3.1" />
-    <PackageReference Include="BFC.ObisLaser.Design" Version="0.3.1" />
+    <PackageReference Include="BFC.ObisLaser" Version="0.3.2" />
+    <PackageReference Include="BFC.ObisLaser.Design" Version="0.3.2" />
     <PackageReference Include="ObisLaser.Net" Version="0.2.1" />
   </ItemGroup>
 

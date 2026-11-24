@@ -71,14 +71,31 @@ public static class HsfpChannels
         return null;
     }
 
-    /// <summary>Short label of a channel: its number and the wavelength, or else the name, of its light source.</summary>
+    static volatile HsfpLaser[] lasers = new HsfpLaser[0];
+
+    /// <summary>Records the lasers found for the light sources, whose wavelengths label and color the channels.</summary>
+    public static void SetLasers(HsfpLaser[] found)
+    {
+        lasers = found ?? new HsfpLaser[0];
+    }
+
+    /// <summary>The laser found for a cuTTLefish channel, or null if the lasers are not found (yet).</summary>
+    public static HsfpLaser FindLaser(int channel)
+    {
+        foreach (var laser in lasers)
+        {
+            if (laser.Channel == channel) return laser;
+        }
+        return null;
+    }
+
+    /// <summary>Short label of a channel: its number and, once its laser is found, the laser's wavelength.</summary>
     public static string Label(AindPhysiologyHsfp.AindPhysioHsfpRig rig, int channel)
     {
-        var source = Find(rig, channel);
-        if (source == null) return "Ch " + channel;
-        return source.Wavelength.HasValue
-            ? string.Format("Ch {0} - {1} nm", channel, source.Wavelength.Value)
-            : string.Format("Ch {0} - {1}", channel, source.Name);
+        var laser = Find(rig, channel) != null ? FindLaser(channel) : null;
+        return laser != null && laser.Wavelength > 0
+            ? string.Format("Ch {0} - {1:F0} nm", channel, laser.Wavelength)
+            : "Ch " + channel;
     }
 }
 

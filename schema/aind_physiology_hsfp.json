@@ -43,40 +43,6 @@
         },
         "channels": {
           "$ref": "#/$defs/CuttlefishChannels",
-          "default": {
-            "channel_1": {
-              "name": "OBIS 405 LX",
-              "power": null,
-              "serial_number": null,
-              "wavelength": 405
-            },
-            "channel_2": {
-              "name": "OBIS 445 LX",
-              "power": null,
-              "serial_number": null,
-              "wavelength": 445
-            },
-            "channel_3": {
-              "name": "OBIS 488 LX",
-              "power": null,
-              "serial_number": null,
-              "wavelength": 488
-            },
-            "channel_4": {
-              "name": "OBIS 514 LX",
-              "power": null,
-              "serial_number": null,
-              "wavelength": 514
-            },
-            "channel_5": {
-              "name": "OBIS 561 LS",
-              "power": null,
-              "serial_number": null,
-              "wavelength": 561
-            },
-            "channel_6": null,
-            "channel_7": null
-          },
           "description": "Light source on each cuTTLefish channel. Channel 0 triggers the camera. Each light source defines the acquisition channel with the same number.",
           "title": "cuTTLefish channels"
         },
@@ -104,7 +70,8 @@
         "rig_name",
         "data_directory",
         "camera",
-        "cuttlefish"
+        "cuttlefish",
+        "channels"
       ],
       "title": "AindPhysioHsfpRig",
       "type": "object"
@@ -231,12 +198,7 @@
       "description": "Light source triggered by each cuTTLefish channel, or None if the channel is unused.\n\nChannel 0 is reserved for the camera trigger. Light sources fire in channel order, skipping unused channels.",
       "properties": {
         "channel_1": {
-          "default": {
-            "name": "OBIS 405 LX",
-            "wavelength": 405,
-            "power": null,
-            "serial_number": null
-          },
+          "default": null,
           "description": "Light source on channel 1.",
           "oneOf": [
             {
@@ -248,12 +210,7 @@
           ]
         },
         "channel_2": {
-          "default": {
-            "name": "OBIS 445 LX",
-            "wavelength": 445,
-            "power": null,
-            "serial_number": null
-          },
+          "default": null,
           "description": "Light source on channel 2.",
           "oneOf": [
             {
@@ -265,12 +222,7 @@
           ]
         },
         "channel_3": {
-          "default": {
-            "name": "OBIS 488 LX",
-            "wavelength": 488,
-            "power": null,
-            "serial_number": null
-          },
+          "default": null,
           "description": "Light source on channel 3.",
           "oneOf": [
             {
@@ -282,12 +234,7 @@
           ]
         },
         "channel_4": {
-          "default": {
-            "name": "OBIS 514 LX",
-            "wavelength": 514,
-            "power": null,
-            "serial_number": null
-          },
+          "default": null,
           "description": "Light source on channel 4.",
           "oneOf": [
             {
@@ -299,12 +246,7 @@
           ]
         },
         "channel_5": {
-          "default": {
-            "name": "OBIS 561 LS",
-            "wavelength": 561,
-            "power": null,
-            "serial_number": null
-          },
+          "default": null,
           "description": "Light source on channel 5.",
           "oneOf": [
             {
@@ -574,26 +516,13 @@
       "type": "object"
     },
     "LightSource": {
-      "description": "A light source triggered by one cuTTLefish channel. Each light source defines one acquisition channel.",
+      "description": "An OBIS laser triggered by one cuTTLefish channel. Each light source defines one acquisition channel.\n\nThe laser is identified by its serial number only: the workflow finds it among the OBIS lasers connected over USB\nwhen it starts, and everything else about it (model, wavelength, power setpoint, ...) is read from the laser and\nlogged when the session starts (the Lasers software event).",
       "properties": {
-        "name": {
-          "description": "Name of the light source, as it appears in the instrument metadata.",
-          "title": "Name",
+        "serial_number": {
+          "description": "Serial number of the OBIS laser. It is controlled from its tab of the acquisition UI.",
+          "minLength": 1,
+          "title": "Serial Number",
           "type": "string"
-        },
-        "wavelength": {
-          "default": null,
-          "description": "Excitation wavelength (nm), if known.",
-          "oneOf": [
-            {
-              "exclusiveMinimum": 0,
-              "type": "integer"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Wavelength"
         },
         "power": {
           "default": null,
@@ -608,24 +537,10 @@
             }
           ],
           "title": "Power"
-        },
-        "serial_number": {
-          "default": null,
-          "description": "Serial number of the OBIS laser, which is found among the OBIS lasers connected over USB when the workflow starts, and controlled from its tab of the acquisition UI. The wavelength it reports must match wavelength. If not set, the light source is not controlled.",
-          "oneOf": [
-            {
-              "minLength": 1,
-              "type": "string"
-            },
-            {
-              "type": "null"
-            }
-          ],
-          "title": "Serial Number"
         }
       },
       "required": [
-        "name"
+        "serial_number"
       ],
       "title": "LightSource",
       "type": "object"

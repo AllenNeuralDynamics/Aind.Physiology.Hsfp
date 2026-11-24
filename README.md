@@ -110,4 +110,4 @@ uv run hsfp -h
 uv run hsfp-data-mapper --data-path "path/to/session" --instrument-path "path/to/instrument_fib.json"
 ```
 
-Writes `acquisition_fib.json` into the session directory. The instrument metadata is optional; it fills in light source powers and wavelengths missing from the rig. See the [data mapper README](./src/packages/aind_physiology_hsfp_data_mappers/README.md).
+Writes `acquisition_fib.json` into the session directory. The instrument metadata is optional: when given, each laser is named after the instrument component with its serial number, and laser powers missing from the rig come from its calibrations. Wavelengths and laser settings come from the `Lasers` software event. See the [data mapper README](./src/packages/aind_physiology_hsfp_data_mappers/README.md).

@@ -14,7 +14,7 @@ from contraqctor.contract.json import Json, JsonParams, PydanticModel, SoftwareE
 from contraqctor.contract.text import Text, TextParams
 
 from aind_physiology_hsfp import __semver__
-from aind_physiology_hsfp.rig import AindPhysioHsfpRig, CuttlefishChannels
+from aind_physiology_hsfp.rig import AindPhysioHsfpRig
 from aind_physiology_hsfp.task_logic import AindPhysioHsfpTaskLogic
 
 CAMERA_APPLIED_SETTINGS = "camera_applied.json"
@@ -90,13 +90,13 @@ def _channel_stream(root: Path, channel: int) -> DataStream:
 def acquired_channels(root: os.PathLike) -> list[int]:
     """Channels acquired in an epoch: the cuTTLefish channels with a light source in its rig.
 
-    Falls back to the channels of the default rig when the epoch has no rig input (e.g. to render the contract).
+    Falls back to channels 1 to 5 when the epoch has no rig input (e.g. to render the contract).
     """
     rig_path = Path(root) / RIG_INPUT
     if rig_path.is_file():
         rig = AindPhysioHsfpRig.model_validate_json(rig_path.read_text(encoding="utf-8-sig"))
         return list(rig.light_sources())
-    return list(CuttlefishChannels().light_sources())
+    return list(range(1, 6))
 
 
 def dataset(root: os.PathLike, channels: Sequence[int] | None = None) -> Dataset:
@@ -198,9 +198,12 @@ def dataset(root: os.PathLike, channels: Sequence[int] | None = None) -> Dataset
                     ),
                     SoftwareEvents(
                         name="Lasers",
-                        description="An event emitted once, with the OBIS laser found for each light source with a "
-                        "serial number: its serial number, model, port, channel on that port and reported wavelength. "
-                        "This file is optional.",
+                        description="One event per reply of an OBIS laser (or of the laser box it is connected to), "
+                        "timestamped when the reply arrived. Each names the light source's cuTTLefish channel and the "
+                        "laser's serial number, model, wavelength, port and channel on that port, whether the laser "
+                        "or its box replied (device), the command (e.g. GetInfo, GetState, GetPower, SYST:INF:SNUM?) "
+                        "and its value, or the error if the command was rejected. When the session starts, every "
+                        "read-only command is sent; after that, GetPower (the measured output power, in W) every 10 s.",
                         reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/Lasers.jsonl"),
                     ),
                     SoftwareEvents(

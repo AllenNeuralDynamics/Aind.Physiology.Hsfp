@@ -253,12 +253,13 @@ static class HsfpUi
     };
 
     /// <summary>
-    /// Color of a cuTTLefish channel: the color of its light source's wavelength, or, if the wavelength is not
-    /// known, a neutral tint per channel.
+    /// Color of a cuTTLefish channel: the color of the wavelength of its laser, or, until the laser is found, a
+    /// neutral tint per channel.
     /// </summary>
     public static Vector4 ChannelColor(AindPhysiologyHsfp.LightSource source, int channel)
     {
-        if (source != null && source.Wavelength.HasValue) return WavelengthColor(source.Wavelength.Value);
+        var laser = source != null ? HsfpChannels.FindLaser(channel) : null;
+        if (laser != null && laser.Wavelength > 0) return WavelengthColor(laser.Wavelength);
         return source != null ? ChannelPalette[((channel % ChannelPalette.Length) + ChannelPalette.Length) % ChannelPalette.Length] : Muted;
     }
 
