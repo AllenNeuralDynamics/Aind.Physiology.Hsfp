@@ -250,6 +250,21 @@
             <Expression xsi:type="rx:BehaviorSubject" TypeArguments="sys:String">
               <rx:Name>HardwareQA</rx:Name>
             </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
+              <rx:Name>StartExperimentRequest</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
+              <rx:Name>StartAcquisition</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
+              <rx:Name>StopAcquisition</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
+              <rx:Name>StartLogging</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
+              <rx:Name>StopLogging</rx:Name>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="5" To="6" Label="Source1" />
@@ -367,6 +382,7 @@
           <rx:DueTime>PT0.5S</rx:DueTime>
         </Combinator>
       </Expression>
+      <Expression xsi:type="IncludeWorkflow" Path="Extensions\OperationLogic.bonsai" />
     </Nodes>
     <Edges>
       <Edge From="0" To="1" Label="Source1" />

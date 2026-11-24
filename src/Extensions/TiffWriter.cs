@@ -14,7 +14,7 @@ public class TiffWriter
 {
     private string fileName = string.Empty;
     private bool useBigTiff = true;
-    private Compression compression = Compression.NONE;
+    private Compression compression = Compression.LZW;
     private bool overwrite = false;
     private int? chunkSize = null;
 

@@ -41,7 +41,8 @@ public class CreateCuttlefishConfiguration
     }
 
     /// <summary>
-    /// Enables rising-edge events on all 8 channels, then configures channel 0 (camera) and each channel with a
+    /// Disables the PWM outputs, which may still run from a previous session, enables rising-edge events on all 8
+    /// channels, then configures channel 0 (camera) and each channel with a
     /// light source, all derived from the rig's trigger timing by <see cref="HsfpTriggerSchedule"/>. Unused
     /// channels get no PWM settings.
     /// </summary>
@@ -52,6 +53,7 @@ public class CreateCuttlefishConfiguration
         const Pins AllPins = Pins.Pin0 | Pins.Pin1 | Pins.Pin2 | Pins.Pin3 | Pins.Pin4 | Pins.Pin5 | Pins.Pin6 | Pins.Pin7;
 
         var messages = new List<HarpMessage>();
+        messages.Add(PwmState.FromPayload(MessageType.Write, EnableFlag.Disabled));
         messages.Add(EnableRisingEdgeEvents.FromPayload(MessageType.Write, AllPins));
         messages.Add(CreatePwmSettings(HsfpChannels.CameraChannel, camera));
         foreach (var channel in channels)

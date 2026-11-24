@@ -91,7 +91,7 @@
                   </Expression>
                   <Expression xsi:type="Unit" />
                   <Expression xsi:type="MulticastSubject">
-                    <Name>StartExperiment</Name>
+                    <Name>StartExperimentRequest</Name>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
                     <Name>_LauncherCommands</Name>
