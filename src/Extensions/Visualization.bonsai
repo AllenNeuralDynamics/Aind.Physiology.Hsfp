@@ -331,7 +331,7 @@
               <Name>Rois</Name>
               <Workflow>
                 <Nodes>
-                  <Expression xsi:type="imvizui:ImGuiVisualizerBuilder" />
+                  <Expression xsi:type="imvizui:ImPlotVisualizerBuilder" />
                   <Expression xsi:type="rx:PublishSubject">
                     <Name>frame</Name>
                   </Expression>
@@ -381,10 +381,26 @@
                       <p1:Enabled>true</p1:Enabled>
                       <p1:Channel>0</p1:Channel>
                       <p1:LocalRoiDefaultPath>../local/hsfp_roi.json</p1:LocalRoiDefaultPath>
+                      <p1:LocalSpectrumRoiPath>../local/hsfp_spectrum_roi.json</p1:LocalSpectrumRoiPath>
                     </Combinator>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Fibers</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:DistinctUntilChanged" />
                   </Expression>
                   <Expression xsi:type="MulticastSubject">
                     <Name>CurrentRoiSettings</Name>
+                  </Expression>
+                  <Expression xsi:type="MemberSelector">
+                    <Selector>Spectrum</Selector>
+                  </Expression>
+                  <Expression xsi:type="Combinator">
+                    <Combinator xsi:type="rx:DistinctUntilChanged" />
+                  </Expression>
+                  <Expression xsi:type="MulticastSubject">
+                    <Name>SpectrumRois</Name>
                   </Expression>
                 </Nodes>
                 <Edges>
@@ -402,6 +418,11 @@
                   <Edge From="12" To="13" Label="Source1" />
                   <Edge From="13" To="14" Label="Source6" />
                   <Edge From="14" To="15" Label="Source1" />
+                  <Edge From="14" To="18" Label="Source1" />
+                  <Edge From="15" To="16" Label="Source1" />
+                  <Edge From="16" To="17" Label="Source1" />
+                  <Edge From="18" To="19" Label="Source1" />
+                  <Edge From="19" To="20" Label="Source1" />
                 </Edges>
               </Workflow>
             </Expression>
@@ -432,7 +453,8 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:HsfpActivityVisualizer">
                       <p1:Visible>true</p1:Visible>
-                      <p1:Capacity>30</p1:Capacity>
+                      <p1:Capacity>120</p1:Capacity>
+                      <p1:Window>30</p1:Window>
                       <p1:MinPlotHeight>80</p1:MinPlotHeight>
                     </Combinator>
                   </Expression>
@@ -464,19 +486,11 @@
                     <Name>HsfpFrames</Name>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
-                    <Name>SelectedChannel</Name>
+                    <Name>SpectrumRois</Name>
                   </Expression>
                   <Expression xsi:type="PropertyMapping">
                     <PropertyMappings>
-                      <Property Name="Channel" />
-                    </PropertyMappings>
-                  </Expression>
-                  <Expression xsi:type="SubscribeSubject">
-                    <Name>CurrentRoiSettings</Name>
-                  </Expression>
-                  <Expression xsi:type="PropertyMapping">
-                    <PropertyMappings>
-                      <Property Name="RoiSettings" />
+                      <Property Name="SpectrumRois" />
                     </PropertyMappings>
                   </Expression>
                   <Expression xsi:type="SubscribeSubject">
@@ -490,21 +504,18 @@
                   <Expression xsi:type="Combinator">
                     <Combinator xsi:type="p1:HsfpSpectrumVisualizer">
                       <p1:Visible>true</p1:Visible>
-                      <p1:Channel>0</p1:Channel>
                     </Combinator>
                   </Expression>
                 </Nodes>
                 <Edges>
                   <Edge From="0" To="1" Label="Source1" />
                   <Edge From="1" To="2" Label="Source1" />
-                  <Edge From="3" To="11" Label="Source1" />
-                  <Edge From="4" To="11" Label="Source2" />
+                  <Edge From="3" To="9" Label="Source1" />
+                  <Edge From="4" To="9" Label="Source2" />
                   <Edge From="5" To="6" Label="Source1" />
-                  <Edge From="6" To="11" Label="Source3" />
+                  <Edge From="6" To="9" Label="Source3" />
                   <Edge From="7" To="8" Label="Source1" />
-                  <Edge From="8" To="11" Label="Source4" />
-                  <Edge From="9" To="10" Label="Source1" />
-                  <Edge From="10" To="11" Label="Source5" />
+                  <Edge From="8" To="9" Label="Source4" />
                 </Edges>
               </Workflow>
             </Expression>

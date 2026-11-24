@@ -2,6 +2,7 @@
 <WorkflowBuilder Version="2.9.0"
                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                  xmlns:p1="clr-namespace:AindPhysiologyHsfp;assembly=Extensions"
+                 xmlns:p6="clr-namespace:;assembly=Extensions"
                  xmlns:rx="clr-namespace:Bonsai.Reactive;assembly=Bonsai.Core"
                  xmlns:p2="clr-namespace:System.Reactive;assembly=System.Reactive.Core"
                  xmlns:sys="clr-namespace:System;assembly=mscorlib"
@@ -266,6 +267,9 @@
             </Expression>
             <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
               <rx:Name>StopLogging</rx:Name>
+            </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p6:HsfpSpectrumRois">
+              <rx:Name>SpectrumRois</rx:Name>
             </Expression>
           </Nodes>
           <Edges>

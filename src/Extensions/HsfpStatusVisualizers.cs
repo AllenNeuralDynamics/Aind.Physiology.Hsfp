@@ -122,16 +122,27 @@ public class HsfpLaserTableVisualizer
     [Description("The rig, whose cuTTLefish channels are listed. Set via PropertyMapping.")]
     public AindPhysiologyHsfp.AindPhysioHsfpRig Rig { get; set; }
 
+    private double refreshInterval = 1.0;
+    [Description("Interval (s) between updates of the rates and frame counts, so they stay readable.")]
+    public double RefreshInterval { get { return refreshInterval; } set { refreshInterval = value; } }
+
     public IObservable<TTickSource> Process<TTickSource>(IObservable<TTickSource> frames, IObservable<HsfpHealth> health)
     {
         return Observable.Create<TTickSource>(observer =>
         {
             var latest = new Latest<HsfpHealth>();
             var healthSub = latest.Track(health, observer.OnError);
+            HsfpHealth shown = null;
+            var clock = System.Diagnostics.Stopwatch.StartNew();
             var frameSub = frames.Subscribe(tick =>
             {
                 HsfpStyle.Apply();
-                if (Visible) Draw(latest.Value);
+                if (shown == null || clock.Elapsed.TotalSeconds >= RefreshInterval)
+                {
+                    shown = latest.Value;
+                    if (shown != null) clock.Restart();
+                }
+                if (Visible) Draw(shown);
                 observer.OnNext(tick);
             }, observer.OnError, observer.OnCompleted);
             return new System.Reactive.Disposables.CompositeDisposable(healthSub, frameSub);
@@ -234,7 +245,7 @@ public class HsfpLaserTableVisualizer
 
 [Combinator]
 [WorkflowElementCategory(ElementCategory.Combinator)]
-[Description("Renders one pill per light source of the rig, colored by wavelength, and emits the cuTTLefish channel of the selected one. Source1 = Frame subject.")]
+[Description("Renders an All pill and one pill per light source of the rig, colored by wavelength, and emits the cuTTLefish channel of the selected one, or 0 for All. Source1 = Frame subject.")]
 public class HsfpChannelSelectorVisualizer
 {
     private bool visible = true;
@@ -245,7 +256,10 @@ public class HsfpChannelSelectorVisualizer
     [Description("The rig, whose cuTTLefish channels define the light sources. Set via PropertyMapping.")]
     public AindPhysiologyHsfp.AindPhysioHsfpRig Rig { get; set; }
 
-    [Description("cuTTLefish channel selected at startup. If it has no light source, the first one is selected.")]
+    /// <summary>Value emitted for the "All" view: the max projection of every channel.</summary>
+    public const int AllChannels = 0;
+
+    [Description("cuTTLefish channel selected at startup, or 0 for all channels. If it has no light source, the first one is selected.")]
     public int InitialChannel { get; set; }
 
     public IObservable<int> Process<TTickSource>(IObservable<TTickSource> frames)
@@ -259,14 +273,20 @@ public class HsfpChannelSelectorVisualizer
                 var rig = Rig;
                 var channels = HsfpChannels.Get(rig);
                 if (!Visible || channels.Count == 0) return;
-                if (!channels.Any(c => c.Channel == selected))
+                if (selected != AllChannels && !channels.Any(c => c.Channel == selected))
                 {
-                    selected = channels.Any(c => c.Channel == InitialChannel) ? InitialChannel : channels[0].Channel;
+                    selected = InitialChannel == AllChannels || channels.Any(c => c.Channel == InitialChannel) ? InitialChannel : channels[0].Channel;
                     observer.OnNext(selected);
                 }
+                if (HsfpUi.Pill("All##HsfpChannelAll", new Vector4(0.91f, 0.92f, 0.93f, 1f), selected == AllChannels) && selected != AllChannels)
+                {
+                    selected = AllChannels;
+                    observer.OnNext(selected);
+                }
+                ImGui.SetItemTooltip("Maximum intensity projection of the last frame of every channel, with every ROI.");
                 for (int i = 0; i < channels.Count; i++)
                 {
-                    if (i > 0) ImGui.SameLine();
+                    ImGui.SameLine();
                     var channel = channels[i].Channel;
                     var label = HsfpChannels.Label(rig, channel) + "##HsfpChannel" + channel;
                     if (HsfpUi.Pill(label, HsfpPlot.ChannelColor(rig, channel), channel == selected) && channel != selected)

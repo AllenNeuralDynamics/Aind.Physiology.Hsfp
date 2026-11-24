@@ -265,6 +265,9 @@
             <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p2:Unit">
               <rx:Name>StopLogging</rx:Name>
             </Expression>
+            <Expression xsi:type="rx:BehaviorSubject" TypeArguments="p6:HsfpSpectrumRois">
+              <rx:Name>SpectrumRois</rx:Name>
+            </Expression>
           </Nodes>
           <Edges>
             <Edge From="5" To="6" Label="Source1" />

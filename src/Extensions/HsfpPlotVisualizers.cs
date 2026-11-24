@@ -37,89 +37,107 @@ static class HsfpPlot
 
 [Combinator]
 [WorkflowElementCategory(ElementCategory.Combinator)]
-[Description("Plots the emission spectrum (mean of each column) inside each fiber's ROI, for the selected channel. Source1 = Frame subject; Source2 = HsfpFrame stream.")]
+[Description("Plots the emission spectrum (mean of each column) inside each spectrum ROI, read from the latest image of the ROI's channel. Source1 = Frame subject; Source2 = HsfpFrame stream.")]
 public class HsfpSpectrumVisualizer
 {
     private bool visible = true;
     [Description("Specifies whether the control is displayed.")]
     public bool Visible { get { return visible; } set { visible = value; } }
 
-    private volatile int channel;
-    [Description("The cuTTLefish channel whose spectrum is shown. Map it from the channel selector.")]
-    public int Channel { get { return channel; } set { channel = value; } }
+    [XmlIgnore]
+    [Description("The spectrum ROIs, edited in the Spectrum tab of the ROI manager. Set via PropertyMapping.")]
+    public HsfpSpectrumRois SpectrumRois { get; set; }
 
     [XmlIgnore]
-    [Description("The regions of interest. Set via PropertyMapping.")]
-    public AindPhysiologyHsfp.RoiSettings RoiSettings { get; set; }
-
-    [XmlIgnore]
-    [Description("The rig, used for channel names. Set via PropertyMapping.")]
+    [Description("The rig, used for channel names and colors. Set via PropertyMapping.")]
     public AindPhysiologyHsfp.AindPhysioHsfpRig Rig { get; set; }
-
-    class Spectra
-    {
-        public int Channel;
-        public List<int> Fibers = new List<int>();
-        public List<double[]> Xs = new List<double[]>();
-        public List<double[]> Ys = new List<double[]>();
-    }
 
     public IObservable<TTickSource> Process<TTickSource>(IObservable<TTickSource> frames, IObservable<HsfpFrame> images)
     {
         return Observable.Create<TTickSource>(observer =>
         {
-            var latest = new Latest<Spectra>();
-            // Only the selected channel is reduced, at most once per rendered frame.
-            var computeGate = 0;
-            var imageSub = images.Where(frame => frame.Channel == Channel).Subscribe(frame =>
+            var imageLock = new object();
+            var latestImages = new Dictionary<int, IplImage>();
+            var limits = new HsfpLimits();
+            var imageSub = images.Subscribe(frame =>
             {
-                if (System.Threading.Interlocked.Exchange(ref computeGate, 1) == 1) return;
-                var settings = RoiSettings;
-                var spectra = new Spectra { Channel = frame.Channel };
-                if (settings != null && settings.Rois != null)
-                {
-                    foreach (var roi in settings.Rois.Where(r => r.Enabled))
-                    {
-                        Rect rect;
-                        if (!HsfpRoi.TryGetRect(roi, frame.Index, frame.Image.Size, out rect)) continue;
-                        var ys = HsfpRoi.ColumnMeans(frame.Image, rect);
-                        var xs = new double[ys.Length];
-                        for (int i = 0; i < xs.Length; i++) xs[i] = rect.X + i;
-                        spectra.Fibers.Add(roi.FiberNumber);
-                        spectra.Xs.Add(xs);
-                        spectra.Ys.Add(ys);
-                    }
-                }
-                latest.Set(spectra);
+                lock (imageLock) latestImages[frame.Channel] = frame.Image;
             }, observer.OnError);
 
             var frameSub = frames.Subscribe(tick =>
             {
                 HsfpStyle.Apply();
-                System.Threading.Interlocked.Exchange(ref computeGate, 0);
-                if (Visible) Draw(latest.Value);
+                if (Visible)
+                {
+                    // Reduced on the render thread, once per rendered frame, from the latest image of each channel.
+                    var rois = SpectrumRois != null ? SpectrumRois.Rois : null;
+                    var lines = new List<Tuple<HsfpSpectrumRoi, double[], double[]>>();
+                    if (rois != null)
+                    {
+                        foreach (var roi in rois)
+                        {
+                            IplImage image;
+                            lock (imageLock)
+                            {
+                                if (!latestImages.TryGetValue(roi.Channel, out image)) continue;
+                            }
+                            Rect rect;
+                            if (!TryGetRect(roi, image.Size, out rect)) continue;
+                            var ys = HsfpRoi.ColumnMeans(image, rect);
+                            var xs = new double[ys.Length];
+                            for (int i = 0; i < xs.Length; i++) xs[i] = rect.X + i;
+                            lines.Add(Tuple.Create(roi, xs, ys));
+                        }
+                    }
+                    Draw(lines, rois != null && rois.Count > 0, limits);
+                }
                 observer.OnNext(tick);
             }, observer.OnError, observer.OnCompleted);
             return new CompositeDisposable(imageSub, frameSub);
         });
     }
 
-    void Draw(Spectra spectra)
+    static bool TryGetRect(HsfpSpectrumRoi roi, Size size, out Rect rect)
     {
-        var current = Channel;
+        var x0 = Math.Max(0, Math.Min(roi.X, size.Width));
+        var y0 = Math.Max(0, Math.Min(roi.Y, size.Height));
+        var x1 = Math.Max(x0, Math.Min(roi.X + roi.Width, size.Width));
+        var y1 = Math.Max(y0, Math.Min(roi.Y + roi.Height, size.Height));
+        rect = new Rect(x0, y0, x1 - x0, y1 - y0);
+        return rect.Width > 0 && rect.Height > 0;
+    }
+
+    void Draw(List<Tuple<HsfpSpectrumRoi, double[], double[]>> lines, bool hasRois, HsfpLimits limits)
+    {
         HsfpUi.SectionHeader("Spectrum");
         ImGui.SameLine();
-        ImGui.TextColored(HsfpPlot.ChannelColor(Rig, current), HsfpPlot.ChannelLabel(Rig, current));
-        var settings = RoiSettings;
-        if (!ImPlot.BeginPlot("##HsfpSpectrum", ImGui.GetContentRegionAvail(), ImPlotFlags.NoTitle | ImPlotFlags.NoMenus)) return;
-        ImPlot.SetupAxes("Sensor x (px)", "Mean (a.u.)", ImPlotAxisFlags.AutoFit, ImPlotAxisFlags.AutoFit);
-        if (spectra != null && spectra.Channel == current)
+        var right = ImGui.GetCursorPosX() + ImGui.GetContentRegionAvail().X - limits.ButtonWidth("Y");
+        if (right > ImGui.GetCursorPosX()) ImGui.SetCursorPosX(right);
+        limits.DrawButton("HsfpSpectrumY", "Y");
+        if (!hasRois)
         {
-            for (int i = 0; i < spectra.Fibers.Count; i++)
+            ImGui.TextDisabled("No spectrum ROIs: add them in the Spectrum tab of the image.");
+            return;
+        }
+        double min = double.MaxValue, max = double.MinValue;
+        foreach (var line in lines)
+        {
+            foreach (var y in line.Item3)
             {
-                var index = settings != null && settings.Rois != null ? settings.Rois.FindIndex(r => r.FiberNumber == spectra.Fibers[i]) : i;
-                HsfpPlot.Line("Fiber " + spectra.Fibers[i], spectra.Xs[i], spectra.Ys[i], spectra.Xs[i].Length, HsfpUi.FiberColor(Math.Max(0, index)));
+                if (double.IsNaN(y)) continue;
+                min = Math.Min(min, y);
+                max = Math.Max(max, y);
             }
+        }
+        if (min <= max) limits.Observe(min, max);
+        if (!ImPlot.BeginPlot("##HsfpSpectrum", ImGui.GetContentRegionAvail(), ImPlotFlags.NoTitle | ImPlotFlags.NoMenus)) return;
+        ImPlot.SetupAxes("Sensor x (px)", "Mean (a.u.)", ImPlotAxisFlags.AutoFit, limits.Auto ? ImPlotAxisFlags.AutoFit : ImPlotAxisFlags.None);
+        if (!limits.Auto) ImPlot.SetupAxisLimits(ImAxis.Y1, limits.Min, limits.Max, ImPlotCond.Always);
+        foreach (var line in lines)
+        {
+            var roi = line.Item1;
+            var label = roi.Name + " - " + HsfpChannels.Label(Rig, roi.Channel) + "##" + roi.Id;
+            HsfpPlot.Line(label, line.Item2, line.Item3, line.Item2.Length, HsfpUi.SpectrumColor(roi.Id - 1));
         }
         ImPlot.EndPlot();
     }
@@ -134,9 +152,15 @@ public class HsfpActivityVisualizer
     [Description("Specifies whether the control is displayed.")]
     public bool Visible { get { return visible; } set { visible = value; } }
 
-    private double capacity = 30;
-    [Description("Time window shown in the plots (s).")]
+    private double capacity = 120;
+    [Description("Longest time window that can be shown (s): the history kept for the plots.")]
     public double Capacity { get { return capacity; } set { capacity = value; } }
+
+    private double window = 30;
+    [Description("Time window shown at startup (s). It can be changed in the plot header, up to Capacity.")]
+    public double Window { get { return window; } set { window = value; } }
+
+    static readonly double[] WindowChoices = { 5, 10, 30, 60, 120, 300, 600 };
 
     [Description("Minimum height of each plot, in pixels at 96 DPI.")]
     public float MinPlotHeight { get; set; }
@@ -165,6 +189,9 @@ public class HsfpActivityVisualizer
             var series = new Dictionary<Tuple<int, int>, Series>();
             var latestTime = 0.0;
             var byFiber = false;
+            var shownWindow = Math.Max(1, Math.Min(Window, Capacity));
+            // Y limits of each plot, keyed by its group ("f" + fiber or "c" + channel).
+            var limits = new Dictionary<string, HsfpLimits>();
 
             var activitySub = activity.Subscribe(value =>
             {
@@ -202,7 +229,7 @@ public class HsfpActivityVisualizer
                         now = latestTime;
                         snapshot = series.Select(kv => new KeyValuePair<Tuple<int, int>, double[][]>(kv.Key, new[] { kv.Value.Times.ToArray(), kv.Value.Values.ToArray() })).ToList();
                     }
-                    Draw(snapshot, now, ref byFiber);
+                    Draw(snapshot, now, ref byFiber, ref shownWindow, limits);
                 }
                 observer.OnNext(tick);
             }, observer.OnError, observer.OnCompleted);
@@ -210,9 +237,41 @@ public class HsfpActivityVisualizer
         });
     }
 
-    void Draw(List<KeyValuePair<Tuple<int, int>, double[][]>> snapshot, double now, ref bool byFiber)
+    static string FormatSeconds(double seconds)
     {
-        HsfpUi.SectionHeader(string.Format("Activity - last {0:F0} s", Capacity));
+        return seconds >= 60 && seconds % 60 == 0 ? (seconds / 60).ToString("F0") + " min" : seconds.ToString("G4") + " s";
+    }
+
+    // Ticks every "nice" number of seconds before now, labelled as time before now ("-10 s" ... "0").
+    static void SetupTimeTicks(double now, double span)
+    {
+        var steps = new[] { 1.0, 2, 5, 10, 15, 20, 30, 60, 120, 300 };
+        var step = steps.FirstOrDefault(s => span / s <= 4);
+        if (step <= 0) step = span / 4;
+        var count = (int)Math.Floor(span / step + 1e-9) + 1;
+        var positions = new double[count];
+        var labels = new string[count];
+        for (int i = 0; i < count; i++)
+        {
+            var ago = (count - 1 - i) * step;
+            positions[i] = now - ago;
+            // Unit on the oldest tick only, to keep the labels short.
+            labels[i] = ago == 0 ? "0" : i == 0 ? "-" + ago.ToString("G4") + " s" : "-" + ago.ToString("G4");
+        }
+        ImPlot.SetupAxisTicks(ImAxis.X1, ref positions[0], count, labels);
+    }
+
+    void Draw(List<KeyValuePair<Tuple<int, int>, double[][]>> snapshot, double now, ref bool byFiber, ref double shownWindow, Dictionary<string, HsfpLimits> limits)
+    {
+        HsfpUi.SectionHeader("Activity - last");
+        var choices = WindowChoices.Where(w => w <= Capacity).ToList();
+        if (choices.Count == 0 || choices[choices.Count - 1] < Capacity) choices.Add(Capacity);
+        foreach (var choice in choices)
+        {
+            ImGui.SameLine();
+            if (HsfpUi.Pill(FormatSeconds(choice) + "##HsfpWindow", new Vector4(0.75f, 0.78f, 0.82f, 1f), Math.Abs(choice - shownWindow) < 1e-9)) shownWindow = choice;
+        }
+        var span = shownWindow;
         ImGui.SameLine(ImGui.GetContentRegionAvail().X - HsfpDpi.FitWidth("By channel", 0) - HsfpDpi.FitWidth("By fiber", 0) - HsfpDpi.ItemSpacing.X + ImGui.GetCursorPosX());
         if (HsfpUi.Pill("By channel##HsfpActivity", new Vector4(0.75f, 0.78f, 0.82f, 1f), !byFiber)) byFiber = false;
         ImGui.SameLine();
@@ -230,7 +289,7 @@ public class HsfpActivityVisualizer
         // Grid whose cells are closest to a wide plot (3:1), among those that keep the minimum height.
         var groups = byFiber ? fibers.Count : channels.Count;
         var avail = ImGui.GetContentRegionAvail();
-        var titleHeight = ImGui.GetTextLineHeightWithSpacing();
+        var titleHeight = ImGui.GetFrameHeightWithSpacing();
         var cellOverhead = titleHeight + 2f * HsfpDpi.ItemSpacing.Y + 2f * HsfpDpi.Px(3f);
         var columns = 1;
         var bestScore = double.MaxValue;
@@ -253,14 +312,39 @@ public class HsfpActivityVisualizer
                 ImGui.TableNextColumn();
                 var title = byFiber ? "Fiber " + fibers[g] : HsfpPlot.ChannelLabel(Rig, channels[g]);
                 var titleColor = byFiber ? HsfpUi.FiberColor(g) : HsfpPlot.ChannelColor(Rig, channels[g]);
-                ImGui.TextColored(titleColor, title);
-                if (ImPlot.BeginPlot("##HsfpActivity" + g, new Vector2(-1, height - ImGui.GetTextLineHeightWithSpacing()), ImPlotFlags.NoTitle | ImPlotFlags.NoMenus | ImPlotFlags.NoLegend))
+                var group = byFiber ? "f" + fibers[g] : "c" + channels[g];
+                HsfpLimits plotLimits;
+                if (!limits.TryGetValue(group, out plotLimits)) limits[group] = plotLimits = new HsfpLimits();
+                double min = double.MaxValue, max = double.MinValue;
+                foreach (var kv in snapshot)
                 {
-                    var axes = ImPlotAxisFlags.NoHighlight | ImPlotAxisFlags.AutoFit;
-                    ImPlot.SetupAxis(ImAxis.X1, "##time", axes | ImPlotAxisFlags.NoLabel);
-                    ImPlot.SetupAxis(ImAxis.Y1, "##value", axes | ImPlotAxisFlags.NoLabel);
-                    ImPlot.SetupAxisLimits(ImAxis.X1, now - Capacity, now, ImPlotCond.Always);
-                    ImPlot.SetupAxisTicks(ImAxis.X1, now - Capacity, now, 2, new[] { "-" + Capacity.ToString("F0") + " s", "0" });
+                    if (byFiber ? kv.Key.Item1 != fibers[g] : kv.Key.Item2 != channels[g]) continue;
+                    for (int k = 0; k < kv.Value[1].Length; k++)
+                    {
+                        var v = kv.Value[1][k];
+                        if (double.IsNaN(v) || kv.Value[0][k] < now - span) continue;
+                        min = Math.Min(min, v);
+                        max = Math.Max(max, v);
+                    }
+                }
+                if (min <= max) plotLimits.Observe(min, max);
+                ImGui.AlignTextToFramePadding();
+                ImGui.TextColored(titleColor, title);
+                ImGui.SameLine();
+                var right = ImGui.GetCursorPosX() + ImGui.GetContentRegionAvail().X - plotLimits.ButtonWidth("Y");
+                if (right > ImGui.GetCursorPosX()) ImGui.SetCursorPosX(right);
+                plotLimits.DrawButton("HsfpActivityY" + group, "Y");
+                if (ImPlot.BeginPlot("##HsfpActivity" + g, new Vector2(-1, height - ImGui.GetFrameHeightWithSpacing()), ImPlotFlags.NoTitle | ImPlotFlags.NoMenus | ImPlotFlags.NoLegend))
+                {
+                    // Shared time axis: every plot shows the same window, labelled on the bottom row only.
+                    var bottomRow = g / columns == rows - 1 || g + columns >= groups;
+                    var timeFlags = ImPlotAxisFlags.NoHighlight | ImPlotAxisFlags.NoLabel | (bottomRow ? ImPlotAxisFlags.None : ImPlotAxisFlags.NoTickLabels);
+                    ImPlot.SetupAxis(ImAxis.X1, "##time", timeFlags);
+                    var valueFlags = ImPlotAxisFlags.NoHighlight | ImPlotAxisFlags.NoLabel | (plotLimits.Auto ? ImPlotAxisFlags.AutoFit | ImPlotAxisFlags.RangeFit : ImPlotAxisFlags.None);
+                    ImPlot.SetupAxis(ImAxis.Y1, "##value", valueFlags);
+                    if (!plotLimits.Auto) ImPlot.SetupAxisLimits(ImAxis.Y1, plotLimits.Min, plotLimits.Max, ImPlotCond.Always);
+                    ImPlot.SetupAxisLimits(ImAxis.X1, now - span, now, ImPlotCond.Always);
+                    SetupTimeTicks(now, span);
                     foreach (var kv in snapshot)
                     {
                         if (byFiber ? kv.Key.Item1 != fibers[g] : kv.Key.Item2 != channels[g]) continue;
