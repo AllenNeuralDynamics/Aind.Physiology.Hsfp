@@ -14,7 +14,6 @@ from contraqctor.contract.json import Json, JsonParams, PydanticModel, SoftwareE
 from contraqctor.contract.text import Text, TextParams
 
 from aind_physiology_hsfp import __semver__
-from aind_physiology_hsfp.extra_types import RoiSettings
 from aind_physiology_hsfp.rig import AindPhysioHsfpRig, CuttlefishChannels
 from aind_physiology_hsfp.task_logic import AindPhysioHsfpTaskLogic
 
@@ -139,11 +138,6 @@ def dataset(root: os.PathLike, channels: Sequence[int] | None = None) -> Dataset
                 description="Camera parameters reported by the camera node.",
             ),
             PydanticModel(
-                "regions",
-                reader_params=PydanticModel.make_params(path=root / "regions.json", model=RoiSettings),
-                description="Regions of interest of each fiber at the start of the acquisition.",
-            ),
-            PydanticModel(
                 "session_input",
                 reader_params=PydanticModel.make_params(path=root / "Logs/session_input.json", model=Session),
                 description="Session input parameters for the HSFP experiment.",
@@ -194,11 +188,6 @@ def dataset(root: os.PathLike, channels: Sequence[int] | None = None) -> Dataset
                         description="An event emitted at the start of the session. Data is true if the repository "
                         "had no uncommitted changes.",
                         reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/RepositoryStatus.jsonl"),
-                    ),
-                    SoftwareEvents(
-                        name="Regions",
-                        description="An event emitted whenever the regions of interest change.",
-                        reader_params=SoftwareEvents.make_params(path=root / "SoftwareEvents/Regions.jsonl"),
                     ),
                     SoftwareEvents(
                         name="HardwareQA",
