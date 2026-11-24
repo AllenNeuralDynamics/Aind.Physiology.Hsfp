@@ -118,8 +118,9 @@ def dataset(root: os.PathLike, channels: Sequence[int] | None = None) -> Dataset
                 "frame_metadata",
                 reader_params=csv.CsvParams(path=root / "frame_metadata.csv", delimiter=","),
                 description="One row per frame, for all channels: camera frame counter (FrameCounter), camera "
-                "timestamp (Timestamp), harp time of the light source trigger (Seconds) and cuTTLefish channel of the "
-                "light source (Channel).",
+                "timestamp (Timestamp), harp time of the light source trigger (Seconds), cuTTLefish channel of the "
+                "light source (Channel), and index of the frame among the frames of its channel, from 0 "
+                "(ChannelFrameCounter), i.e. its index in the channel's TIFF stack.",
             ),
             Json(
                 "camera_settings",

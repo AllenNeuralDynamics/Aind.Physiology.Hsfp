@@ -552,11 +552,15 @@
                           <io:Overwrite>false</io:Overwrite>
                           <io:Suffix>None</io:Suffix>
                           <io:IncludeHeader>true</io:IncludeHeader>
-                          <io:Selector>FrameCounter,Timestamp,Seconds,Channel</io:Selector>
+                          <io:Selector>FrameCounter,Timestamp,Seconds,Channel,ChannelFrameCounter</io:Selector>
+                        </Expression>
+                        <Expression xsi:type="Combinator">
+                          <Combinator xsi:type="p6:CreateHsfpFrameMetadata" />
                         </Expression>
                       </Nodes>
                       <Edges>
-                        <Edge From="0" To="4" Label="Source1" />
+                        <Edge From="0" To="5" Label="Source1" />
+                        <Edge From="5" To="4" Label="Source1" />
                         <Edge From="1" To="2" Label="Source1" />
                         <Edge From="2" To="3" Label="Source1" />
                         <Edge From="3" To="4" Label="Source2" />
